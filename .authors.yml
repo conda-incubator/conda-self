@@ -1,0 +1,18 @@
+- name: pre-commit-ci[bot]
+  email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2025-07-07 16:55:16
+  github: pre-commit-ci[bot]
+- name: Jaime Rodríguez-Guerra
+  email: jaimergp@users.noreply.github.com
+  num_commits: 7
+  first_commit: 2025-05-22 17:55:45
+  github: jaimergp
+  aliases:
+  - Jaime RGP
+  - jaimergp
+- name: Sophia Castellarin
+  email: scastellarin@quansight.com
+  num_commits: 5
+  first_commit: 2025-06-23 20:17:32
+  github: soapy1
