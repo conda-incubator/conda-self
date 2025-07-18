@@ -35,8 +35,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     configure_parser_install(subparsers.add_parser("install", help=UPDATE_INSTALL))
-    configure_parser_protect(subparsers.add_parser("protect", help=REMOVE_HELP))
-    configure_parser_remove(subparsers.add_parser("remove", help=PROTECT_HELP))
+    configure_parser_protect(subparsers.add_parser("protect", help=PROTECT_HELP))
+    configure_parser_remove(subparsers.add_parser("remove", help=REMOVE_HELP))
     configure_parser_reset(subparsers.add_parser("reset", help=RESET_HELP))
     configure_parser_update(subparsers.add_parser("update", help=UPDATE_HELP))
     parser.set_defaults(func=partial(parser.parse_args, ["--help"]))
