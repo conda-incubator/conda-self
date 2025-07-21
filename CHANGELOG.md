@@ -1,5 +1,12 @@
 [//]: # (current developments)
 
+## 2025-07-21   0.1.1:
+### Bug fixes
+
+* Fix `conda self protect` and `conda self remove` help text. (#17)
+
+
+
 
 ## 2025-07-17   0.1.0:
 
