@@ -5,6 +5,9 @@
 
 * Fix `conda self protect` and `conda self remove` help text. (#17)
 
+### Contributors
+
+* @kenodegard
 
 
 
