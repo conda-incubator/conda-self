@@ -15,8 +15,8 @@ options:
 subcommands:
   {install,protect,remove,reset,update}
     install             Add conda plugins to the 'base' environment.
-    protect             Remove conda plugins from the 'base' environment.
-    remove              Protect 'base' environment from any further modifications
+    protect             Protect 'base' environment from any further modifications
+    remove              Remove conda plugins from the 'base' environment.
     reset               Reset 'base' environment to essential packages only.
     update              Update 'conda' and/or its plugins in the 'base' environment.
 ```
