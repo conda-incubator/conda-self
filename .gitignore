@@ -134,6 +134,8 @@ dmypy.json
 # hatch-vcs
 conda_self/_version.py
 
-
 # vscode
 .vscode/
+
+# rever
+rever/
