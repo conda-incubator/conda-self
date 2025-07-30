@@ -44,7 +44,7 @@ def execute(args: argparse.Namespace) -> int:
     if dest_prefix_data.is_environment():
         confirm_yn(
             "WARNING: A conda environment already exists at "
-            "'{dest_prefix_data.prefix_path}'\n\n"
+            f"'{dest_prefix_data.prefix_path}'\n\n"
             "Remove existing environment?\nThis will remove ALL packages "
             "contained within this specified prefix directory.\n\n",
             default="no",
@@ -55,7 +55,7 @@ def execute(args: argparse.Namespace) -> int:
     elif dest_prefix_data.exists():
         confirm_yn(
             "WARNING: A directory already exists at the target "
-            "location '{dest_prefix_data.prefix_path}'\n"
+            f"location '{dest_prefix_data.prefix_path}'\n"
             "but it is not a conda environment.\n"
             "Continue creating environment",
             default="no",
