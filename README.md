@@ -24,7 +24,7 @@ subcommands:
 ## Try it locally
 
 1. Make sure `pixi` and `git` are installed. [Instructions for `pixi`](https://pixi.sh/latest/installation/).
-2. Clone this repository: `git clone https://github.com/jaimergp/conda-self`
+2. Clone this repository: `git clone https://github.com/conda-incubator/conda-self`
 3. Change to that directory: `cd conda-self`
 4. Run the help message: `pixi run conda self --help`
 
