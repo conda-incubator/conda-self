@@ -1,11 +1,4 @@
-# How to contribute
-
-You'll need a copy of `pixi` and `git` in your machine. Then:
-
-1. Fork and clone this repo to disk.
-2. `pixi run test` to run the tests. Choose your desired Python version by picking the adequate environment.
-3. `pixi run lint` to run the pre-commit linters and formatters.
-4. `pixi run docs` to build the docs and `pixi run serve` to serve them in your browser.
+# How to Contribute
 
 ## Try it locally
 
@@ -48,6 +41,12 @@ pip install -e .
    2. `python -m conda self install conda-rich`
    3. `python -m conda self update`
    4. `python -m conda self remove conda-rich`
+
+#### Included Tasks
+
+1. `pixi run test` to run the tests. Choose your desired Python version by picking the adequate environment.
+2. `pixi run lint` to run the pre-commit linters and formatters.
+3. `pixi run docs` to build the docs and `pixi run serve` to serve them in your browser.
 
 ### With `conda` only
 
