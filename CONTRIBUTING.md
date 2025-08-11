@@ -62,11 +62,12 @@ cd conda-self
 
 3. Create a `conda` environment with `conda-self`, `python` and `pip` in it.
 ```
-conda create -n conda-self-dev conda-self --only-deps python pip
+conda create -n conda-self-dev python pip
 ```
-4. Activate the environment.
+4. Activate the environment and install `conda self`.
 ```
 conda activate conda-self-dev
+conda install conda-self --only-deps
 ```
 5. `pip` install the package.
 ```
