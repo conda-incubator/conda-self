@@ -139,3 +139,6 @@ conda_self/_version.py
 
 # rever
 rever/
+
+# OS-specific files
+.DS_Store
