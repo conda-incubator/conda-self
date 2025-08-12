@@ -37,6 +37,8 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.8
         with:
           environments: test-py${{ matrix.python-version }}
+      - name: Ensure package is installed
+        run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
       - name: Setup project
         run: |
           echo "channels: [conda-forge]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
