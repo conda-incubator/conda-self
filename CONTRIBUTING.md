@@ -24,7 +24,7 @@ We _could_ just use the default pixi env to try things, but it doesn't write a g
 ```
 pixi run conda create -p .pixi/envs/demo conda pip
 ```
-2. If you have `conda spawn` installed,pseudo-activate it.
+2. `conda-spawn` is included in the pixi configuration, which you can use to pseudo-activate the environment:
 ```
 conda spawn ./.pixi/envs/demo
 ```  
