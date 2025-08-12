@@ -57,7 +57,7 @@ git clone https://github.com/conda-incubator/conda-self
 cd conda-self
 ```
 
-3. Create a `conda` environment with `conda-self`, `python` and `pip` in it.
+3. Create a `conda` environment with `python` and `pip` in it.
 ```
 conda create -n conda-self-dev python pip
 ```
