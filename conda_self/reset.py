@@ -8,7 +8,7 @@ from conda.core.prefix_data import PrefixData
 def reset(prefix: str = sys.prefix, uninstallable_packages: set[str] = set()):
     installed = sorted(PrefixData(prefix).iter_records(), key=lambda x: x.name)
     packages_to_remove = [
-        pkg for pkg in installed if pkg.name not in uninstallable_packages and pkg.name!="conda-self"
+        pkg for pkg in installed if pkg.name not in uninstallable_packages
     ]
 
     stp = PrefixSetup(
