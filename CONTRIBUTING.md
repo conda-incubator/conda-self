@@ -32,7 +32,7 @@ If not, simply activate the environment.
 ```
 conda activate .pixi/envs/demo
 ```
-3. Install conda-self in it. 
+3. Install `conda-self` in it. 
 ```
 pip install -e .
 ```
