@@ -2,13 +2,6 @@
 
 A `self` command to manage your `base` environment safely.
 
-The `conda self` plugin provides two main subcommands, `protect` and `reset`: 
-
-- The `protect` subcommand lets you "freeze" your `base` environment so that you can't accidentally modify it. 
-- The `reset` subcommand lets you "reset" your `base` environment to only contain the essential packages. Others are deleted and the `base` environment is returned to an "unbloated" state. 
-
-Both `protect` and `reset` save the current state of the base environment in a `conda-meta/explicit.<time-stamp>.txt` file. 
-
 ```
 $ conda self
 usage: conda self [-V] [-h] {install,protect,remove,reset,update} ...
