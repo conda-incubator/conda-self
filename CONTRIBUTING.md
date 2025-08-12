@@ -35,9 +35,9 @@ conda activate .pixi/envs/demo
 pip install -e .
 ```
 4. Play with `python -m conda self`.
-   1. `python -m conda self install numpy`
-   2. `python -m conda self install conda-rich`
-   3. `python -m conda self update`
+   1. `python -m conda self update`
+   2. `python -m conda self install numpy`
+   3. `python -m conda self install conda-rich` 
    4. `python -m conda self remove conda-rich`
 
 ### Included Tasks
