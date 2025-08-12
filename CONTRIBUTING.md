@@ -50,7 +50,7 @@ pip install -e .
 
 1. Fork and clone this repository.
 ```
-git clone https://github.com/conda-incubator/conda-self`
+git clone https://github.com/conda-incubator/conda-self
 ```
 2. Change to that directory. 
 ```
