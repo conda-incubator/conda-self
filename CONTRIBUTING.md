@@ -26,7 +26,7 @@ pixi run conda create -p .pixi/envs/demo conda pip
 ```
 2. `conda-spawn` is included in the pixi configuration, which you can use to pseudo-activate the environment:
 ```
-conda spawn ./.pixi/envs/demo
+pixi run conda spawn ./.pixi/envs/demo
 ```  
 If not, simply activate the environment.
 ```
