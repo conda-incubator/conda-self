@@ -70,6 +70,7 @@ def permanent_dependencies() -> set[str]:
 
     packages = []
     for pkg in PERMANENT_PACKAGES:
-        node = prefix_graph.get_node_by_name(pkg)
-        packages.extend([record.name for record in prefix_graph.all_ancestors(node)])
+        node = next((rec for rec in prefix_graph.records if rec.name == pkg), None)
+        if node:
+            packages.extend([record.name for record in prefix_graph.all_ancestors(node)])
     return set(packages)
