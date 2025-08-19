@@ -1,6 +1,8 @@
 import sys
+import subprocess
 
 from conda.core.prefix_data import PrefixData
+from conda.testing.fixtures import conda_cli, TmpEnvFixture
 
 
 def test_help(conda_cli):
@@ -23,3 +25,16 @@ def test_reset(conda_cli, tmp_path):
     )
 
     assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
+
+
+def test_reset_conda_self_present(conda_cli, tmp_env: TmpEnvFixture):
+    with tmp_env("conda", "conda-self") as prefix:
+        # platform is "win32" even in win64 machines
+        if sys.platform=="win32":
+            python_bin = prefix / "python.exe"
+        else:
+            python_bin=prefix / "python" / "bin"
+
+        result=subprocess.run([str(python_bin), "-m", "conda", "self"], capture_output=True)
+        print(result.stdout)
+
