@@ -2,7 +2,7 @@ import sys
 import subprocess
 
 from conda.core.prefix_data import PrefixData
-from conda.testing.fixtures import conda_cli, TmpEnvFixture
+from conda.testing.fixtures import TmpEnvFixture
 
 
 def test_help(conda_cli):
