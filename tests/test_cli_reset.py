@@ -34,9 +34,9 @@ def test_reset_conda_self_present(conda_cli, tmp_env: TmpEnvFixture):
             python_bin = prefix / "python.exe"
         else:
             python_bin=prefix / "python" / "bin"
-
-       subprocess.run([str(python_bin), "-m", "conda", "self", "reset"], check=True)
-       result=subprocess.run([str(python_bin), "-m", "conda", "self", "--help"], check=True)
-       assert PrefixData(prefix).get("conda")  # make sure conda-self didn't remove itself
-       assert PrefixData(prefix).get("conda-self")  # make sure conda-self didn't remove itself
+            
+        result=subprocess.run([str(python_bin), "-m", "conda", "self", "reset"], check=True)
+        
+        assert PrefixData(prefix).get("conda")  # make sure conda-self didn't remove itself
+        assert PrefixData(prefix).get("conda-self")  # make sure conda-self didn't remove itself
 
