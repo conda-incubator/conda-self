@@ -33,7 +33,7 @@ def test_reset_conda_self_present(conda_cli, tmp_env: TmpEnvFixture):
         if sys.platform=="win32":
             python_bin = prefix / "python.exe"
         else:
-            python_bin=prefix / "python" / "bin"
+            python_bin=prefix / "bin"/"python" 
             
         result=subprocess.run([str(python_bin), "-m", "conda", "self", "reset"], check=True)
 
