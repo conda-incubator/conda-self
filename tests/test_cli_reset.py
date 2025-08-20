@@ -34,8 +34,13 @@ def test_reset_conda_self_present(conda_cli, tmp_env: TmpEnvFixture):
             python_bin = prefix / "python.exe"
         else:
             python_bin=prefix / "bin"/"python" 
+        
+        print("before",sorted(list((prefix/"conda-meta").glob("*.json"))))
             
         result=subprocess.run([str(python_bin), "-m", "conda", "self", "reset"], check=True)
+
+        print("after", sorted(list((prefix/"conda-meta").glob("*.json"))))
+
 
         assert PrefixData(prefix).get("conda")  # make sure conda-self didn't remove conda
         assert PrefixData(prefix).get("conda-self")  # make sure conda-self didn't remove itself

@@ -10,6 +10,7 @@ def reset(prefix: str = sys.prefix, uninstallable_packages: set[str] = set()):
     packages_to_remove = [
         pkg for pkg in installed if pkg.name not in uninstallable_packages
     ]
+    print("remove", packages_to_remove)
 
     stp = PrefixSetup(
         target_prefix=prefix,
