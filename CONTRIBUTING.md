@@ -3,15 +3,15 @@
 ## With `pixi`
 
 1. Make sure `pixi` and `git` are installed. [Instructions for `pixi`](https://pixi.sh/latest/installation/).
-2. Clone this repository. 
+2. Clone this repository.
 ```
 git clone https://github.com/conda-incubator/conda-self
 ```
-3. Change to that directory. 
+3. Change to that directory.
 ```
 cd conda-self
 ```
-4. Run the help message. 
+4. Run the help message.
 ```
 pixi run conda self --help
 ```
@@ -25,19 +25,19 @@ pixi run conda create -p .pixi/envs/demo conda pip
 2. `conda-spawn` is included in the pixi configuration, which you can use to pseudo-activate the environment:
 ```
 pixi run conda spawn ./.pixi/envs/demo
-```  
+```
 If not, simply activate the environment.
 ```
 conda activate .pixi/envs/demo
 ```
-3. Install `conda-self` in it. 
+3. Install `conda-self` in it.
 ```
 pip install -e .
 ```
 4. Play with `python -m conda self`.
    1. `python -m conda self update`
    2. `python -m conda self install numpy`
-   3. `python -m conda self install conda-rich` 
+   3. `python -m conda self install conda-rich`
    4. `python -m conda self remove conda-rich`
 
 ### Included Tasks
@@ -52,7 +52,7 @@ pip install -e .
 ```
 git clone https://github.com/conda-incubator/conda-self
 ```
-2. Change to that directory. 
+2. Change to that directory.
 ```
 cd conda-self
 ```
