@@ -5,7 +5,7 @@
      through the checklist. -->
 
 - [ ] Add a file to the `news` directory ([using the template]([[ repo.html_url ]]/blob/main/news/TEMPLATE)) for the next release's release notes?
-     <!-- All "significant" changes should get an entry:
+     <!-- All "significant" changes should get an entry
             - user-facing changes or enhancements
             - bug fixes
             - deprecations
