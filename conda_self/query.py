@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from functools import cache
 from typing import TYPE_CHECKING
 
 from conda.base.context import context
@@ -62,10 +61,12 @@ def latest(
     return best
 
 
-@cache
 def permanent_dependencies() -> set[str]:
     """Get the full list of dependencies for all the permanent packages."""
-    installed = PrefixData(sys.prefix)
+    # In some dev environments, conda-self is installed as a PyPI package
+    # and does not have its conda-meta/conda-self-*.json entry, which makes it
+    # invisible to PrefixData()... unless we enable interoperability.
+    installed = PrefixData(sys.prefix, interoperability=True)
     prefix_graph = PrefixGraph(installed.iter_records())
 
     packages = []
