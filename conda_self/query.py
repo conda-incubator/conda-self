@@ -69,10 +69,11 @@ def permanent_dependencies() -> set[str]:
     prefix_graph = PrefixGraph(installed.iter_records())
 
     packages = []
-    print(PERMANENT_PACKAGES)
     for pkg in PERMANENT_PACKAGES:
         node = next((rec for rec in prefix_graph.records if rec.name == pkg), None)
         if node:
-            packages.extend([record.name for record in prefix_graph.all_ancestors(node)])
-    print(packages)
+            packages.append(node.name)
+            packages.extend(
+                [record.name for record in prefix_graph.all_ancestors(node)]
+            )
     return set(packages)
