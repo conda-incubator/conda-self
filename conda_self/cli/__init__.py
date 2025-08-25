@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import argparse
 
+from . import main_reset, main_migrate
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
     from functools import partial
@@ -20,6 +21,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     from .main_reset import configure_parser as configure_parser_reset
     from .main_update import HELP as UPDATE_HELP
     from .main_update import configure_parser as configure_parser_update
+    from .main_migrate import configure_parser as configure_parser_migrate
+    from .main_migrate import HELP as migrate_HELP
 
     parser.add_argument(
         "-V",
