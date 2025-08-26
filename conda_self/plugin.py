@@ -22,9 +22,6 @@ def conda_subcommands() -> Iterable[plugins.CondaSubcommand]:
         configure_parser=configure_parser,
         summary="Manage your conda 'base' environment safely.",
     )
-
-@plugins.hookimpl
-def conda_subcommands() -> Iterable[plugins.CondaSubcommand]:
     yield plugins.CondaSubcommand(
         name="migrate",
         action=main_migrate.execute,
