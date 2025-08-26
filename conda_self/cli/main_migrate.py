@@ -12,7 +12,7 @@ HELP = "Migrate your `base` environment into a new  environment named `default` 
 WHAT_TO_EXPECT ="""
     This will:
 
-    1. Duplicate your base environment in a new environment named `default`.
+    1. Duplicate your base environment to a new environment named `{env_name}`.
     2. Reset the `base` environment to only the essential packages and plugins.
     3. Protect the `base` environment, which prevents you from making further changes to it 
        (this behavior can be overriden using the `--override-frozen` flag).
@@ -23,6 +23,25 @@ WHAT_TO_EXPECT ="""
     1. Accidental breakage of the conda installation    
     2. Bloated and complex environments
     """
+
+SUCCESS_MESSAGE=""" 
+    SUCCESS! 
+    The following operations were completed:
+
+    1. Duplication of your current `base` environment to `{env_name}`.
+    2. Resetting of the `base` to only the essential packages and plugins.
+    3. Protection of the `base` which prevents it from being modified (unless an override flag is used).
+    4. Activation your duplicate environment `{env_name}`.
+"""
+
+BEST_PRACTICES="""
+    BEST PRACTICES
+    Follow these tips for a smoother `conda` experience:
+
+    1. Do not modify the `base` environment.
+    2. Use a different environment for your work going forward.
+    3. Create a new environment for each new project.
+"""
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.description = HELP
@@ -50,7 +69,7 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import reset
 
-    print(WHAT_TO_EXPECT)
+    print(WHAT_TO_EXPECT.format(env_name=args.default_env))
 
     confirm_yn("Proceed with migrating your base environment?[y/n]:\n", default="no", dry_run=False)
 
@@ -107,4 +126,6 @@ def execute(args: argparse.Namespace) -> int:
     rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
     _write_rc(sys_rc_path, rc_config)
 
+    print(SUCCESS_MESSAGE.format(env_name=args.default_env))
+    print(BEST_PRACTICES)
     return 0
