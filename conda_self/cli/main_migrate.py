@@ -4,6 +4,7 @@ import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
+from conda.base.context import context
 from conda.cli.helpers import add_output_and_prompt_options
 from conda.reporters import confirm_yn
 
@@ -14,7 +15,7 @@ HELP = (
     "Protect `base` from accidental modifications and provide a modifiable copy "
     "that will be configured as default."
 )
-WHAT_TO_EXPECT = """
+WHAT_TO_EXPECT = dedent("""
     This will:
 
     1. Duplicate your `base` environment to a new environment named `{env_name}`.
@@ -27,9 +28,9 @@ WHAT_TO_EXPECT = """
 
     1. Accidental breakage of the conda installation
     2. Bloated and complex environments that are difficult to update
-    """
+    """).lstrip()
 
-SUCCESS_MESSAGE = """
+SUCCESS_MESSAGE = dedent("""
     SUCCESS!
     The following operations were completed:
 
@@ -38,7 +39,7 @@ SUCCESS_MESSAGE = """
     3. Protection of the `base` which prevents it from being modified
     (unless an override flag is used).
     4. Activation your duplicate environment `{env_name}`.
-"""
+""").lstrip()
 
 BEST_PRACTICES = dedent(
     """
@@ -84,7 +85,7 @@ def execute(args: argparse.Namespace) -> int:
     confirm_yn(
         "Proceed with migrating your base environment?[y/n]:\n",
         default="no",
-        dry_run=False,
+        dry_run=context.dry_run,
     )
 
     print("Protecting 'base' environment...")
