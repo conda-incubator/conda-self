@@ -39,14 +39,16 @@ SUCCESS_MESSAGE = """
     4. Activation your duplicate environment `{env_name}`.
 """
 
-BEST_PRACTICES = """
+BEST_PRACTICES = dedent(
+    """
     BEST PRACTICES
     Follow these tips for a smoother `conda` experience:
 
     1. Do not modify the `base` environment.
     2. Use a different environment for your work going forward.
     3. Create a new environment for each new project.
-"""
+    """
+).lstrip()
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
