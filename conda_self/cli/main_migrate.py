@@ -22,7 +22,6 @@ WHAT_TO_EXPECT = dedent("""
     2. Reset the `base` environment to only the essential packages and plugins.
     3. Protect the `base` environment, which prevents you from making further
        changes to it (this behavior can be overridden using `--override-frozen`).
-    4. Activate your duplicate environment.
 
     This helps prevent issues like:
 
