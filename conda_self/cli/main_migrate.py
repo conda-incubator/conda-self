@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 from conda.cli.helpers import add_output_and_prompt_options
