@@ -3,8 +3,8 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
-from conda.reporters import confirm_yn
 from conda.cli.helpers import add_output_and_prompt_options
+from conda.reporters import confirm_yn
 
 if TYPE_CHECKING:
     import argparse
