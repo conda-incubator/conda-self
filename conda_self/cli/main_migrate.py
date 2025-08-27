@@ -4,6 +4,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from conda.reporters import confirm_yn
+from conda.cli.helpers import add_output_and_prompt_options
 
 if TYPE_CHECKING:
     import argparse
@@ -56,6 +57,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         default="default",
         help="Name of the new default environment",
     )
+    add_output_and_prompt_options(parser)
     parser.set_defaults(func=execute)
 
 

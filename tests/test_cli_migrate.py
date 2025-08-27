@@ -16,7 +16,6 @@ def test_help(conda_cli):
 def test_protect(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
     # Set the root prefix to the temporary directory
     monkeypatch.setenv("CONDA_ROOT_PREFIX", str(tmpdir))
-    monkeypatch.setenv("CONDA_ALWAYS_YES", "True")
     # Make sure the envs dir exists in the temporary root prefix
     env_dir = tmpdir / "envs"
     env_dir.mkdir()
@@ -51,6 +50,7 @@ def test_protect(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
         "migrate",
         "--default-env",
         new_default_env,
+        "--yes",
     )
 
     # ensure a backup environment file was created
