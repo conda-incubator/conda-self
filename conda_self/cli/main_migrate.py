@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     import argparse
 
 HELP = (
-    "Migrate your `base` environment into a new  environment named `default`"
-    " and protect your base."
+    "Protect `base` from accidental modifications and provide a modifiable copy "
+    "that will be configured as default."
 )
 WHAT_TO_EXPECT = """
     This will:
