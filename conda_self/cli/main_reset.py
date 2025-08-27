@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
+from conda.base.context import context
 from conda.reporters import confirm_yn
 
 if TYPE_CHECKING:
@@ -18,7 +20,11 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import reset
 
-    confirm_yn("Proceed with protecting your base environment?[y/n]:\n", default="no", dry_run=False)
+    confirm_yn(
+        "Proceed with protecting your base environment?[y/n]:\n",
+        default="no",
+        dry_run=context.dry_run,
+    )
     print("Resetting 'base' environment...")
     uninstallable_packages = permanent_dependencies()
     reset(uninstallable_packages=uninstallable_packages)

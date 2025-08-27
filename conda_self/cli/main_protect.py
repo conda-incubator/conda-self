@@ -35,8 +35,6 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import reset
 
-    confirm_yn("Proceed with protecting your base environment?[y/n]:\n", default="no", dry_run=False)
-
     print("Protecting 'base' environment...")
     uninstallable_packages = permanent_dependencies()
 
