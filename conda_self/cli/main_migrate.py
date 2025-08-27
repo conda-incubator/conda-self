@@ -16,7 +16,7 @@ HELP = (
 WHAT_TO_EXPECT = """
     This will:
 
-    1. Duplicate your base environment to a new environment named `{env_name}`.
+    1. Duplicate your `base` environment to a new environment named `{env_name}`.
     2. Reset the `base` environment to only the essential packages and plugins.
     3. Protect the `base` environment, which prevents you from making further
     changes to it(this behavior can be overriden using `--override-frozen`).
