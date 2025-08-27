@@ -77,7 +77,8 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import reset
 
-    print(WHAT_TO_EXPECT.format(env_name=args.default_env))
+    if not context.quiet:
+        print(WHAT_TO_EXPECT.format(env_name=args.default_env))
 
     confirm_yn(
         "Proceed with migrating your base environment?[y/n]:\n",
