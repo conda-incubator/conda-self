@@ -25,7 +25,7 @@ WHAT_TO_EXPECT = """
     This helps prevent issues like:
 
     1. Accidental breakage of the conda installation
-    2. Bloated and complex environments
+    2. Bloated and complex environments that are difficult to update
     """
 
 SUCCESS_MESSAGE = """
