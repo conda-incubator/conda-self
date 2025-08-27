@@ -138,6 +138,7 @@ def execute(args: argparse.Namespace) -> int:
     rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
     _write_rc(sys_rc_path, rc_config)
 
-    print(SUCCESS_MESSAGE.format(env_name=args.default_env))
-    print(BEST_PRACTICES)
+    if not context.quiet:
+        print(SUCCESS_MESSAGE.format(env_name=args.default_env))
+        print(BEST_PRACTICES)
     return 0
