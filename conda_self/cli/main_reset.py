@@ -21,7 +21,7 @@ def execute(args: argparse.Namespace) -> int:
     from ..reset import reset
 
     confirm_yn(
-        "Proceed with protecting your base environment?[y/n]:\n",
+        "Proceed with resetting your 'base' environment?[y/n]:\n",
         default="no",
         dry_run=context.dry_run,
     )
