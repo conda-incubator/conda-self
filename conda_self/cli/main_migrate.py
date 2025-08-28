@@ -15,7 +15,8 @@ HELP = (
     "Protect `base` from accidental modifications and provide a modifiable copy "
     "that will be configured as default."
 )
-WHAT_TO_EXPECT = dedent("""
+WHAT_TO_EXPECT = dedent(
+    """
     This will:
 
     1. Duplicate your `base` environment to a new environment named `{env_name}`.
@@ -27,9 +28,10 @@ WHAT_TO_EXPECT = dedent("""
 
     1. Accidental breakage of the conda installation
     2. Bloated and complex environments that are difficult to update
-    """).lstrip()
-
-SUCCESS_MESSAGE = dedent("""
+    """
+).lstrip()
+SUCCESS_MESSAGE = dedent(
+    """
     SUCCESS!
     The following operations were completed:
 
@@ -38,8 +40,8 @@ SUCCESS_MESSAGE = dedent("""
     3. Protection of the `base` which prevents it from being modified
     (unless an override flag is used).
     4. Activation your duplicate environment `{env_name}`.
-""").lstrip()
-
+    """
+).lstrip()
 BEST_PRACTICES = dedent(
     """
     BEST PRACTICES
