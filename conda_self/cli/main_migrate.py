@@ -89,7 +89,8 @@ def execute(args: argparse.Namespace) -> int:
         dry_run=context.dry_run,
     )
 
-    print("Protecting 'base' environment...")
+    if not context.quiet:
+        print("Protecting 'base' environment...")
     uninstallable_packages = permanent_dependencies()
 
     # Ensure the destination default environment does not exist already
@@ -102,7 +103,7 @@ def execute(args: argparse.Namespace) -> int:
             "Remove existing environment?\nThis will remove ALL packages "
             "contained within this specified prefix directory.\n\n",
             default="no",
-            dry_run=False,
+            dry_run=context.dry_run,
         )
         reset(prefix=dest_prefix_data.prefix_path)
         rm_rf(dest_prefix_data.prefix_path)
@@ -113,7 +114,7 @@ def execute(args: argparse.Namespace) -> int:
             "but it is not a conda environment.\n"
             "Continue creating environment",
             default="no",
-            dry_run=False,
+            dry_run=context.dry_run,
         )
 
     src_prefix = sys.prefix
@@ -121,23 +122,27 @@ def execute(args: argparse.Namespace) -> int:
     # Take a snapshot of the current base environment by generating the explicit file.
     snapshot_filename = f"explicit.{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt"
     snapshot_dest = f"{src_prefix}/conda-meta/{snapshot_filename}"
-    print(f"Taking a snapshot of 'base' and saving it to '{snapshot_dest}'...")
+    if not context.quiet:
+        print(f"Taking a snapshot of 'base' and saving it to '{snapshot_dest}'...")
     with open(snapshot_dest, "w") as f:
         with redirect_stdout(f):
             print_explicit(src_prefix)
 
     # Clone the current base environment into the new default environment
-    print(f"Cloning 'base' environment into '{args.default_env}'...")
+    if not context.quiet:
+        print(f"Cloning 'base' environment into '{args.default_env}'...")
     dest_prefix = str(dest_prefix_data.prefix_path)
     clone_env(src_prefix, dest_prefix, verbose=False, quiet=True)
 
     # Reset the base environment
-    print("Resetting 'base' environment...")
+    if not context.quiet:
+        print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
 
     # Update the system level condarc default environment to point
     # to the new default environment
-    print(f"Updating default environment location to '{args.default_env}'")
+    if not context.quiet:
+        print(f"Updating default environment location to '{args.default_env}'")
     rc_config = _read_rc(sys_rc_path)
     rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
     _write_rc(sys_rc_path, rc_config)
