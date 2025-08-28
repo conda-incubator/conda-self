@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from conda.base.context import context
-from conda.reporters import confirm_yn
-
 if TYPE_CHECKING:
     import argparse
 
@@ -17,6 +14,9 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 
 def execute(args: argparse.Namespace) -> int:
+    from conda.base.context import context
+    from conda.reporters import confirm_yn
+
     from ..query import permanent_dependencies
     from ..reset import reset
 
