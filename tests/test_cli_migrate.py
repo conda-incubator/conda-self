@@ -9,7 +9,7 @@ import conda_self
 
 
 def test_help(conda_cli):
-    out, err, exc = conda_cli("self", "protect", "--help", raises=SystemExit)
+    out, err, exc = conda_cli("migrate", "--help", raises=SystemExit)
     assert exc.value.code == 0
 
 
@@ -47,10 +47,10 @@ def test_protect(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
     mocker.patch("conda.cli.main_list.print_explicit")
 
     out, err, exc = conda_cli(
-        "self",
-        "protect",
+        "migrate",
         "--default-env",
         new_default_env,
+        "--yes",
     )
 
     # ensure a backup environment file was created
