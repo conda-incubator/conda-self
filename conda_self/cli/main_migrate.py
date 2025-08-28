@@ -4,10 +4,6 @@ import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
-from conda.base.context import context
-from conda.cli.helpers import add_output_and_prompt_options
-from conda.reporters import confirm_yn
-
 if TYPE_CHECKING:
     import argparse
 
@@ -55,6 +51,8 @@ BEST_PRACTICES = dedent(
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
+    from conda.cli.helpers import add_output_and_prompt_options
+
     parser.description = HELP
     parser.add_argument(
         "--default-env",
@@ -70,12 +68,13 @@ def execute(args: argparse.Namespace) -> int:
     from contextlib import redirect_stdout
     from datetime import datetime
 
-    from conda.base.context import sys_rc_path
+    from conda.base.context import context, sys_rc_path
     from conda.cli.main_config import _read_rc, _write_rc
     from conda.cli.main_list import print_explicit
     from conda.core.prefix_data import PrefixData
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
+    from conda.reporters import confirm_yn
 
     from ..query import permanent_dependencies
     from ..reset import reset
