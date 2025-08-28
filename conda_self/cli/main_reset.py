@@ -9,7 +9,10 @@ HELP = "Reset 'base' environment to essential packages only."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
+    from conda.cli.helpers import add_output_and_prompt_options
+
     parser.description = HELP
+    add_output_and_prompt_options(parser)
     parser.set_defaults(func=execute)
 
 
@@ -25,7 +28,8 @@ def execute(args: argparse.Namespace) -> int:
         default="no",
         dry_run=context.dry_run,
     )
-    print("Resetting 'base' environment...")
+    if context.quiet:
+        print("Resetting 'base' environment...")
     uninstallable_packages = permanent_dependencies()
     reset(uninstallable_packages=uninstallable_packages)
 
