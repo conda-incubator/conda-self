@@ -12,8 +12,6 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     from .. import APP_NAME, APP_VERSION
     from .main_install import HELP as INSTALL_HELP
     from .main_install import configure_parser as configure_parser_install
-    from .main_protect import HELP as PROTECT_HELP
-    from .main_protect import configure_parser as configure_parser_protect
     from .main_remove import HELP as REMOVE_HELP
     from .main_remove import configure_parser as configure_parser_remove
     from .main_reset import HELP as RESET_HELP
@@ -35,7 +33,6 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     configure_parser_install(subparsers.add_parser("install", help=INSTALL_HELP))
-    configure_parser_protect(subparsers.add_parser("protect", help=PROTECT_HELP))
     configure_parser_remove(subparsers.add_parser("remove", help=REMOVE_HELP))
     configure_parser_reset(subparsers.add_parser("reset", help=RESET_HELP))
     configure_parser_update(subparsers.add_parser("update", help=UPDATE_HELP))
