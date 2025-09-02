@@ -12,16 +12,12 @@ WHAT_TO_EXPECT = dedent("""
 This will:
 1.Reset your `base` to ONLY contain `conda` (and its dependencies), `conda` plugins
 and `conda-self`.
-2.Protect the `base` from further modifications
-(unless the `--override-frozen` flag is used).
 """).lstrip()
 SUCCESS = dedent("""
 SUCCESS!
 The following operations were completed:
 
 1. Resetting of the `base` to only the essential packages and plugins.
-2. Protection of the `base` which prevents it from being modified
-(unless an override flag is used).
 """)
 
 
