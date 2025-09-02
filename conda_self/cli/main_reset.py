@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 HELP = "Reset 'base' environment to essential packages only."
 
 WHAT_TO_EXPECT = dedent(
-	"""
+    """
 	This will reset your `base` to ONLY contain `conda`, its plugins,
 	and their dependencies.
 	"""
 ).lstrip()
 SUCCESS = dedent(
-	"""
+    """
 	SUCCESS!
 	Reset the `base` environment to only the essential packages and plugins.
 	"""
