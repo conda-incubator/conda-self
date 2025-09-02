@@ -8,17 +8,18 @@ if TYPE_CHECKING:
 
 HELP = "Reset 'base' environment to essential packages only."
 
-WHAT_TO_EXPECT = dedent("""
-This will:
-1.Reset your `base` to ONLY contain `conda` (and its dependencies), `conda` plugins
-and `conda-self`.
-""").lstrip()
-SUCCESS = dedent("""
-SUCCESS!
-The following operations were completed:
-
-1. Resetting of the `base` to only the essential packages and plugins.
-""")
+WHAT_TO_EXPECT = dedent(
+	"""
+	This will reset your `base` to ONLY contain `conda`, its plugins,
+	and their dependencies.
+	"""
+).lstrip()
+SUCCESS = dedent(
+	"""
+	SUCCESS!
+	Reset the `base` environment to only the essential packages and plugins.
+	"""
+).lstrip()
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
