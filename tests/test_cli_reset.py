@@ -22,6 +22,7 @@ def test_reset(conda_cli, tmp_path):
     conda_cli(
         "self",
         "reset",
+        "--yes",
     )
 
     assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
@@ -40,7 +41,10 @@ def test_reset_conda_self_present(tmp_env: TmpEnvFixture):
         # the repo because the working directory happens to contain it. We should
         # actually 'pip install .' the repo but in this case we are lucky and don't
         # need to.
-        subprocess.run([str(python_bin), "-m", "conda", "self", "reset"], check=True)
+        subprocess.run(
+            [str(python_bin), "-m", "conda", "self", "reset", "--yes"],
+            check=True,
+        )
 
         # make sure conda-self didn't remove conda
         assert PrefixData(prefix).get("conda")
