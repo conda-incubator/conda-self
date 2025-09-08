@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import sys
+from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -59,6 +61,12 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         action="store",
         default="default",
         help="Name of the new default environment",
+    )
+    parser.add_argument(
+        "--message",
+        action="store",
+        default=None,
+        help="Message to add to the `conda-meta/frozen` file",
     )
     add_output_and_prompt_options(parser)
     parser.set_defaults(func=execute)
@@ -137,6 +145,14 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
+
+    # protect the base environment
+    if args.message:
+        Path(sys.prefix, "conda-meta", "frozen").write_text(
+            json.dumps({"message": args.message})
+        )
+    else:
+        Path(sys.prefix, "conda-meta", "frozen").touch()
 
     # Update the system level condarc default environment to point
     # to the new default environment
