@@ -1,6 +1,5 @@
 import subprocess
 import sys
-from pathlib import Path
 
 from conda.core.prefix_data import PrefixData
 from conda.testing.fixtures import TmpEnvFixture
@@ -11,26 +10,20 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
-def test_reset(conda_cli, tmp_path):
-    tmp_prefix = sys.prefix
+def test_reset(conda_cli, tmp_env: TmpEnvFixture):
+    with tmp_env("conda", "conda-self") as prefix:
+        assert len(tuple(PrefixData(prefix).query("numpy"))) == 0
 
-    # unprotect the environement if protected
-    if Path(tmp_prefix, "conda-meta", "frozen").exists():
-        Path(tmp_prefix, "conda-meta", "frozen").unlink()
+        conda_cli("install", "numpy", "--yes")
 
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
+        assert len(tuple(PrefixData(prefix).query("numpy"))) == 1
 
-    conda_cli("install", "numpy", "--yes")
-
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 1
-
-    conda_cli(
-        "self",
-        "reset",
-        "--yes",
-    )
-
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
+        conda_cli(
+            "self",
+            "reset",
+            "--yes",
+        )
+        assert len(tuple(PrefixData(prefix).query("numpy"))) == 0
 
 
 def test_reset_conda_self_present(tmp_env: TmpEnvFixture):

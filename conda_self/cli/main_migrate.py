@@ -148,11 +148,19 @@ def execute(args: argparse.Namespace) -> int:
 
     # protect the base environment
     if args.message:
-        Path(sys.prefix, "conda-meta", "frozen").write_text(
-            json.dumps({"message": args.message})
-        )
+        try:
+            Path(sys.prefix, "conda-meta", "frozen").write_text(
+                json.dumps({"message": args.message})
+            )
+        except OSError:
+            print("Environment could not be protected due to the following error: {e}")
+            return 0
     else:
-        Path(sys.prefix, "conda-meta", "frozen").touch()
+        try:
+            Path(sys.prefix, "conda-meta", "frozen").touch()
+        except OSError:
+            print("Environment could not be protected due to the following error: {e}")
+            return 0
 
     # Update the system level condarc default environment to point
     # to the new default environment
