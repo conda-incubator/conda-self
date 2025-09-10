@@ -1,5 +1,6 @@
 import subprocess
 import sys
+from pathlib import Path
 
 from conda.core.prefix_data import PrefixData
 from conda.testing.fixtures import TmpEnvFixture
@@ -12,6 +13,9 @@ def test_help(conda_cli):
 
 def test_reset(conda_cli, tmp_env: TmpEnvFixture):
     with tmp_env("conda", "conda-self") as prefix:
+        if Path(prefix, "conda-meta", "frozen").exists():
+            Path(prefix, "conda-meta", "frozen").unlink()
+
         assert len(tuple(PrefixData(prefix).query("numpy"))) == 0
 
         conda_cli("install", "numpy", "--yes")
