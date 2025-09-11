@@ -110,7 +110,6 @@ jobs:
           miniconda-version: ${{ runner.arch == 'ARM64' && 'latest' || null }}
           architecture: ${{ runner.arch }}
           channels: ${{ matrix.channel }}
-          auto-activate-base: true
           pkgs-dirs: ${{ env.CONDA_PKGS_DIR }}
 
       - name: Display conda info
@@ -123,9 +122,9 @@ jobs:
       - name: Install conda-self dependencies
         run: |
           # Install the same dependencies as environment.yml but with matrix-specific versions
-          conda install -n base --channel ${{ matrix.channel }} \
+          conda install --channel ${{ matrix.channel }} \
             python=${{ matrix.python-version }} \
-            conda>=${{ matrix.conda-version }} \
+            conda=${{ matrix.conda-version }} \
             pip \
             pytest \
             pytest-mock \
@@ -134,12 +133,13 @@ jobs:
 
       - name: Install conda-self in development mode
         run: |
-          python -m pip install -e . --no-deps
+          pip install -e . --no-deps
 
-      - name: Display installed packages
-        run: |
-          conda list
-          python -c "import conda_self; print(f'conda-self version: {conda_self.__version__}')"
+      - name: Conda Config
+        run: conda config --show-sources
+
+      - name: Conda List
+        run: conda list --show-channel-urls
 
       - name: Test conda-self plugin registration
         run: |
@@ -147,7 +147,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest -xvs --cov=conda_self --cov-report=xml tests/
+          pytest -xvs --cov=conda_self --cov-report=xml tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Determine Success
-        uses: re-actors/alls-green@v1
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           # permit jobs to be skipped if there are no code changes
           allowed-skips: ${{ toJSON(needs) }}
