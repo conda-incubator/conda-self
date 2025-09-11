@@ -152,7 +152,6 @@ jobs:
           --cov=conda_self
           --cov-report=xml
           --basetemp=${{ runner.temp }}
-          -n auto
           tests/
 
       - name: Upload coverage to Codecov
