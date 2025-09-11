@@ -128,7 +128,7 @@ jobs:
           pre-commit
 
       - name: Install self
-        run: pip install -e
+        run: pip install -e .
 
       - name: Conda Info
         # view test env info (not base)
