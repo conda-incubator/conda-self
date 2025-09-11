@@ -103,13 +103,13 @@ jobs:
           key: cache-${{ env.HASH }}
 
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@835234971496cad1653abb28a638a281cf32541f # v3.2.0
         with:
-          python-version: ${{ matrix.python-version }}
-          conda-version: ${{ matrix.conda-version }}
+          run-post: false  # skip post cleanup
+          # conda not preinstalled in arm64 runners
+          miniconda-version: ${{ runner.arch == 'ARM64' && 'latest' || null }}
+          architecture: ${{ runner.arch }}
           channels: ${{ matrix.channel }}
-          channel-priority: strict
-          activate-environment: ""
           auto-activate-base: true
           pkgs-dirs: ${{ env.CONDA_PKGS_DIR }}
 
@@ -167,10 +167,12 @@ jobs:
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
+          # conda not preinstalled in arm64 runners
+          miniconda-version: ${{ runner.arch == 'ARM64' && 'latest' || null }}
+          architecture: ${{ runner.arch }}
           python-version: "3.10"
           conda-version: "25.7"
           channels: conda-forge
-          activate-environment: ""
           auto-activate-base: true
 
       - name: Install linting dependencies
