@@ -49,6 +49,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CONDA_PKGS_DIR: ${{ matrix.os == 'windows-latest' && 'D:\conda_pkgs_dir' || '~/conda_pkgs_dir' }}
+      CONDA_INSTALL_DIR: ${{ matrix.os == 'windows-latest' && 'D:\conda' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -84,11 +85,11 @@ jobs:
 
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -el {0}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
@@ -96,7 +97,7 @@ jobs:
         run: echo "HASH=${{ runner.os }}-${{ runner.arch }}-Py${{ matrix.python-version }}-$(date -u "+%Y%m")" >> $GITHUB_ENV
 
       - name: Cache Conda
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           enableCrossOsArchive: true
           path: ${{ env.CONDA_PKGS_DIR }}
@@ -111,29 +112,27 @@ jobs:
           architecture: ${{ runner.arch }}
           channels: ${{ matrix.channel }}
           pkgs-dirs: ${{ env.CONDA_PKGS_DIR }}
-
-      - name: Display conda info
-        run: |
-          conda info
-          conda list
-          which conda
-          conda --version
+          installation-dir: ${{ env.CONDA_INSTALL_DIR }}
 
       - name: Install conda-self dependencies
-        run: |
-          # Install the same dependencies as environment.yml but with matrix-specific versions
-          conda install --channel ${{ matrix.channel }} \
+        run: >
+          conda install
+            --channel ${{ matrix.channel }} \
+            --override-channels \
             python=${{ matrix.python-version }} \
-            conda=${{ matrix.conda-version }} \
+            ${{ matrix.conda-version != 'latest' && format('conda={0}', matrix.conda-version) || ''}}
             pip \
             pytest \
             pytest-mock \
             pytest-cov \
             pre-commit
 
-      - name: Install conda-self in development mode
-        run: |
-          pip install -e . --no-deps
+      - name: Install self
+        run: pip install -e
+
+      - name: Conda Info
+        # view test env info (not base)
+        run: python -m conda info --verbose
 
       - name: Conda Config
         run: conda config --show-sources
@@ -142,12 +141,19 @@ jobs:
         run: conda list --show-channel-urls
 
       - name: Test conda-self plugin registration
-        run: |
-          conda self --help
+        run: conda self --help
 
       - name: Run tests
-        run: |
-          pytest -xvs --cov=conda_self --cov-report=xml tests/
+        # Windows is sensitive to long paths, using `--basetemp=${{ runner.temp }} to
+        # keep the test directories shorter
+        run: >
+          pytest
+          -xvs
+          --cov=conda_self
+          --cov-report=xml
+          --basetemp=${{ runner.temp }}
+          -n auto
+          tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -162,10 +168,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@835234971496cad1653abb28a638a281cf32541f # v3.2.0
         with:
           # conda not preinstalled in arm64 runners
           miniconda-version: ${{ runner.arch == 'ARM64' && 'latest' || null }}
@@ -173,12 +179,16 @@ jobs:
           python-version: "3.10"
           conda-version: "25.7"
           channels: conda-forge
-          auto-activate-base: true
 
       - name: Install linting dependencies
-        run: |
-          conda install -n base pre-commit
-          python -m pip install -e . --no-deps
+        run: >
+          conda install
+            --channel conda-forge \
+            --override-channels \
+            python=3.10 \
+            conda=25.7 \
+            pre-commit
+          pip install -e .
         shell: bash -l {0}
 
       - name: Run pre-commit
