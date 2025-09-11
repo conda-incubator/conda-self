@@ -42,7 +42,6 @@ jobs:
               - '.github/workflows/tests.yml'
 
   test:
-    name: Test (Python ${{ matrix.python-version }}, Conda ${{ matrix.conda-version }}, ${{ matrix.channel }})
     # only run test suite if there are code changes or it's a scheduled run
     needs: changes
     if: github.event_name == 'schedule' || needs.changes.outputs.code == 'true'
