@@ -117,15 +117,15 @@ jobs:
       - name: Install conda-self dependencies
         run: >
           conda install
-            --channel ${{ matrix.channel }} \
-            --override-channels \
-            python=${{ matrix.python-version }} \
-            ${{ matrix.conda-version != 'latest' && format('conda={0}', matrix.conda-version) || ''}}
-            pip \
-            pytest \
-            pytest-mock \
-            pytest-cov \
-            pre-commit
+          --channel ${{ matrix.channel }}
+          --override-channels
+          python=${{ matrix.python-version }}
+          ${{ matrix.conda-version != 'latest' && format('conda={0}', matrix.conda-version) || ''}}
+          pip
+          pytest
+          pytest-mock
+          pytest-cov
+          pre-commit
 
       - name: Install self
         run: pip install -e
@@ -183,12 +183,15 @@ jobs:
       - name: Install linting dependencies
         run: >
           conda install
-            --channel conda-forge \
-            --override-channels \
-            python=3.10 \
-            conda=25.7 \
+            --channel conda-forge
+            --override-channels
+            python=3.10
+            conda=25.7
             pre-commit
-          pip install -e .
+        shell: bash -l {0}
+
+      - name: Run pip
+        run: pip install -e .
         shell: bash -l {0}
 
       - name: Run pre-commit
