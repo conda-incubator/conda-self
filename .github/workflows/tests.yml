@@ -1,66 +1,197 @@
-name: conda-self tests
+name: Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+  merge_group:
+  schedule:
+    # Run tests daily at 8:24 AM UTC to catch regressions
+    - cron: '24 08 * * *'
 
 concurrency:
-  # Concurrency group that uses the workflow name and PR number if available
-  # or commit SHA as a fallback. If a new build is triggered under that
-  # concurrency group while a previous build is running it will be canceled.
-  # Repeated pushes to a PR will cancel all previous builds, while multiple
-  # merges to main will not cancel.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
-  tests:
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["39", "310", "311", "312"]
-        include:
-          - os: macos-13
-            python-version: "39"
-          - os: macos-14
-            python-version: "312"
-
+  # detect whether any code changes are included in this PR
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        if: github.event_name != 'pull_request'
+
+      - name: Filter Changes
+        uses: dorny/paths-filter@v3
+        id: filter
         with:
-          environments: test-py${{ matrix.python-version }}
-      - name: Ensure package is installed
-        run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
-      - name: Setup project
-        run: |
-          echo "channels: [conda-forge]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
-          pixi run --environment test-py${{ matrix.python-version }} conda info
-      - name: Run tests
-        run: pixi run --environment test-py${{ matrix.python-version }} test --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
+          filters: |
+            code:
+              - 'conda_self/**'
+              - 'tests/**'
+              - '*.py'
+              - 'environment-*.yml'
+              - 'recipe/**'
+              - '.github/workflows/tests.yml'
 
-  build-conda:
-    name: Build conda package (${{ matrix.os }})
+  test:
+    name: Test (Python ${{ matrix.python-version }}, Conda ${{ matrix.conda-version }}, ${{ matrix.channel }})
+    # only run test suite if there are code changes or it's a scheduled run
+    needs: changes
+    if: github.event_name == 'schedule' || needs.changes.outputs.code == 'true'
     runs-on: ${{ matrix.os }}
+    env:
+      CONDA_PKGS_DIR: ${{ matrix.os == 'windows-latest' && 'D:\conda_pkgs_dir' || '~/conda_pkgs_dir' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-    env:
-      PYTHONUNBUFFERED: "1"
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        conda-version: ["24.11", "25.1", "25.3", "25.5", "25.7"]
+        channel: ["conda-forge", "defaults"]
+        exclude:
+          # Windows: only test lowest and highest Python versions
+          - os: windows-latest
+            python-version: "3.10"
+          - os: windows-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.12"
+          # macOS: reduce matrix for faster CI
+          - os: macos-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.12"
+          # Older conda versions may not support Python 3.13
+          - conda-version: "24.11"
+            python-version: "3.13"
+          - conda-version: "25.1"
+            python-version: "3.13"
+          # Older conda versions: only test with conda-forge
+          - conda-version: "24.11"
+            channel: "defaults"
+          - conda-version: "25.1"
+            channel: "defaults"
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
+
+      - name: Hash + Timestamp
+        run: echo "HASH=${{ runner.os }}-${{ runner.arch }}-Py${{ matrix.python-version }}-$(date -u "+%Y%m")" >> $GITHUB_ENV
+
+      - name: Cache Conda
+        uses: actions/cache@v4
         with:
-          environments: build
-      - name: Build recipe
-        run: pixi run --environment build build
+          enableCrossOsArchive: true
+          path: ${{ env.CONDA_PKGS_DIR }}
+          key: cache-${{ env.HASH }}
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          conda-version: ${{ matrix.conda-version }}
+          channels: ${{ matrix.channel }}
+          channel-priority: strict
+          activate-environment: ""
+          auto-activate-base: true
+          pkgs-dirs: ${{ env.CONDA_PKGS_DIR }}
+
+      - name: Display conda info
+        run: |
+          conda info
+          conda list
+          which conda
+          conda --version
+
+      - name: Install conda-self dependencies
+        run: |
+          # Install the same dependencies as environment.yml but with matrix-specific versions
+          conda install -n base --channel ${{ matrix.channel }} \
+            python=${{ matrix.python-version }} \
+            conda>=${{ matrix.conda-version }} \
+            pip \
+            pytest \
+            pytest-mock \
+            pytest-cov \
+            pre-commit
+
+      - name: Install conda-self in development mode
+        run: |
+          python -m pip install -e . --no-deps
+
+      - name: Display installed packages
+        run: |
+          conda list
+          python -c "import conda_self; print(f'conda-self version: {conda_self.__version__}')"
+
+      - name: Test conda-self plugin registration
+        run: |
+          conda self --help
+
+      - name: Run tests
+        run: |
+          python -m pytest -xvs --cov=conda_self --cov-report=xml tests/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    needs: changes
+    if: github.event_name == 'schedule' || needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.10"
+          conda-version: "25.7"
+          channels: conda-forge
+          activate-environment: ""
+          auto-activate-base: true
+
+      - name: Install linting dependencies
+        run: |
+          conda install -n base pre-commit
+          python -m pip install -e . --no-deps
+        shell: bash -l {0}
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+        shell: bash -l {0}
+
+  # required check
+  analyze:
+    needs: [test, lint]
+    if: '!cancelled()'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Success
+        uses: re-actors/alls-green@v1
+        with:
+          # permit jobs to be skipped if there are no code changes
+          allowed-skips: ${{ toJSON(needs) }}
+          jobs: ${{ toJSON(needs) }}

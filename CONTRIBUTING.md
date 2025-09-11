@@ -1,77 +1,146 @@
 # How to Contribute
 
-## With `pixi`
+## Setup Development Environment
 
-1. Make sure `pixi` and `git` are installed. [Instructions for `pixi`](https://pixi.sh/latest/installation/).
-2. Clone this repository.
-```
-git clone https://github.com/conda-incubator/conda-self
-```
-3. Change to that directory.
-```
-cd conda-self
-```
-4. Run the help message.
-```
-pixi run conda self --help
-```
+This project uses conda's native capabilities for development and testing. Follow these steps to get started:
 
-We _could_ just use the default pixi env to try things, but it doesn't write a good `history` file, so `conda self` will misunderstand what to do and remove everything sometimes. For now, let's use this default conda to create a demo environment to do things with:
+### Prerequisites
 
-1. Create a demo environment with `conda` and `pip`.
-```
-pixi run conda create -p .pixi/envs/demo conda pip
-```
-2. `conda-spawn` is included in the pixi configuration, which you can use to pseudo-activate the environment:
-```
-pixi run conda spawn ./.pixi/envs/demo
-```
-If not, simply activate the environment.
-```
-conda activate .pixi/envs/demo
-```
-3. Install `conda-self` in it.
-```
-pip install -e .
-```
-4. Play with `python -m conda self`.
-   1. `python -m conda self update`
-   2. `python -m conda self install numpy`
-   3. `python -m conda self install conda-rich`
-   4. `python -m conda self remove conda-rich`
+**You must have conda installed before proceeding.**
 
-### Included Tasks
+- **conda** - Install [Miniforge](https://conda-forge.org/download/) (recommended) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main)
+- git
 
-1. `pixi run test` to run the tests. Choose your desired Python version by picking the adequate environment.
-2. `pixi run lint` to run the pre-commit linters and formatters.
-3. `pixi run docs` to build the docs and `pixi run serve` to serve them in your browser.
+> 💡 **Note**: All setup commands below require `conda` to be available in your PATH. If you just installed conda, you may need to restart your terminal or run `conda init` first.
 
-## With `conda` only
+### Quick Setup
 
-1. Fork and clone this repository.
-```
-git clone https://github.com/conda-incubator/conda-self
-```
-2. Change to that directory.
-```
+1. Fork and clone this repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/conda-self
 cd conda-self
 ```
 
-3. Create a `conda` environment with `python` and `pip` in it.
+2. Set up the development environment:
+```bash
+# Unix/Linux/macOS
+./scripts/setup.sh
+
+# Windows
+scripts\setup.bat
 ```
-conda create -n conda-self-dev python pip
-```
-4. Activate the environment and install `conda self`.
-```
+
+3. Activate the environment:
+```bash
 conda activate conda-self-dev
-conda install conda-self --only-deps
 ```
-5. `pip` install the package.
+
+4. Verify the installation works by testing the plugin:
+```bash
+python -m conda self --help
 ```
-python -m pip install -e . --no-deps
+
+### Manual Setup (Alternative)
+
+If you prefer to set up manually:
+
+1. Create and activate the conda environment:
+```bash
+conda env create -f environment-dev.yml
+conda activate conda-self-dev
 ```
-6. Play with `python -m conda self`
-   1. `python -m conda self install numpy`
-   2. `python -m conda self install conda-rich`
-   3. `python -m conda self update`
-   4. `python -m conda self remove conda-rich`
+
+2. The environment automatically installs the package in editable mode via pip.
+
+### Development Workflow
+
+#### Running Tests
+```bash
+# Unix/Linux/macOS
+./scripts/test.sh
+
+# Windows
+scripts\test.bat
+
+# Or manually:
+python -m pytest -xvs --cov=conda_self tests/
+```
+
+#### Running Linting
+```bash
+# Unix/Linux/macOS
+./scripts/lint.sh
+
+# Windows
+scripts\lint.bat
+
+# Or manually:
+pre-commit run --all-files
+```
+
+#### Building Documentation
+```bash
+# Unix/Linux/macOS
+./scripts/docs.sh
+
+# Windows
+scripts\docs.bat
+```
+
+#### Testing Your Changes
+
+**Method 1: Testing within development environment**
+```bash
+conda activate conda-self-dev
+
+# Test the module directly
+python -m conda self --help
+python -c "import conda_self; print('Version:', conda_self.__version__)"
+```
+
+**Method 2: Testing as a real conda plugin (recommended for full testing)**
+```bash
+# Install your development version in base environment
+conda activate base
+pip install -e /path/to/your/conda-self
+
+# Now you can use it as a real conda plugin
+conda self --help
+conda self update  # Update conda itself
+conda self install conda-auth  # Install a conda plugin (for private channel auth)
+conda self remove conda-auth   # Remove the plugin when done testing
+
+# When done testing, uninstall from base
+pip uninstall conda-self
+```
+
+**Method 3: Testing in isolated environment**
+```bash
+# Create a clean test environment with conda
+conda create -n test-env python conda pip
+conda activate test-env
+
+# Install your development version
+pip install -e /path/to/your/conda-self
+
+# Test using that environment's conda
+python -m conda self --help
+```
+
+### Environment Files
+
+- `environment-dev.yml` - Main development environment with testing tools
+- `environment-docs.yml` - Documentation building environment
+
+## Code Standards
+
+This project follows these standards:
+- Code formatting with `ruff`
+- Type checking with `mypy`
+- Testing with `pytest`
+- Pre-commit hooks for code quality
+
+All checks run automatically in CI, but please run them locally:
+```bash
+pre-commit run --all-files
+```

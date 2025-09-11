@@ -1,4 +1,5 @@
 name: Docs
+
 on:
   push:
     branches:
@@ -6,32 +7,85 @@ on:
     tags:
       - "*"
   pull_request:
-    paths:
-      - ".github/workflows/docs.yml"
-      - "docs/**"
+    branches:
+      - main
+  merge_group:
   workflow_dispatch:
 
 concurrency:
-  # Concurrency group that uses the workflow name and PR number if available
-  # or commit SHA as a fallback. If a new build is triggered under that
-  # concurrency group while a previous build is running it will be canceled.
-  # Repeated pushes to a PR will cancel all previous builds, while multiple
-  # merges to main will not cancel.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
-  docs:
+  # detect whether any doc changes are included in this PR
+  changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout Source
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        if: github.event_name != 'pull_request'
+
+      - name: Filter Changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - 'conda_self/**'
+              - '*.py'
+              - 'environment-docs.yml'
+              - 'pyproject.toml'
+              - '.github/workflows/docs.yml'
+
+  docs:
+    # only run docs build if there are relevant changes
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CONDA_PKGS_DIR: ~/conda_pkgs_dir
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
+
+      - name: Hash + Timestamp
+        run: echo "HASH=${{ runner.os }}-${{ runner.arch }}-docs-$(date -u "+%Y%m")" >> $GITHUB_ENV
+
+      - name: Cache Conda
+        uses: actions/cache@v4
         with:
-          environments: docs
+          enableCrossOsArchive: true
+          path: ${{ env.CONDA_PKGS_DIR }}
+          key: cache-docs-${{ env.HASH }}
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment-docs.yml
+          activate-environment: conda-self-docs
+          pkgs-dirs: ${{ env.CONDA_PKGS_DIR }}
+
+      - name: Display conda info
+        run: |
+          conda info
+          conda list
+          python -c "import conda_self; print(f'conda-self version: {conda_self.__version__}')"
+
       - name: Build docs
-        run: pixi run docs
+        run: |
+          cd docs
+          python -m sphinx.cmd.build -M dirhtml . _build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
@@ -39,7 +93,7 @@ jobs:
 
   pages:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     needs: [docs]
 
     # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -56,3 +110,16 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+
+  # required check for docs
+  analyze:
+    needs: [docs, pages]
+    if: '!cancelled()'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Success
+        uses: re-actors/alls-green@v1
+        with:
+          # permit jobs to be skipped if there are no relevant changes or deployment conditions aren't met
+          allowed-skips: ${{ toJSON(needs) }}
+          jobs: ${{ toJSON(needs) }}

@@ -3,12 +3,7 @@ ci:
   autofix_prs: false
 # generally speaking we ignore all vendored code as well as tests data
 # TODO: Restore index and solver exclude lines before merge
-exclude: |
-  (?x)^(
-    tests/data/ |
-    conda_self/_version.py |
-    pixi.lock
-  )$
+exclude: conda_self/_version.py
 repos:
   # generic verification and formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks

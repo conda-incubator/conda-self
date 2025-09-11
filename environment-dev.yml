@@ -1,0 +1,16 @@
+name: conda-self-dev
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.9
+  - conda >=24.5
+  - pip
+  # Testing dependencies
+  - pytest
+  - pytest-mock
+  - pytest-cov >=6.1.1,<7
+  # Linting dependencies
+  - pre-commit
+  # Development dependencies - install package in editable mode
+  - pip:
+    - -e .
