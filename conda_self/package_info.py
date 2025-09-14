@@ -6,10 +6,12 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from conda.models.records import PrefixRecord
+
 from .exceptions import NoDistInfoDirFound
 
 if TYPE_CHECKING:
-    from conda.models.records import PackageCacheRecord, PrefixRecord
+    from conda.models.records import PackageCacheRecord
 
 
 # This is required for reading entry point info from an extracted package
@@ -41,7 +43,10 @@ class PackageInfo:
         for path in paths:
             if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
                 dist_infos.add(maybe_dist_info)
-        basedir = getattr(record, "extracted_package_dir", sys.prefix)
+        if isinstance(record, PrefixRecord):
+            basedir = sys.prefix
+        else:
+            basedir = record.extracted_package_dir
         if not dist_infos:
             raise NoDistInfoDirFound(record.name, basedir)
         return [cls(Path(basedir, p)) for p in dist_infos]

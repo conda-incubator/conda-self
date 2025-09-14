@@ -13,13 +13,10 @@ def test_reset(conda_cli, tmp_env: TmpEnvFixture):
     with tmp_env("conda", "conda-self", "conda-index") as prefix:
         assert not is_installed(prefix, "numpy")
 
-        conda_cli_subprocess(prefix, "list", "--prefix", prefix)
         conda_cli("install", "numpy", "--yes", "--prefix", prefix)
         assert is_installed(prefix, "numpy")
-        conda_cli_subprocess(prefix, "list", "--prefix", prefix)
 
         conda_cli_subprocess(prefix, "self", "reset", "--yes")
-        conda_cli_subprocess(prefix, "list", "--prefix", prefix)
         # make sure conda-self didn't remove conda
         assert is_installed(prefix, "conda")
         # make sure conda-self didn't remove itself

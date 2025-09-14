@@ -69,11 +69,11 @@ def permanent_dependencies() -> set[str]:
     # In some dev environments, conda-self is installed as a PyPI package
     # and does not have its conda-meta/conda-self-*.json entry, which makes it
     # invisible to PrefixData()... unless we enable interoperability.
-    installed = PrefixData(sys.prefix, interoperability=True)
-    prefix_graph = PrefixGraph(installed.iter_records())
+    installed = list(PrefixData(sys.prefix, interoperability=True).iter_records())
+    prefix_graph = PrefixGraph(installed)
 
     protect = [*PERMANENT_PACKAGES]
-    for record in installed.iter_records():
+    for record in installed:
         with suppress(NoDistInfoDirFound):
             for pkg_info in PackageInfo.from_record(record):
                 if "conda" in pkg_info.entry_points():
