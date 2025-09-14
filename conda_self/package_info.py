@@ -35,10 +35,8 @@ class PackageInfo:
                     .splitlines()
                 )
             except FileNotFoundError:
-                # empty packages have no info/files manifest and that's ok
+                # missing info/files -> empty package
                 paths = []
-        if not paths:
-            return []
         dist_infos = set()
         for path in paths:
             if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
