@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import configparser
 import os
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .exceptions import NoDistInfoDirFound
 
 if TYPE_CHECKING:
-    from conda.models.records import PackageCacheRecord
+    from conda.models.records import PackageCacheRecord, PrefixRecord
 
 
 # This is required for reading entry point info from an extracted package
@@ -23,16 +24,22 @@ class PackageInfo:
         self.dist_info_path = dist_info_path
 
     @classmethod
-    def from_record(cls, record: PackageCacheRecord) -> list[PackageInfo]:
+    def from_record(
+        cls, record: PrefixRecord | PackageCacheRecord
+    ) -> list[PackageInfo]:
+        if not hasattr(record, "files"):
+            # PackageCacheRecord, use .from_conda_extracted_package_path
+            return cls.from_conda_extracted_package_path(record.extracted_package_dir)
+
+        # PrefixRecord (already installed) has in-memory metadata about its files
+        # Paths are relative to sys.prefix
         dist_infos = set()
         for path in record.files:
-            if record.name == "conda-index":
-                print(path, os.path.dirname(path))
             if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
                 dist_infos.add(maybe_dist_info)
         if len(dist_infos) == 0:
             raise NoDistInfoDirFound(record.extracted_package_dir)
-        return [cls(Path(record.extracted_package_dir, p)) for p in sorted(dist_infos)]
+        return [cls(Path(sys.prefix, p)) for p in sorted(dist_infos)]
 
     @classmethod
     def from_conda_extracted_package_path(cls, path: str | Path) -> list[PackageInfo]:
