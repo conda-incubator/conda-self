@@ -9,7 +9,8 @@ def test_help(conda_cli):
 
 
 def test_reset(conda_cli, tmp_env: TmpEnvFixture):
-    with tmp_env("conda", "conda-self") as prefix:
+    # Adding conda-index too to test that non-default plugins are kept
+    with tmp_env("conda", "conda-self", "conda-index") as prefix:
         assert not is_installed(prefix, "numpy")
 
         conda_cli("install", "numpy", "--yes", "--prefix", prefix)
@@ -20,5 +21,7 @@ def test_reset(conda_cli, tmp_env: TmpEnvFixture):
         assert is_installed(prefix, "conda")
         # make sure conda-self didn't remove itself
         assert is_installed(prefix, "conda-self")
+        # make sure conda-self didn't remove a non-default conda plugin
+        assert is_installed(prefix, "conda-index")
         # but numpy should be gone
         assert not is_installed(prefix, "numpy")

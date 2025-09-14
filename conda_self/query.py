@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from conda.base.context import context
@@ -17,6 +18,8 @@ from conda.models.prefix_graph import PrefixGraph
 from conda.models.version import VersionOrder
 
 from .constants import PERMANENT_PACKAGES
+from .exceptions import NoDistInfoDirFound
+from .package_info import PackageInfo
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -69,8 +72,16 @@ def permanent_dependencies() -> set[str]:
     installed = PrefixData(sys.prefix, interoperability=True)
     prefix_graph = PrefixGraph(installed.iter_records())
 
+    protect = [*PERMANENT_PACKAGES]
+    for record in installed.iter_records():
+        with suppress(NoDistInfoDirFound):
+            for pkg_info in PackageInfo.from_record(record):
+                if "conda" in pkg_info.entry_points():
+                    protect.append(record.name)
+                    break
+
     packages = []
-    for pkg in PERMANENT_PACKAGES:
+    for pkg in dict.fromkeys(protect):
         node = next((rec for rec in prefix_graph.records if rec.name == pkg), None)
         if node:
             packages.append(node.name)

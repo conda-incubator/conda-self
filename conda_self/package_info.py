@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import configparser
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -18,20 +19,26 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
 
 class PackageInfo:
     def __init__(self, dist_info_path: Path):
-        """Describe the dist-info for a conda package"""
+        """Describe the dist-info for a Python package installed as a conda package"""
         self.dist_info_path = dist_info_path
 
     @classmethod
     def from_record(cls, record: PackageCacheRecord) -> list[PackageInfo]:
-        return cls.from_conda_extracted_package_path(record.extracted_package_dir)
+        dist_infos = set()
+        for path in record.files:
+            if record.name == "conda-index":
+                print(path, os.path.dirname(path))
+            if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
+                dist_infos.add(maybe_dist_info)
+        if len(dist_infos) == 0:
+            raise NoDistInfoDirFound(record.extracted_package_dir)
+        return [cls(Path(record.extracted_package_dir, p)) for p in sorted(dist_infos)]
 
     @classmethod
     def from_conda_extracted_package_path(cls, path: str | Path) -> list[PackageInfo]:
         """Create a PackageInfo object given the path to an extracted conda package"""
         path = Path(path)
-        matching_paths = [
-            p for p in path.rglob("**/*site-packages/*dist-info*") if p.is_dir()
-        ]
+        matching_paths = [p for p in path.rglob("**/site-packages/*.dist-info/")]
         if len(matching_paths) == 0:
             raise NoDistInfoDirFound(path)
         return [cls(matching_path) for matching_path in matching_paths]
