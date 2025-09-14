@@ -74,8 +74,8 @@ def execute(args: argparse.Namespace) -> int:
     import sys
     from contextlib import redirect_stdout
     from datetime import datetime
-    from pathlib import Path
 
+    from conda.base.constants import PREFIX_FROZEN_FILE
     from conda.base.context import context, sys_rc_path
     from conda.cli.main_config import _read_rc, _write_rc
     from conda.cli.main_list import print_explicit
@@ -149,12 +149,11 @@ def execute(args: argparse.Namespace) -> int:
 
     # protect the base environment
     try:
+        frozen_path = PrefixData(sys.prefix).prefix_path / PREFIX_FROZEN_FILE
         if args.message:
-            Path(sys.prefix, "conda-meta", "frozen").write_text(
-                json.dumps({"message": args.message})
-            )
+            frozen_path.write_text(json.dumps({"message": args.message}))
         else:
-            Path(sys.prefix, "conda-meta", "frozen").touch()
+            frozen_path.touch()
     except OSError as e:
         raise CondaOSError(f"Environment could not be protected: {e}") from e
 
