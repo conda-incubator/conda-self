@@ -27,28 +27,26 @@ class PackageInfo:
     def from_record(
         cls, record: PrefixRecord | PackageCacheRecord
     ) -> list[PackageInfo]:
-        if not hasattr(record, "files"):
-            # PackageCacheRecord, use .from_conda_extracted_package_path
-            return cls.from_conda_extracted_package_path(record.extracted_package_dir)
-
-        # PrefixRecord (already installed) has in-memory metadata about its files
-        # Paths are relative to sys.prefix
+        if not (paths := getattr(record, "files", None)):
+            try:
+                paths = (
+                    Path(record.extracted_package_dir, "info/files")
+                    .read_text()
+                    .splitlines()
+                )
+            except FileNotFoundError:
+                # empty packages have no info/files manifest and that's ok
+                paths = []
+        if not paths:
+            return []
         dist_infos = set()
-        for path in record.files:
+        for path in paths:
             if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
                 dist_infos.add(maybe_dist_info)
-        if len(dist_infos) == 0:
-            raise NoDistInfoDirFound(record.extracted_package_dir)
-        return [cls(Path(sys.prefix, p)) for p in sorted(dist_infos)]
-
-    @classmethod
-    def from_conda_extracted_package_path(cls, path: str | Path) -> list[PackageInfo]:
-        """Create a PackageInfo object given the path to an extracted conda package"""
-        path = Path(path)
-        matching_paths = [p for p in path.rglob("**/site-packages/*.dist-info/")]
-        if len(matching_paths) == 0:
-            raise NoDistInfoDirFound(path)
-        return [cls(matching_path) for matching_path in matching_paths]
+        basedir = getattr(record, "extracted_package_dir", sys.prefix)
+        if not dist_infos:
+            raise NoDistInfoDirFound(record.name, basedir)
+        return [cls(Path(basedir, p)) for p in dist_infos]
 
     def entry_points(self) -> dict[str, dict[str, str]]:
         """Get the entry points for a package.
