@@ -13,7 +13,7 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
-def test_protect(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
+def test_migrate(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
     # Set the root prefix to the temporary directory
     monkeypatch.setenv("CONDA_ROOT_PREFIX", str(tmpdir))
     # Make sure the envs dir exists in the temporary root prefix
@@ -69,3 +69,5 @@ def test_protect(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
     conda.cli.main_config._write_rc.assert_called_once_with(
         sys_rc_path, {"default_activation_env": str(default_activation_env_path)}
     )
+    # ensure the base was protected
+    assert Path(sys.prefix, "conda-meta", "frozen").exists()

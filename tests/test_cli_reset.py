@@ -1,8 +1,6 @@
-import subprocess
-import sys
-
-from conda.core.prefix_data import PrefixData
 from conda.testing.fixtures import TmpEnvFixture
+
+from conda_self.testing import conda_cli_subprocess, is_installed
 
 
 def test_help(conda_cli):
@@ -10,43 +8,17 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
-def test_reset(conda_cli, tmp_path):
-    tmp_prefix = sys.prefix
-
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
-
-    conda_cli("install", "numpy", "--yes")
-
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 1
-
-    conda_cli(
-        "self",
-        "reset",
-        "--yes",
-    )
-
-    assert len(tuple(PrefixData(tmp_prefix).query("numpy"))) == 0
-
-
-def test_reset_conda_self_present(tmp_env: TmpEnvFixture):
+def test_reset(conda_cli, tmp_env: TmpEnvFixture):
     with tmp_env("conda", "conda-self") as prefix:
-        # platform is "win32" even in win64 machines
-        if sys.platform == "win32":
-            python_bin = prefix / "python.exe"
-        else:
-            python_bin = prefix / "bin" / "python"
+        assert not is_installed(prefix, "numpy")
 
-        PrefixData._cache_.clear()
-        # Note: Running python -m conda self incidentally loads 'conda_self' from
-        # the repo because the working directory happens to contain it. We should
-        # actually 'pip install .' the repo but in this case we are lucky and don't
-        # need to.
-        subprocess.run(
-            [str(python_bin), "-m", "conda", "self", "reset", "--yes"],
-            check=True,
-        )
+        conda_cli("install", "numpy", "--yes", "--prefix", prefix)
+        assert is_installed(prefix, "numpy")
 
+        conda_cli_subprocess(prefix, "self", "reset", "--yes")
         # make sure conda-self didn't remove conda
-        assert PrefixData(prefix).get("conda")
+        assert is_installed(prefix, "conda")
         # make sure conda-self didn't remove itself
-        assert PrefixData(prefix).get("conda-self")
+        assert is_installed(prefix, "conda-self")
+        # but numpy should be gone
+        assert not is_installed(prefix, "numpy")

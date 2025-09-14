@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -60,18 +59,28 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         default="default",
         help="Name of the new default environment",
     )
+    parser.add_argument(
+        "--message",
+        action="store",
+        default=None,
+        help="Optional message to add to the `conda-meta/frozen` file",
+    )
     add_output_and_prompt_options(parser)
     parser.set_defaults(func=execute)
 
 
 def execute(args: argparse.Namespace) -> int:
+    import json
+    import sys
     from contextlib import redirect_stdout
     from datetime import datetime
 
+    from conda.base.constants import PREFIX_FROZEN_FILE
     from conda.base.context import context, sys_rc_path
     from conda.cli.main_config import _read_rc, _write_rc
     from conda.cli.main_list import print_explicit
     from conda.core.prefix_data import PrefixData
+    from conda.exceptions import CondaOSError
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
     from conda.reporters import confirm_yn
@@ -137,6 +146,16 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
+
+    # protect the base environment
+    try:
+        frozen_path = PrefixData(sys.prefix).prefix_path / PREFIX_FROZEN_FILE
+        if args.message:
+            frozen_path.write_text(json.dumps({"message": args.message}))
+        else:
+            frozen_path.touch()
+    except OSError as e:
+        raise CondaOSError(f"Environment could not be protected: {e}") from e
 
     # Update the system level condarc default environment to point
     # to the new default environment
