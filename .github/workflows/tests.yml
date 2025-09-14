@@ -46,10 +46,10 @@ jobs:
       - name: Run tests
         run: >
           pixi run
-            --environment test-py${{ matrix.python-version }}
-            test
-            -vv
-            --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
+          --environment test-py${{ matrix.python-version }}
+          test
+          -vv
+          --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
 
   build-conda:
     name: Build conda package (${{ matrix.os }})
