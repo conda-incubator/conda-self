@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import json
-import sys
-from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -66,20 +63,24 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         "--message",
         action="store",
         default=None,
-        help="Message to add to the `conda-meta/frozen` file",
+        help="Optional message to add to the `conda-meta/frozen` file",
     )
     add_output_and_prompt_options(parser)
     parser.set_defaults(func=execute)
 
 
 def execute(args: argparse.Namespace) -> int:
+    import json
+    import sys
     from contextlib import redirect_stdout
     from datetime import datetime
+    from pathlib import Path
 
     from conda.base.context import context, sys_rc_path
     from conda.cli.main_config import _read_rc, _write_rc
     from conda.cli.main_list import print_explicit
     from conda.core.prefix_data import PrefixData
+    from conda.exceptions import CondaOSError
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
     from conda.reporters import confirm_yn
@@ -147,20 +148,15 @@ def execute(args: argparse.Namespace) -> int:
     reset(uninstallable_packages=uninstallable_packages)
 
     # protect the base environment
-    if args.message:
-        try:
+    try:
+        if args.message:
             Path(sys.prefix, "conda-meta", "frozen").write_text(
                 json.dumps({"message": args.message})
             )
-        except OSError:
-            print("Environment could not be protected due to the following error: {e}")
-            return 0
-    else:
-        try:
+        else:
             Path(sys.prefix, "conda-meta", "frozen").touch()
-        except OSError:
-            print("Environment could not be protected due to the following error: {e}")
-            return 0
+    except OSError as e:
+        raise CondaOSError(f"Environment could not be protected: {e}") from e
 
     # Update the system level condarc default environment to point
     # to the new default environment
