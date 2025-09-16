@@ -113,14 +113,10 @@ pre-commit = 'pre-commit'
 lint = 'pre-commit'
 
 [tool.pixi.feature.test]
-channels = [
-  "conda-forge",  # Force it for tests, pytest-cov not available in defaults
-]
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
 pytest-mock = "*"
 pre-commit = "*"
-pytest-cov = ">=6.1.1,<7"
 
 [tool.pixi.feature.py39.dependencies]
 python = "3.9.*"
