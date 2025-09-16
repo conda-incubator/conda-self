@@ -45,7 +45,6 @@ jobs:
       - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
         with:
           environments: test-py${{ matrix.python-version }}
-          locked: ${{ matrix.channel != 'defaults' }}
       - name: Ensure package is installed
         run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
       - name: Setup project
