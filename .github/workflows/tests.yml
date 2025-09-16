@@ -53,7 +53,12 @@ jobs:
           echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
           pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
-        run: pixi run --environment test-py${{ matrix.python-version }} test --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
+        run: >
+          pixi run
+          --environment test-py${{ matrix.python-version }}
+          test
+          -vv
+          --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
 
   build-conda:
     name: Build conda package (${{ matrix.os }})
