@@ -37,9 +37,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Patch channels in pixi config
+        if: matrix.channel == 'defaults'
+        shell: bash
+        run: |
+          sed -i.bak 's|channels = ["conda-forge"]|channels = ["defaults"]|g' pyproject.toml
       - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
         with:
           environments: test-py${{ matrix.python-version }}
+          frozen: ${{ matrix.channel != 'defaults' }}
+          locked: ${{ matrix.channel != 'defaults' }}
       - name: Ensure package is installed
         run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
       - name: Setup project
