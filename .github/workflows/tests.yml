@@ -19,12 +19,13 @@ concurrency:
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}
+    name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        channel: [defaults, conda-forge]
         python-version: ["39", "310", "311", "312"]
         include:
           - os: macos-13
@@ -41,7 +42,7 @@ jobs:
         run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
       - name: Setup project
         run: |
-          echo "channels: [conda-forge]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
+          echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
           pixi run --environment test-py${{ matrix.python-version }} conda info
       - name: Run tests
         run: pixi run --environment test-py${{ matrix.python-version }} test --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
