@@ -37,7 +37,6 @@ version-file = "conda_self/_version.py"
 [project.entry-points.conda]
 "conda-self" = "conda_self.plugin"
 
-
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 omit = ["conda_self/_version.py"]
@@ -76,7 +75,6 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 [tool.pixi.dependencies]
 python = ">=3.9"
 conda = ">=25.5"
-conda-spawn = "*" # not a requirement, but useful for local experimentation
 
 [tool.pixi.tasks]
 conda = { cmd = "python -m conda", env = { CONDA_CHANNELS = "conda-forge" } }
@@ -90,7 +88,7 @@ tasks = { build = "conda build recipe" }
 
 [tool.pixi.feature.docs]
 channels = [
-  "conda-forge",
+  "conda-forge",  # Force it for docs, not available in defaults
 ]
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "python -m sphinx.cmd.build -M dirhtml . _build", cwd = "docs" }

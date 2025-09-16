@@ -51,7 +51,7 @@ jobs:
       - name: Setup project
         run: |
           echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
-          pixi run --environment test-py${{ matrix.python-version }} conda info
+          pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
         run: pixi run --environment test-py${{ matrix.python-version }} test --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
 
