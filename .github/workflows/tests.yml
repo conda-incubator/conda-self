@@ -19,21 +19,30 @@ concurrency:
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}
+    name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        channel: [defaults, conda-forge]
         python-version: ["39", "310", "311", "312"]
         include:
           - os: macos-13
+            channel: defaults
             python-version: "39"
           - os: macos-14
+            channel: conda-forge
             python-version: "312"
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Patch channels in pixi config
+        if: matrix.channel == 'defaults'
+        shell: bash
+        run: |
+          sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
+          rm pixi.lock
       - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
         with:
           environments: test-py${{ matrix.python-version }}
@@ -41,8 +50,8 @@ jobs:
         run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
       - name: Setup project
         run: |
-          echo "channels: [conda-forge]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
-          pixi run --environment test-py${{ matrix.python-version }} conda info
+          echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
+          pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
         run: pixi run --environment test-py${{ matrix.python-version }} test --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
 
