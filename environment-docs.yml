@@ -1,0 +1,20 @@
+name: conda-self-docs
+channels:
+  - conda-forge
+dependencies:
+  - python =3.12
+  - conda >=24.5
+  - pip
+  # Documentation dependencies
+  - conda-sphinx-theme
+  - linkify-it-py
+  - myst-parser
+  - sphinx
+  - sphinx-copybutton
+  - sphinx-design
+  - sphinx-reredirects
+  - sphinx-sitemap
+  - sphinxcontrib-programoutput
+  # Install package for docs
+  - pip:
+    - -e .
