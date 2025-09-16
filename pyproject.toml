@@ -20,7 +20,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy"
 ]
 dependencies = [
-  # "conda >=23.9.0",
+  # "conda >=25.5.0",
 ]
 dynamic = ["version"]
 
@@ -75,7 +75,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
 python = ">=3.9"
-conda = ">=23.9"
+conda = ">=25.5"
 conda-spawn = "*" # not a requirement, but useful for local experimentation
 
 [tool.pixi.tasks]
