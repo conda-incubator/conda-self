@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from conda.models.records import PackageRecord
 
 
-def conda_cli_subprocess(prefix: str | Path, *args) -> CompletedProcess:
+def conda_cli_subprocess(prefix: str | Path, *args, **kwargs) -> CompletedProcess:
     prefix = Path(prefix)
     if os.name == "nt":
         python = prefix / "python.exe"
@@ -23,9 +23,8 @@ def conda_cli_subprocess(prefix: str | Path, *args) -> CompletedProcess:
 
     return run(
         [python, "-m", "conda", *args],
-        check=True,
-        capture_output=True,
-        text=True,
+        check=kwargs.pop("check", True),
+        **kwargs,
     )
 
 

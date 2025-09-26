@@ -19,5 +19,7 @@ class SpecsCanNotBeRemoved(CondaError):
 
 
 class NoDistInfoDirFound(CondaError):
-    def __init__(self, path: str | Path):
-        super().__init__(f"No *.dist-info directories found in {path}.")
+    def __init__(self, package_name: str, path: str | Path):
+        super().__init__(
+            f"No *.dist-info directories found for '{package_name}' in '{path}'."
+        )
