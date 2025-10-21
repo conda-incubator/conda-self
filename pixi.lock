@@ -4994,8 +4994,8 @@ packages:
   timestamp: 1751548225624
 - pypi: ./
   name: conda-self
-  version: 0.1.2.dev35+gbfe0a9015.d20250916
-  sha256: c84c60d57a2ceafa4a995146c641e0bb39d93068e20f848dd51ddd2cb7eec583
+  version: 0.1.2.dev28+g67cefaaa9
+  sha256: 0882b06b818008f8eef2d6c5e2a3ea46762f79bc277240b1e50037e2f6fae9a1
   requires_python: '>=3.9'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/conda-sphinx-theme-0.3.0-pyhd8ed1ab_1.conda
