@@ -28,10 +28,10 @@ jobs:
         channel: [defaults, conda-forge]
         python-version: ["39", "310", "311", "312"]
         include:
-          - os: macos-13
+          - os: macos-15-intel
             channel: defaults
             python-version: "39"
-          - os: macos-14
+          - os: macos-latest
             channel: conda-forge
             python-version: "312"
 
@@ -43,7 +43,7 @@ jobs:
         run: |
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
           rm pixi.lock
-      - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
+      - uses: prefix-dev/setup-pixi@194d461b21b6c5717c722ffc597fa91ed2ff29fa # v0.9.1
         with:
           environments: test-py${{ matrix.python-version }}
       - name: Ensure package is installed
@@ -66,14 +66,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
     env:
       PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@fef5c9568ca6c4ff7707bf840ab0692ba3f08293 # v0.9.0
+      - uses: prefix-dev/setup-pixi@194d461b21b6c5717c722ffc597fa91ed2ff29fa # v0.9.1
         with:
           environments: build
       - name: Build recipe

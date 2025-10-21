@@ -35,18 +35,17 @@ def test_help(conda_cli):
     ),
 )
 def test_update_conda(conda_cli, mocker, latest_version, message):
-    if latest_version != conda_version:
-        mocker.patch.object(
-            query,
-            "latest",
-            return_value=PackageRecord(
-                name="conda",
-                version=latest_version,
-                build="0",
-                build_number=0,
-                channel=Channel("conda-forge"),
-            ),
-        )
+    mocker.patch.object(
+        query,
+        "latest",
+        return_value=PackageRecord(
+            name="conda",
+            version=latest_version,
+            build="0",
+            build_number=0,
+            channel=Channel("conda-forge"),
+        ),
+    )
     out, err, exc = conda_cli("self", "update", "--dry-run", raises=DryRunExit)
     assert f"Installed conda: {conda_version}" in out
     assert message in out
