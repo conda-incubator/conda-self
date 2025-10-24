@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 from conda import __version__ as conda_version
 from conda.exceptions import CondaValueError, DryRunExit
@@ -51,7 +49,6 @@ def test_update_conda(conda_cli, mocker, latest_version, message):
     assert message in out
 
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Only supported in Py312+")
 @pytest.mark.parametrize(
     "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
 )
