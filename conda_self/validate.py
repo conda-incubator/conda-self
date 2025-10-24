@@ -1,18 +1,23 @@
 import sys
 from functools import cache
-from importlib.metadata import entry_points
 
 from conda.exceptions import CondaValueError
+
+if sys.version_info >= (3, 12):
+    from importlib.metadata import entry_points
+else:
+    from importlib_metadata import entry_points
 
 
 @cache
 def conda_plugin_packages():
-    if sys.version_info < (3, 12):
-        raise RuntimeError("This function requires Python 3.12+")
+    # Both Python 3.12+ and importlib-metadata support ep.dist
+    # but the return type and attributes differ slightly
     return set(
         name
         for ep in entry_points(group="conda")
-        if (name := ep.dist.name.strip())  # EntryPoint.dist() only available in py312+
+        if ep.dist is not None
+        and (name := ep.dist.name.strip())
         and name != "conda-self"
     )
 
