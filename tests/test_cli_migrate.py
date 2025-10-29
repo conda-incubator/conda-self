@@ -13,6 +13,17 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
+def test_help_base(conda_cli):
+    out, err, exc = conda_cli("migrate", "base", "--help", raises=SystemExit)
+    assert exc.value.code == 0
+
+
+def test_list(conda_cli):
+    out, err, exc = conda_cli("migrate", "--list")
+    assert "Available migration tasks:" in out
+    assert "base" in out
+
+
 def test_migrate(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
     # Set the root prefix to the temporary directory
     monkeypatch.setenv("CONDA_ROOT_PREFIX", str(tmpdir))
@@ -48,6 +59,7 @@ def test_migrate(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
 
     out, err, exc = conda_cli(
         "migrate",
+        "base",
         "--default-env",
         new_default_env,
         "--yes",
