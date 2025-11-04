@@ -11,6 +11,21 @@ def install_package_in_protected_env(
     force_reinstall: bool = False,
     json: bool = False,
 ) -> int:
+    return install_package_list_in_protected_env(
+        {package_name: package_version},
+        channel,
+        force_reinstall,
+        json,
+    )
+
+
+def install_package_list_in_protected_env(
+    packages: dict[str, str],
+    channel: str,
+    force_reinstall: bool = False,
+    json: bool = False,
+) -> int:
+    specs = [f"{name}={version}" for name, version in packages.items()]
     process = run(
         [
             sys.executable,
@@ -28,7 +43,7 @@ def install_package_in_protected_env(
             "--update-specs",
             "--override-channels",
             f"--channel={channel}",
-            f"{package_name}={package_version}",
+            *specs,
         ]
     )
     return process.returncode
