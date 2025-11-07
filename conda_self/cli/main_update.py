@@ -36,8 +36,6 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 
 def execute(args: argparse.Namespace) -> int:
-    import sys
-
     from conda.base.context import context
     from conda.exceptions import DryRunExit
     from conda.reporters import get_spinner
