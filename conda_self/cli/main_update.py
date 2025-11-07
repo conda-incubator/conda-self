@@ -59,7 +59,7 @@ def execute(args: argparse.Namespace) -> int:
     for package_name in package_names:
         with get_spinner(f"Checking updates for {package_name}"):
             update_available, installed, latest = check_updates(
-                package_name, sys.prefix
+                package_name, context.root_prefix
             )
         if not channel:
             channel = installed.channel
