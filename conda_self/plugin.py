@@ -26,5 +26,5 @@ def conda_subcommands() -> Iterable[plugins.CondaSubcommand]:
         name="migrate",
         action=main_migrate.execute,
         configure_parser=main_migrate.configure_parser,
-        summary="Protect and migrate your 'base' environment to a new one.",
+        summary="Perform migration tasks for conda environments and configuration.",
     )
