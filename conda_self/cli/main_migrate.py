@@ -86,9 +86,9 @@ def execute(args: argparse.Namespace) -> int:
     from conda.misc import clone_env
     from conda.reporters import confirm_yn
 
+    from ..constants import RESET_FILE_MIGRATE
     from ..query import permanent_dependencies
     from ..reset import reset
-    from .main_reset import RESET_FILE_MIGRATE
 
     if not context.quiet:
         print(WHAT_TO_EXPECT.format(env_name=args.default_env))
