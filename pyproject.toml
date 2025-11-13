@@ -75,7 +75,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
 python = ">=3.9"
-conda = ">=25.5"
+conda = ">=25.7.0"
 
 [tool.pixi.tasks]
 conda = { cmd = "python -m conda", env = { CONDA_CHANNELS = "conda-forge" } }
