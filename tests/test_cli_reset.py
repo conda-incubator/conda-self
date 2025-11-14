@@ -1,14 +1,19 @@
-from conda.testing.fixtures import TmpEnvFixture
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from conda_self.testing import conda_cli_subprocess, is_installed
 
+if TYPE_CHECKING:
+    from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 
-def test_help(conda_cli):
+
+def test_help(conda_cli: CondaCLIFixture):
     out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
     assert exc.value.code == 0
 
 
-def test_reset(conda_cli, tmp_env: TmpEnvFixture):
+def test_reset(conda_cli: CondaCLIFixture, tmp_env: TmpEnvFixture):
     # Adding conda-index too to test that non-default plugins are kept
     with tmp_env("conda", "conda-self", "conda-index") as prefix:
         assert not is_installed(prefix, "numpy")
