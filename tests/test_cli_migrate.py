@@ -53,8 +53,9 @@ def test_migrate(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
         "--yes",
     )
 
-    # ensure a backup environment file was created
-    conda.cli.main_list.print_explicit.assert_called_once_with(sys.prefix)
+    # ensure a backup environment file and the migrate lock file were created
+    conda.cli.main_list.print_explicit.assert_called_with(sys.prefix)
+    assert conda.cli.main_list.print_explicit.call_count == 2
 
     # ensure the base environment was cloned to the new env
     conda.misc.clone_env.assert_called_once_with(
