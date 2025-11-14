@@ -11,7 +11,6 @@ from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
     from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
-    from pytest_mock import MockFixture
 
 
 def test_help(conda_cli: CondaCLIFixture):
@@ -38,16 +37,8 @@ def test_reset(conda_cli: CondaCLIFixture, tmp_env: TmpEnvFixture):
         assert not is_installed(prefix, "numpy")
 
 
-def test_reset_migrate(
-    conda_cli: CondaCLIFixture, mocker: MockFixture, tmp_env: TmpEnvFixture
-):
+def test_reset_migrate(conda_cli: CondaCLIFixture, tmp_env: TmpEnvFixture):
     conda_version = "25.7.0"
-
-    # mock conda.misc.clone_env so we don't create a new environment as part of the test
-    mocker.patch("conda.misc.clone_env")
-    # Do not change the .condarc file
-    mocker.patch("conda.cli.main_config._read_rc", return_value={})
-    mocker.patch("conda.cli.main_config._write_rc")
 
     with tmp_env(f"conda={conda_version}", "conda-self") as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE
