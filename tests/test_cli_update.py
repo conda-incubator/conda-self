@@ -60,6 +60,28 @@ def test_update_conda(conda_cli, mocker, latest_version, message):
     assert message in out
 
 
+def test_update_deps(conda_cli: CondaCLIFixture, mocker: MockerFixture):
+    mocker.patch.object(
+        query,
+        "latest",
+        return_value=PackageRecord(
+            name="conda",
+            version=conda_version,
+            build="0",
+            build_number=0,
+            channel=Channel("conda-forge"),
+        ),
+    )
+    message = (
+        "conda is using the latest version available, "
+        "but may have updateable dependencies."
+    )
+    out, err, exc = conda_cli(
+        "self", "update", "--dry-run", "--update-deps", raises=DryRunExit
+    )
+    assert message in out
+
+
 @pytest.mark.parametrize(
     "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
 )
