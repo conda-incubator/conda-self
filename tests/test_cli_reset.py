@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from contextlib import redirect_stdout
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,7 @@ from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
     from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
+    from pytest import MonkeyPatch
 
 
 def test_help(conda_cli: CondaCLIFixture):
@@ -37,8 +39,13 @@ def test_reset(conda_cli: CondaCLIFixture, tmp_env: TmpEnvFixture):
         assert not is_installed(prefix, "numpy")
 
 
-def test_reset_migrate(conda_cli: CondaCLIFixture, tmp_env: TmpEnvFixture):
+def test_reset_migrate(
+    conda_cli: CondaCLIFixture, monkeypatch: MonkeyPatch, tmp_env: TmpEnvFixture
+):
     conda_version = "25.7.0"
+    monkeypatch.setenv(
+        "CONDA_CHANNELS", os.environ.get("CONDA_SELF_TEST_CHANNEL", "conda-forge")
+    )
 
     with tmp_env(f"conda={conda_version}", "conda-self") as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE

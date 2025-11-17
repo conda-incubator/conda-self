@@ -53,6 +53,8 @@ jobs:
           echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
           pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
+        env:
+          CONDA_SELF_TEST_CHANNEL: ${{ matrix.channel }}
         run: >
           pixi run
           --environment test-py${{ matrix.python-version }}
