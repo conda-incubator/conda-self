@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
-def test_help(conda_cli):
+def test_help(conda_cli: CondaCLIFixture):
     out, err, exc = conda_cli("self", "update", "--help", raises=SystemExit)
     assert exc.value.code == 0
 
@@ -43,7 +43,9 @@ def test_help(conda_cli):
         ),
     ),
 )
-def test_update_conda(conda_cli, mocker, latest_version, message):
+def test_update_conda(
+    conda_cli: CondaCLIFixture, mocker: MockerFixture, latest_version: str, message: str
+):
     mocker.patch.object(
         query,
         "latest",
@@ -60,10 +62,34 @@ def test_update_conda(conda_cli, mocker, latest_version, message):
     assert message in out
 
 
+def test_update_deps(conda_cli: CondaCLIFixture, mocker: MockerFixture):
+    mocker.patch.object(
+        query,
+        "latest",
+        return_value=PackageRecord(
+            name="conda",
+            version=conda_version,
+            build="0",
+            build_number=0,
+            channel=Channel("conda-forge"),
+        ),
+    )
+    message = (
+        "conda is using the latest version available, "
+        "but may have updateable dependencies."
+    )
+    out, err, exc = conda_cli(
+        "self", "update", "--dry-run", "--update-deps", raises=DryRunExit
+    )
+    assert message in out
+
+
 @pytest.mark.parametrize(
     "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
 )
-def test_update_plugin(conda_cli, plugin_name, ok):
+def test_update_plugin(
+    conda_cli: CondaCLIFixture, plugin_name: str, ok: tuple[str, bool]
+):
     conda_cli(
         "self",
         "update",
