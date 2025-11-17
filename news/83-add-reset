@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Add option to reset protected environment to installer-provided or post-migration state. (#54, #55 via #83)
+* Add option to reset protected environment to installer-provided or post-migration state. (#54 via #83)
 
 ### Bug fixes
 
