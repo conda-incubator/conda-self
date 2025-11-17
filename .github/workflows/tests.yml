@@ -77,4 +77,4 @@ jobs:
         with:
           environments: build
       - name: Build recipe
-        run: pixi run --environment build build
+        run: pixi run --environment build build --channel conda-forge
