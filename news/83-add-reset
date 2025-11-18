@@ -1,6 +1,7 @@
 ### Enhancements
 
-* Add option to reset protected environment to installer-provided or post-migration state. (#54, #55 via #83)
+* Add option to reset protected environment to installer-provided or post-migration state. (#54 via #83)
+* Change `conda self reset` to try to reset to the post-migration state or the installer-provided state by default. (#55 via #83)
 
 ### Bug fixes
 
