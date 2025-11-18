@@ -54,7 +54,7 @@ jobs:
           pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
         env:
-          CONDA_CHANNEL: ${{ matrix.channel }}
+          TEST_CONDA_CHANNEL: ${{ matrix.channel }}
         run: >
           pixi run
           --environment test-py${{ matrix.python-version }}

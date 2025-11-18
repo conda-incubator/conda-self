@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
     from pytest import MonkeyPatch
 
-CONDA_CHANNEL = os.environ.get("CONDA_CHANNEL", "conda-forge")
+CONDA_CHANNEL = os.environ.get("TEST_CONDA_CHANNEL", "conda-forge")
 # Ensure that the Python version is the same in all environments
 # to avoid ABI incompatibilities between the python version in the
 # current working directory and the test environments.
