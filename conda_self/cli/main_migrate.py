@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -85,6 +86,7 @@ def execute(args: argparse.Namespace) -> int:
     from conda.misc import clone_env
     from conda.reporters import confirm_yn
 
+    from ..constants import RESET_FILE_MIGRATE
     from ..query import permanent_dependencies
     from ..reset import reset
 
@@ -129,10 +131,10 @@ def execute(args: argparse.Namespace) -> int:
 
     # Take a snapshot of the current base environment by generating the explicit file.
     snapshot_filename = f"explicit.{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.txt"
-    snapshot_dest = f"{src_prefix}/conda-meta/{snapshot_filename}"
+    snapshot_dest = Path(src_prefix, "conda-meta", snapshot_filename)
     if not context.quiet:
         print(f"Taking a snapshot of 'base' and saving it to '{snapshot_dest}'...")
-    with open(snapshot_dest, "w") as f:
+    with snapshot_dest.open(mode="w") as f:
         with redirect_stdout(f):
             print_explicit(src_prefix)
 
@@ -146,6 +148,12 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
+
+    # Save the state after migration to allow users to reset to post-migration state
+    migrate_state = Path(src_prefix, "conda-meta", RESET_FILE_MIGRATE)
+    with migrate_state.open(mode="w") as f:
+        with redirect_stdout(f):
+            print_explicit(src_prefix)
 
     # protect the base environment
     try:
