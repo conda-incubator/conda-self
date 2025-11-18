@@ -5,6 +5,7 @@ import sys
 from contextlib import redirect_stdout
 from typing import TYPE_CHECKING
 
+import pytest
 from conda.base.constants import PREFIX_FROZEN_FILE
 from conda.cli.main_list import print_explicit
 
@@ -50,8 +51,12 @@ def test_reset(
         assert not is_installed(prefix, "numpy")
 
 
+@pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--reset-to"))
 def test_reset_migrate(
-    conda_cli: CondaCLIFixture, monkeypatch: MonkeyPatch, tmp_env: TmpEnvFixture
+    add_cli_arg: bool,
+    conda_cli: CondaCLIFixture,
+    monkeypatch: MonkeyPatch,
+    tmp_env: TmpEnvFixture,
 ):
     conda_version = "25.7.0"
     monkeypatch.setenv("CONDA_CHANNELS", CONDA_CHANNEL)
@@ -82,6 +87,12 @@ def test_reset_migrate(
         assert is_installed(prefix, "constructor")
 
         # Conda should be downgraded and constructor should be gone
-        conda_cli_subprocess(prefix, "self", "reset", "--yes", "--reset-to", "migrate")
+        conda_cli_subprocess(
+            prefix,
+            "self",
+            "reset",
+            "--yes",
+            *(("--reset-to", "migrate") if add_cli_arg else ()),
+        )
         assert is_installed(prefix, f"conda={conda_version}"), "conda not reset"
         assert not is_installed(prefix, "constructor")
