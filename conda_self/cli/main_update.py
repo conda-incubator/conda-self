@@ -77,7 +77,7 @@ def execute(args: argparse.Namespace) -> int:
             if not update_available and args.update_deps:
                 print(
                     f"{package_name} is using the latest version available, "
-                    "but may have updateable dependencies."
+                    "but may have outdated dependencies."
                 )
             updates[package_name] = latest.version
 

@@ -76,7 +76,7 @@ def test_update_deps(conda_cli: CondaCLIFixture, mocker: MockerFixture):
     )
     message = (
         "conda is using the latest version available, "
-        "but may have updateable dependencies."
+        "but may have outdated dependencies."
     )
     out, err, exc = conda_cli(
         "self", "update", "--dry-run", "--update-deps", raises=DryRunExit
