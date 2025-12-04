@@ -3,9 +3,11 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
+from boltons.setutils import IndexedSet
 from conda.base.context import context
 from conda.core.link import PrefixSetup, UnlinkLinkTransaction
 from conda.core.prefix_data import PrefixData
+from conda.core.solve import diff_for_unlink_link_precs
 from conda.gateways.disk.read import yield_lines
 from conda.misc import get_package_records_from_explicit
 
@@ -16,28 +18,25 @@ if TYPE_CHECKING:
 def reset(
     prefix: str = sys.prefix,
     uninstallable_packages: set[str] = set(),
-    reset_to: Path | None = None,
+    snapshot: Path | None = None,
 ):
-    installed = sorted(PrefixData(prefix).iter_records(), key=lambda x: x.name)
-    if reset_to:
-        reset_to_content = list(yield_lines(reset_to))
-        packages_in_reset_env = sorted(
-            get_package_records_from_explicit(reset_to_content), key=lambda x: x.name
+    if snapshot:
+        snapshot_content = list(yield_lines(snapshot))
+        packages_in_reset_env = IndexedSet(
+            get_package_records_from_explicit(snapshot_content)
         )
-        packages_to_remove = [
-            package for package in installed if package not in packages_in_reset_env
-        ]
-        packages_to_install = [
-            package for package in packages_in_reset_env if package not in installed
-        ]
+        packages_to_remove, packages_to_install = diff_for_unlink_link_precs(
+            prefix, packages_in_reset_env
+        )
         if not packages_to_remove and not packages_to_install:
             print("Environment is already reset")
             return
     else:
-        packages_to_remove = [
+        installed = sorted(PrefixData(prefix).iter_records(), key=lambda x: x.name)
+        packages_to_remove = tuple(
             pkg for pkg in installed if pkg.name not in uninstallable_packages
-        ]
-        packages_to_install = []
+        )
+        packages_to_install = ()
 
     stp = PrefixSetup(
         target_prefix=prefix,

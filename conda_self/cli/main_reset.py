@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 HELP = "Reset 'base' environment to essential packages only."
-RESET_TO_HELP = dedent(
+SNAPSHOT_HELP = dedent(
     """
     State to reset the `base` environment to.
     `current_snapshot` removes all packages except for `conda`, its plugins,
@@ -58,7 +58,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--snapshot",
         choices=("current", "installer", "migrate"),
-        help=RESET_TO_HELP,
+        help=SNAPSHOT_HELP,
     )
     parser.set_defaults(func=execute)
 
@@ -112,7 +112,7 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
     uninstallable_packages = permanent_dependencies() if not reset_file else set()
-    reset(uninstallable_packages=uninstallable_packages, reset_to=reset_file)
+    reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
 
     if not context.quiet:
         if state:
