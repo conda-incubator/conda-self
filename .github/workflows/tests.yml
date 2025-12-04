@@ -29,10 +29,10 @@ jobs:
         python-version: ["310", "311", "312", "313"]
         include:
           - os: macos-15-intel
-            channel: defaults
+            channel: conda-forge
             python-version: "310"
           - os: macos-latest
-            channel: conda-forge
+            channel: defaults
             python-version: "313"
 
     steps:
