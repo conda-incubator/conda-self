@@ -51,7 +51,7 @@ def test_reset(
         assert not is_installed(prefix, "numpy")
 
 
-@pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--reset-to"))
+@pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--snapshot"))
 def test_reset_migrate(
     add_cli_arg: bool,
     conda_cli: CondaCLIFixture,
@@ -92,7 +92,7 @@ def test_reset_migrate(
             "self",
             "reset",
             "--yes",
-            *(("--reset-to", "migrate") if add_cli_arg else ()),
+            *(("--snapshot", "migrate") if add_cli_arg else ()),
         )
         assert is_installed(prefix, f"conda={conda_version}"), "conda not reset"
         assert not is_installed(prefix, "constructor")

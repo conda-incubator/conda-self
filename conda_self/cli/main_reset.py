@@ -56,8 +56,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.description = HELP
     add_output_and_prompt_options(parser)
     parser.add_argument(
-        "--reset-to",
-        choices=("current_snapshot", "installer", "migrate"),
+        "--snapshot",
+        choices=("current", "installer", "migrate"),
         help=RESET_TO_HELP,
     )
     parser.set_defaults(func=execute)
@@ -87,20 +87,20 @@ def execute(args: argparse.Namespace) -> int:
 
     reset_file: Path | None = None
     state = ""
-    if not args.reset_to:
+    if not args.snapshot:
         for state in ("migrate", "installer"):
             if not reset_data[state]["file_path"].exists():
                 continue
             reset_file = reset_data[state]["file_path"]
             state = reset_data[state]["state_name"]
             break
-    elif args.reset_to == "installer" or args.reset_to == "migrate":
-        reset_file = reset_data[args.reset_to]["file_path"]
-        state = reset_data[args.reset_to]["state_name"]
+    elif args.snapshot == "installer" or args.snapshot == "migrate":
+        reset_file = reset_data[args.snapshot]["file_path"]
+        state = reset_data[args.snapshot]["state_name"]
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{args.reset_to}`. "
+            f"Failed to reset to `{args.snapshot}`. "
             f"Required file {reset_file} not found."
         )
 
@@ -112,7 +112,6 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
     uninstallable_packages = permanent_dependencies() if not reset_file else set()
-    print(f"{reset_file=}")
     reset(uninstallable_packages=uninstallable_packages, reset_to=reset_file)
 
     if not context.quiet:
