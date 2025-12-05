@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 HELP = "Reset 'base' environment to essential packages only."
 SNAPSHOT_HELP = dedent(
     """
-    State to reset the `base` environment to.
-    `current_snapshot` removes all packages except for `conda`, its plugins,
+    Snapshot to reset the `base` environment to.
+    `snapshot` removes all packages except for `conda`, its plugins,
     and their dependencies.
     `installer` resets the `base` environment to the state provided
     by the installer.
