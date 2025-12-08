@@ -30,7 +30,8 @@ def reset(
         )
         if not packages_to_remove and not packages_to_install:
             print(
-                "Nothing to do. Packages in target environment match the selected snapshot."
+                "Nothing to do. "
+                "Packages in target environment match the selected snapshot."
             )
             return
     else:
