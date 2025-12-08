@@ -29,7 +29,7 @@ def reset(
             prefix, packages_in_reset_env
         )
         if not packages_to_remove and not packages_to_install:
-            print("Environment is already reset")
+            print("Nothing to do. Packages in target environment match the selected snapshot.")
             return
     else:
         installed = sorted(PrefixData(prefix).iter_records(), key=lambda x: x.name)
