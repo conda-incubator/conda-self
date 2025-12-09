@@ -78,9 +78,7 @@ def test_update_deps(conda_cli: CondaCLIFixture, mocker: MockerFixture):
         "conda is using the latest version available, "
         "but may have outdated dependencies."
     )
-    out, err, exc = conda_cli(
-        "self", "update", "--dry-run", "--update-deps", raises=DryRunExit
-    )
+    out, err, exc = conda_cli("self", "update", "--dry-run", "--all", raises=DryRunExit)
     assert message in out
 
 
@@ -109,8 +107,14 @@ def test_update_plugin(
                 "conda-libmamba-solver": clms_version,
             },
             (
-                "conda is already using the latest version available!",
-                "conda-libmamba-solver is already using the latest version available!",
+                (
+                    "conda is already using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
+                (
+                    "conda-libmamba-solver is already using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
             ),
             id="No updates",
         ),
@@ -120,7 +124,10 @@ def test_update_plugin(
                 "conda-libmamba-solver": "2080",
             },
             (
-                "conda is already using the latest version available!",
+                (
+                    "conda is already using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
                 "Latest conda-libmamba-solver: 2080",
             ),
             id="Update one",

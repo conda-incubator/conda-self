@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Allow updating dependencies using the `--update-deps` flag. (#80 via #84)
+* Expand `conda self update --all` to also update all dependencies. (#80 via #84)
 
 ### Bug fixes
 
