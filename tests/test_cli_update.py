@@ -62,26 +62,6 @@ def test_update_conda(
     assert message in out
 
 
-def test_update_deps(conda_cli: CondaCLIFixture, mocker: MockerFixture):
-    mocker.patch.object(
-        query,
-        "latest",
-        return_value=PackageRecord(
-            name="conda",
-            version=conda_version,
-            build="0",
-            build_number=0,
-            channel=Channel("conda-forge"),
-        ),
-    )
-    message = (
-        "conda is using the latest version available, "
-        "but may have outdated dependencies."
-    )
-    out, err, exc = conda_cli("self", "update", "--dry-run", "--all", raises=DryRunExit)
-    assert message in out
-
-
 @pytest.mark.parametrize(
     "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
 )
@@ -108,11 +88,11 @@ def test_update_plugin(
             },
             (
                 (
-                    "conda is already using the latest version "
+                    "conda is using the latest version "
                     "available, but may have outdated dependencies."
                 ),
                 (
-                    "conda-libmamba-solver is already using the latest version "
+                    "conda-libmamba-solver is using the latest version "
                     "available, but may have outdated dependencies."
                 ),
             ),
@@ -125,7 +105,7 @@ def test_update_plugin(
             },
             (
                 (
-                    "conda is already using the latest version "
+                    "conda is using the latest version "
                     "available, but may have outdated dependencies."
                 ),
                 "Latest conda-libmamba-solver: 2080",

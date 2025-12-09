@@ -30,7 +30,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     update_group.add_argument(
         "--all",
         action="store_true",
-        help="Update conda and all plugins.",
+        help="Update conda, all plugins, and dependencies.",
     )
     parser.set_defaults(func=execute)
 
