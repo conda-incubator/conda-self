@@ -9,9 +9,9 @@ if TYPE_CHECKING:
     import argparse
     from typing import TypedDict
 
-    class StateData(TypedDict):
+    class SnapshotData(TypedDict):
         file_path: Path
-        state_name: str
+        snapshot_name: str
 
 
 HELP = "Reset 'base' environment to essential packages only."
@@ -20,12 +20,12 @@ SNAPSHOT_HELP = dedent(
     Snapshot to reset the `base` environment to.
     `snapshot` removes all packages except for `conda`, its plugins,
     and their dependencies.
-    `installer` resets the `base` environment to the state provided
+    `installer` resets the `base` environment to the snapshot provided
     by the installer.
-    `migrate` resets the `base` environment to the state after the last
+    `migrate` resets the `base` environment to the snapshot after the last
     `conda migrate` command run.
 
-    If not set, `conda self` will try to reset to the post-migration state first,
+    If not set, `conda self` will try to reset to the post-migration snapshot first,
     then to the installer-provided, and finally to the current snapshot.
     """
 ).lstrip()
@@ -42,10 +42,10 @@ SUCCESS = dedent(
     Reset the `base` environment to only the essential packages and plugins.
     """
 ).lstrip()
-SUCCESS_STATE = dedent(
+SUCCESS_SNAPSHOT = dedent(
     """
     SUCCESS!
-    Reset the `base` environment to {state} state.
+    Reset the `base` environment to {snapshot} snapshot.
     """
 ).lstrip()
 
@@ -74,29 +74,29 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print(WHAT_TO_EXPECT)
 
-    reset_data: dict[str, StateData] = {
+    reset_data: dict[str, SnapshotData] = {
         "installer": {
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
-            "state_name": "installer-provided",
+            "snapshot_name": "installer-provided",
         },
         "migrate": {
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_MIGRATE),
-            "state_name": "post-migration",
+            "snapshot_name": "post-migration",
         },
     }
 
     reset_file: Path | None = None
-    state = ""
+    snapshot = ""
     if not args.snapshot:
-        for state in ("migrate", "installer"):
-            if not reset_data[state]["file_path"].exists():
+        for snapshot in ("migrate", "installer"):
+            if not reset_data[snapshot]["file_path"].exists():
                 continue
-            reset_file = reset_data[state]["file_path"]
-            state = reset_data[state]["state_name"]
+            reset_file = reset_data[snapshot]["file_path"]
+            snapshot = reset_data[snapshot]["snapshot_name"]
             break
     elif args.snapshot in reset_data:
         reset_file = reset_data[args.snapshot]["file_path"]
-        state = reset_data[args.snapshot]["state_name"]
+        snapshot = reset_data[args.snapshot]["snapshot_name"]
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
@@ -105,8 +105,8 @@ def execute(args: argparse.Namespace) -> int:
         )
 
     prompt = "Proceed with resetting your 'base' environment"
-    if state:
-        prompt += f" to the {state} snapshot"
+    if snapshot:
+        prompt += f" to the {snapshot} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.quiet:
@@ -115,8 +115,8 @@ def execute(args: argparse.Namespace) -> int:
     reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
 
     if not context.quiet:
-        if state:
-            print(SUCCESS_STATE.format(state=state))
+        if snapshot:
+            print(SUCCESS_SNAPSHOT.format(snapshot=snapshot))
         else:
             print(SUCCESS)
 
