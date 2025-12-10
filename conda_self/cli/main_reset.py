@@ -45,7 +45,7 @@ SUCCESS = dedent(
 SUCCESS_SNAPSHOT = dedent(
     """
     SUCCESS!
-    Reset the `base` environment to {snapshot} snapshot.
+    Reset the `base` environment to {snapshot_name} snapshot.
     """
 ).lstrip()
 
@@ -86,17 +86,18 @@ def execute(args: argparse.Namespace) -> int:
     }
 
     reset_file: Path | None = None
-    snapshot = ""
+    snapshot_name = ""
     if not args.snapshot:
         for snapshot in ("migrate", "installer"):
-            if not reset_data[snapshot]["file_path"].exists():
+            snapshot_data = reset_data[snapshot]
+            if not snapshot_data["file_path"].exists():
                 continue
-            reset_file = reset_data[snapshot]["file_path"]
-            snapshot = reset_data[snapshot]["snapshot_name"]
+            reset_file = snapshot_data["file_path"]
+            snapshot_name = snapshot_data["snapshot_name"]
             break
     elif args.snapshot in reset_data:
         reset_file = reset_data[args.snapshot]["file_path"]
-        snapshot = reset_data[args.snapshot]["snapshot_name"]
+        snapshot_name = reset_data[args.snapshot]["snapshot_name"]
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
@@ -105,8 +106,8 @@ def execute(args: argparse.Namespace) -> int:
         )
 
     prompt = "Proceed with resetting your 'base' environment"
-    if snapshot:
-        prompt += f" to the {snapshot} snapshot"
+    if snapshot_name:
+        prompt += f" to the {snapshot_name} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.quiet:
@@ -115,8 +116,8 @@ def execute(args: argparse.Namespace) -> int:
     reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
 
     if not context.quiet:
-        if snapshot:
-            print(SUCCESS_SNAPSHOT.format(snapshot=snapshot))
+        if snapshot_name:
+            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot_name))
         else:
             print(SUCCESS)
 
