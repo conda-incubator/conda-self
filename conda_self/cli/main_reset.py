@@ -22,8 +22,8 @@ SNAPSHOT_HELP = dedent(
     and their dependencies.
     `installer` resets the `base` environment to the state provided
     by the installer.
-    `migrate` resets the `base` environment to state after the last
-    `conda self migrate` command.
+    `migrate` resets the `base` environment to the state after the last
+    `conda migrate` command run.
 
     If not set, `conda self` will try to reset to the post-migration state first,
     then to the installer-provided, and finally to the current snapshot.
@@ -94,19 +94,19 @@ def execute(args: argparse.Namespace) -> int:
             reset_file = reset_data[state]["file_path"]
             state = reset_data[state]["state_name"]
             break
-    elif args.snapshot == "installer" or args.snapshot == "migrate":
+    elif args.snapshot in reset_data:
         reset_file = reset_data[args.snapshot]["file_path"]
         state = reset_data[args.snapshot]["state_name"]
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{args.snapshot}`. "
+            f"Failed to reset to `{args.snapshot}`.\n"
             f"Required file {reset_file} not found."
         )
 
     prompt = "Proceed with resetting your 'base' environment"
     if state:
-        prompt += f" to the {state} state"
+        prompt += f" to the {state} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.quiet:
