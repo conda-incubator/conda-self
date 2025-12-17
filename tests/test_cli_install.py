@@ -1,11 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 from conda.exceptions import DryRunExit, PackagesNotFoundError
 
 from conda_self.exceptions import SpecsAreNotPlugins
 
+if TYPE_CHECKING:
+    from conda.testing.fixtures import CondaCLIFixture
 
-def test_help(conda_cli):
-    out, err, exc = conda_cli("self", "install", "--help", raises=SystemExit)
+
+def test_help(conda_cli: CondaCLIFixture):
+    out, err, exc = conda_cli(
+        "self",
+        "install",
+        "--help",
+        raises=SystemExit,  # type: ignore[arg-type]
+    )
     assert exc.value.code == 0
 
 
@@ -16,7 +28,7 @@ def test_help(conda_cli):
         ("conda-fake-solver", False),
     ),
 )
-def test_install_plugin_dry_run(conda_cli, plugin_name, ok):
+def test_install_plugin_dry_run(conda_cli: CondaCLIFixture, plugin_name: str, ok: bool):
     conda_cli(
         "self",
         "install",
@@ -34,7 +46,7 @@ def test_install_plugin_dry_run(conda_cli, plugin_name, ok):
         ("numpy", SpecsAreNotPlugins),
     ),
 )
-def test_install_not_plugins(conda_cli, plugin_name, error):
+def test_install_not_plugins(conda_cli: CondaCLIFixture, plugin_name: str, error):
     conda_cli(
         "self",
         "install",

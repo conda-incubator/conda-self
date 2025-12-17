@@ -1,37 +1,24 @@
+"""Implementation of the 'base' fix task for conda fix.
+
+This module provides the fix task that protects the base environment
+by cloning it and resetting it to essential packages only.
+"""
+
 from __future__ import annotations
 
 import argparse
 from textwrap import dedent
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    pass
 
 
-class MigrationTask(NamedTuple):
-    """A migration task definition."""
-
-    name: str
-    help: str
-    configure_parser: Callable[[argparse.ArgumentParser], None]
-
-
-HELP = dedent(
-    """
-    Perform migration tasks for conda environments and configuration.
-
-    The migrate command helps you transition your conda setup to follow best
-    practices. Each migration task is a one-time operation that improves your
-    conda workflow.
-
-    Use `conda migrate --list` to see available migration tasks.
-    """
-).lstrip()
-
-BASE_HELP = (
+SUMMARY = (
     "Protect the `base` environment from accidental modifications and provide a "
     "modifiable copy that will be configured as default."
 )
+
 WHAT_TO_EXPECT = dedent(
     """
     This will:
@@ -47,6 +34,7 @@ WHAT_TO_EXPECT = dedent(
     2. Bloated and complex environments that are difficult to update
     """
 ).lstrip()
+
 SUCCESS_MESSAGE = dedent(
     """
     SUCCESS!
@@ -59,6 +47,7 @@ SUCCESS_MESSAGE = dedent(
     4. Activation your duplicate environment `{env_name}`.
     """
 ).lstrip()
+
 BEST_PRACTICES = dedent(
     """
     BEST PRACTICES
@@ -71,10 +60,11 @@ BEST_PRACTICES = dedent(
 ).lstrip()
 
 
-def configure_parser_base(parser: argparse.ArgumentParser) -> None:
+def configure_parser(parser: argparse.ArgumentParser) -> None:
+    """Configure the argument parser for the base fix task."""
     from conda.cli.helpers import add_output_and_prompt_options
 
-    parser.description = BASE_HELP
+    parser.description = SUMMARY
     parser.add_argument(
         "--default-env",
         action="store",
@@ -88,10 +78,10 @@ def configure_parser_base(parser: argparse.ArgumentParser) -> None:
         help="Optional message to add to the `conda-meta/frozen` file",
     )
     add_output_and_prompt_options(parser)
-    parser.set_defaults(func=execute_base)
 
 
-def execute_base(args: argparse.Namespace) -> int:
+def execute(args: argparse.Namespace) -> int:
+    """Execute the base fix task."""
     import json
     import sys
     from contextlib import redirect_stdout
@@ -192,64 +182,3 @@ def execute_base(args: argparse.Namespace) -> int:
         print(BEST_PRACTICES)
     return 0
 
-
-# Registry of available migration tasks
-# TODO: Replace this with a plugin hook to allow external packages to register
-# migration tasks dynamically
-MIGRATION_TASKS = [
-    MigrationTask(
-        name="base",
-        help=BASE_HELP,
-        configure_parser=configure_parser_base,
-    ),
-]
-
-
-def _print_task_list() -> None:
-    """Print the list of available migration tasks."""
-    print("Available migration tasks:")
-    print()
-    for task in MIGRATION_TASKS:
-        print(f"  {task.name:<6}  {task.help}")
-
-
-def configure_parser(parser: argparse.ArgumentParser) -> None:
-    from conda.cli.helpers import add_output_and_prompt_options
-
-    parser.description = HELP
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List all available migration tasks",
-    )
-    add_output_and_prompt_options(parser)
-
-    subparsers = parser.add_subparsers(
-        title="migration tasks",
-        dest="task",
-    )
-
-    for task in MIGRATION_TASKS:
-        task.configure_parser(subparsers.add_parser(task.name, help=task.help))
-
-
-def execute(args: argparse.Namespace) -> int:
-    from conda.base.context import context
-
-    if args.list:
-        if context.json:
-            from conda.cli.common import stdout_json
-
-            stdout_json(
-                [{"name": task.name, "help": task.help} for task in MIGRATION_TASKS]
-            )
-        else:
-            _print_task_list()
-        return 0
-
-    # If no subcommand was provided, show error and help
-    if not hasattr(args, "func"):
-        parser = argparse.ArgumentParser(prog="conda migrate")
-        parser.error("the following arguments are required: task")
-
-    return args.func(args)

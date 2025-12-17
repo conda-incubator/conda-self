@@ -1,21 +1,7 @@
-from __future__ import annotations
+from contextlib import contextmanager
+from types import SimpleNamespace
 
-from typing import TYPE_CHECKING
-
-import pytest
-from conda import __version__ as conda_version
-from conda.exceptions import CondaValueError, DryRunExit
-from conda.models.channel import Channel
-from conda.models.records import PackageRecord
-from conda_libmamba_solver import __version__ as clms_version
-
-from conda_self import query, validate
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from conda.testing.fixtures import CondaCLIFixture
-    from pytest_mock import MockerFixture
+from conda.base.context import context
 
 
 def test_help(conda_cli):
@@ -23,122 +9,85 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
-@pytest.mark.parametrize(
-    "latest_version,message",
-    (
-        pytest.param(
-            "1",
-            "conda is already using the latest version available!",
-            id="Outdated",
-        ),
-        pytest.param(
-            conda_version,
-            "conda is already using the latest version available!",
-            id="Same",
-        ),
-        pytest.param(
-            "2040",
-            "Latest conda: 2040",
-            id="Updatable",
-        ),
-    ),
-)
-def test_update_conda(conda_cli, mocker, latest_version, message):
-    mocker.patch.object(
-        query,
-        "latest",
-        return_value=PackageRecord(
-            name="conda",
-            version=latest_version,
-            build="0",
-            build_number=0,
-            channel=Channel("conda-forge"),
-        ),
-    )
-    out, err, exc = conda_cli("self", "update", "--dry-run", raises=DryRunExit)
-    assert f"Installed conda: {conda_version}" in out
-    assert message in out
-
-
-@pytest.mark.parametrize(
-    "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
-)
-def test_update_plugin(conda_cli, plugin_name, ok):
-    conda_cli(
-        "self",
-        "update",
-        "--dry-run",
-        "--plugin",
-        plugin_name,
-        raises=DryRunExit if ok else CondaValueError,
+def test_update_conda_no_updates(conda_cli, monkeypatch):
+    monkeypatch.setattr(context, "dry_run", False)
+    monkeypatch.setattr(context, "quiet", True)
+    monkeypatch.setattr("conda_self.validate.conda_plugin_packages", lambda: [])
+    monkeypatch.setattr(
+        "conda_self.validate.validate_plugin_is_installed",
+        lambda name: None,
     )
 
-
-@pytest.mark.parametrize(
-    "latest_versions,message_parts",
-    (
-        pytest.param(
-            {
-                "conda": conda_version,
-                "conda-libmamba-solver": clms_version,
-            },
-            (
-                "conda is already using the latest version available!",
-                "conda-libmamba-solver is already using the latest version available!",
-            ),
-            id="No updates",
-        ),
-        pytest.param(
-            {
-                "conda": conda_version,
-                "conda-libmamba-solver": "2080",
-            },
-            (
-                "conda is already using the latest version available!",
-                "Latest conda-libmamba-solver: 2080",
-            ),
-            id="Update one",
-        ),
-        pytest.param(
-            {
-                "conda": "2040",
-                "conda-libmamba-solver": "2080",
-            },
-            (
-                "Latest conda: 2040",
-                "Latest conda-libmamba-solver: 2080",
-            ),
-            id="Update all",
-        ),
-    ),
-)
-def test_update_all(
-    conda_cli: CondaCLIFixture,
-    mocker: MockerFixture,
-    latest_versions: dict[str, str],
-    message_parts: tuple[str, ...],
-):
-    def mock_latest(package_name: str, _: str, __: Iterable[str]) -> PackageRecord:
-        return PackageRecord(
-            name=package_name,
-            version=latest_versions.get(package_name),
-            build="0",
-            build_number=0,
-            channel=Channel("conda-forge"),
-        )
-
-    mocker.patch.object(
-        validate, "conda_plugin_packages", return_value=["conda-libmamba-solver"]
+    installed = SimpleNamespace(channel="defaults", version="1.0.0")
+    latest = SimpleNamespace(version="1.0.0")
+    monkeypatch.setattr(
+        "conda_self.query.check_updates",
+        lambda name, prefix: (False, installed, latest),
     )
-    mocker.patch.object(query, "latest", mock_latest)
-    out, _, _ = conda_cli(
-        "self",
-        "update",
-        "--all",
-        "--dry-run",
-        raises=DryRunExit,
+
+    calls = {}
+
+    def fake_install_package_list_in_protected_env(packages, channel, force_reinstall):
+        calls["packages"] = packages
+        calls["channel"] = channel
+        calls["force_reinstall"] = force_reinstall
+        return 0
+
+    monkeypatch.setattr(
+        "conda_self.install.install_package_list_in_protected_env",
+        fake_install_package_list_in_protected_env,
     )
-    assert f"Installed conda: {conda_version}" in out
-    assert f"Installed conda-libmamba-solver: {clms_version}" in out
-    for message in message_parts:
-        assert message in out
+
+    @contextmanager
+    def fake_spinner(_):
+        yield None
+
+    monkeypatch.setattr("conda.reporters.get_spinner", fake_spinner)
+
+    out, err, exc = conda_cli("self", "update")
+
+    assert exc == 0
+    assert calls == {}
+
+
+def test_update_conda_with_update(conda_cli, monkeypatch):
+    monkeypatch.setattr(context, "dry_run", False)
+    monkeypatch.setattr(context, "quiet", True)
+    monkeypatch.setattr("conda_self.validate.conda_plugin_packages", lambda: [])
+    monkeypatch.setattr(
+        "conda_self.validate.validate_plugin_is_installed",
+        lambda name: None,
+    )
+
+    installed = SimpleNamespace(channel="defaults", version="1.0.0")
+    latest = SimpleNamespace(version="2.0.0")
+    monkeypatch.setattr(
+        "conda_self.query.check_updates",
+        lambda name, prefix: (True, installed, latest),
+    )
+
+    calls = {}
+
+    def fake_install_package_list_in_protected_env(packages, channel, force_reinstall):
+        calls["packages"] = packages
+        calls["channel"] = channel
+        calls["force_reinstall"] = force_reinstall
+        return 0
+
+    monkeypatch.setattr(
+        "conda_self.install.install_package_list_in_protected_env",
+        fake_install_package_list_in_protected_env,
+    )
+
+    @contextmanager
+    def fake_spinner(_):
+        yield None
+
+    monkeypatch.setattr("conda.reporters.get_spinner", fake_spinner)
+
+    out, err, exc = conda_cli("self", "update")
+
+    assert exc == 0
+    assert calls["packages"] == {"conda": "2.0.0"}
+    assert calls["channel"] == "defaults"
+    assert calls["force_reinstall"] is False

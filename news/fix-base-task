@@ -1,0 +1,8 @@
+### Enhancements
+
+* The `base` environment protection task is now exposed via `conda fix base` using conda's new plugin-based fix task framework. The `conda migrate` command has been removed. (#75)
+
+### Deprecations
+
+* The `conda migrate` command has been removed. Use `conda fix base` instead to protect your base environment.
+
