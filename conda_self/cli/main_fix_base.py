@@ -6,8 +6,11 @@ by cloning it and resetting it to essential packages only.
 
 from __future__ import annotations
 
-import argparse
 from textwrap import dedent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import argparse
 
 SUMMARY = (
     "Protect the `base` environment from accidental modifications and provide a "
