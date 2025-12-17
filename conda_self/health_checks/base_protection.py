@@ -81,7 +81,8 @@ def fix(prefix: str, args: Namespace) -> int:
     )
     base_prefix = Path(sys.prefix)
 
-    print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
+    if not context.quiet:
+        print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
     confirm_yn(
         "Proceed?",
         default="no",
@@ -113,19 +114,22 @@ def fix(prefix: str, args: Namespace) -> int:
     snapshot_file = (
         base_prefix / "conda-meta" / f"explicit.{datetime.now():%Y-%m-%d-%H-%M-%S}.txt"
     )
-    print(f"Saving snapshot to {snapshot_file}")
+    if not context.quiet:
+        print(f"Saving snapshot to {snapshot_file}")
     with open(snapshot_file, "w") as f:
         with redirect_stdout(f):
             print_explicit(str(base_prefix))
 
     # Clone base to new default environment
-    print(f"Cloning 'base' to '{default_env}'...")
+    if not context.quiet:
+        print(f"Cloning 'base' to '{default_env}'...")
     clone_env(
         str(base_prefix), str(dest_prefix_data.prefix_path), verbose=False, quiet=True
     )
 
     # Reset base
-    print("Resetting 'base' environment...")
+    if not context.quiet:
+        print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
 
     # Freeze base
@@ -136,10 +140,12 @@ def fix(prefix: str, args: Namespace) -> int:
         raise CondaOSError(f"Could not protect environment: {e}") from e
 
     # Update default activation environment
-    print(f"Setting default environment to '{default_env}'")
+    if not context.quiet:
+        print(f"Setting default environment to '{default_env}'")
     rc_config = _read_rc(sys_rc_path)
     rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
     _write_rc(sys_rc_path, rc_config)
 
-    print(f"\nDone! To use your packages: conda activate {default_env}")
+    if not context.quiet:
+        print(f"\nDone! To use your packages: conda activate {default_env}")
     return 0
