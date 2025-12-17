@@ -32,6 +32,7 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
     yield CondaHealthCheck(
         name="Base Environment Protection",
         action=base_protection.check,
+        id="base-protection",
         fix=base_protection.fix,
         summary="Protect base environment from accidental modifications",
     )

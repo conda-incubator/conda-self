@@ -26,16 +26,28 @@ subcommands:
 
 ## Base Environment Protection
 
-To protect your base environment from accidental modifications, run:
+To check if your base environment is protected, run:
 
 ```
-conda doctor --fix
+conda doctor
 ```
 
-This will check if your base environment is protected and offer to:
+To protect your base environment, run:
+
+```
+conda doctor --fix base-protection
+```
+
+This will:
 1. Clone your current base environment to a new "default" environment
 2. Reset base to essential packages only
 3. Freeze the base environment to prevent modifications
+
+To see all available health checks, run:
+
+```
+conda doctor --list
+```
 
 ## Installation
 
