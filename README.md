@@ -28,15 +28,15 @@ subcommands:
 ## `conda fix base`
 
 The `conda fix` command is provided by conda and offers a framework for
-fix tasks. The `conda-self` plugin provides the `base` fix task.
+health fixes. The `conda-self` plugin provides the `base` health fix.
 
-The `base` task helps you transition your conda setup to follow best practices
+The `base` health fix helps you transition your conda setup to follow best practices
 by creating a duplicate environment for daily use while protecting the base
 environment from accidental modifications.
 
 ```
 $ conda fix --list
-Available fix tasks:
+Available health fixes:
 
   base    Protect the `base` environment from accidental modifications and
           provide a modifiable copy that will be configured as default.

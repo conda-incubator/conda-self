@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from conda.plugins.hookspec import hookimpl
-from conda.plugins.types import CondaFixTask, CondaSubcommand
+from conda.plugins.types import CondaHealthFix, CondaSubcommand
 
 from .cli import configure_parser, execute
 
@@ -26,11 +26,11 @@ def conda_subcommands() -> Iterable[CondaSubcommand]:
 
 
 @hookimpl
-def conda_fix_tasks():
-    """Register the base fix task provided by conda-self."""
+def conda_health_fixes():
+    """Register the base health fix provided by conda-self."""
     from .cli import main_fix_base
 
-    yield CondaFixTask(
+    yield CondaHealthFix(
         name="base",
         summary=main_fix_base.SUMMARY,
         configure_parser=main_fix_base.configure_parser,

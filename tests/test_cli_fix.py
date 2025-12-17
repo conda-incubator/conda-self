@@ -37,7 +37,7 @@ def test_list(conda_cli):
     _skip_if_fix_unavailable(conda_cli)
 
     out, err, exc = conda_cli("fix", "--list")
-    assert "Available fix tasks:" in out
+    assert "Available health fixes:" in out
     assert "base" in out
 
 
@@ -47,15 +47,17 @@ def test_list_json(conda_cli):
     _skip_if_fix_unavailable(conda_cli)
 
     out, err, exc = conda_cli("fix", "--list", "--json")
-    tasks = json.loads(out)
-    assert any(task["name"] == "base" for task in tasks)
+    health_fixes = json.loads(out)
+    assert any(fix["name"] == "base" for fix in health_fixes)
 
 
-def test_no_task(conda_cli):
+def test_no_health_fix(conda_cli):
+    from conda.exceptions import CondaError
+
     _skip_if_fix_unavailable(conda_cli)
 
-    out, err, exc = conda_cli("fix", raises=SystemExit)
-    assert exc.value.code == 2
+    out, err, exc = conda_cli("fix", raises=CondaError)
+    assert "No health fix specified" in str(exc.value)
 
 
 def test_fix_base(conda_cli, mocker: MockerFixture, tmpdir: Path, monkeypatch):
