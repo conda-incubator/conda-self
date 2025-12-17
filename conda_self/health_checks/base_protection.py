@@ -29,7 +29,7 @@ def is_base_protected() -> bool:
     return frozen_file.exists()
 
 
-def check(prefix: str, verbose: bool) -> None:
+def check(prefix: str, _verbose: bool) -> None:
     """Health check: Verify base environment protection status.
 
     Only runs when checking the base environment.
@@ -41,8 +41,7 @@ def check(prefix: str, verbose: bool) -> None:
         print(f"{OK_MARK} Base environment is protected (frozen).\n")
     else:
         print(f"{X_MARK} Base environment is not protected.\n")
-        if verbose:
-            print("  Run `conda doctor --fix` to protect it.\n")
+        print("  Run `conda doctor --fix` to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace) -> int:
