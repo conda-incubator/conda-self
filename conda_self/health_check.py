@@ -11,14 +11,11 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
-from conda.base.constants import PREFIX_FROZEN_FILE
+from conda.base.constants import OK_MARK, PREFIX_FROZEN_FILE, X_MARK
 from conda.core.prefix_data import PrefixData
 
 if TYPE_CHECKING:
     from argparse import Namespace
-
-OK_MARK = "✅"
-X_MARK = "❌"
 
 
 def is_base_environment(prefix: str) -> bool:
