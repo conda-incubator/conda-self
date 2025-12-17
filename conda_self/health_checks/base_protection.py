@@ -55,7 +55,7 @@ def fix(prefix: str, args: Namespace) -> int:
     from datetime import datetime
     from pathlib import Path
 
-    from conda.base.context import context, sys_rc_path
+    from conda.base.context import context, user_rc_path
     from conda.cli.main_config import set_keys
     from conda.cli.main_list import print_explicit
     from conda.exceptions import CondaOSError
@@ -143,7 +143,7 @@ def fix(prefix: str, args: Namespace) -> int:
         print(f"Setting default environment to '{default_env}'")
     set_keys(
         ("default_activation_env", str(dest_prefix_data.prefix_path)),
-        path=sys_rc_path,
+        path=user_rc_path,
     )
 
     if not context.quiet:
