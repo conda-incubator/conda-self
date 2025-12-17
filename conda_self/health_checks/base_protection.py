@@ -57,7 +57,7 @@ def fix(prefix: str, args: Namespace) -> int:
     from pathlib import Path
 
     from conda.base.context import context, sys_rc_path
-    from conda.cli.main_config import _read_rc, _write_rc
+    from conda.cli.main_config import set_keys
     from conda.cli.main_list import print_explicit
     from conda.exceptions import CondaOSError
     from conda.gateways.disk.delete import rm_rf
@@ -142,9 +142,10 @@ def fix(prefix: str, args: Namespace) -> int:
     # Update default activation environment
     if not context.quiet:
         print(f"Setting default environment to '{default_env}'")
-    rc_config = _read_rc(sys_rc_path)
-    rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
-    _write_rc(sys_rc_path, rc_config)
+    set_keys(
+        ("default_activation_env", str(dest_prefix_data.prefix_path)),
+        path=sys_rc_path,
+    )
 
     if not context.quiet:
         print(f"\nDone! To use your packages: conda activate {default_env}")
