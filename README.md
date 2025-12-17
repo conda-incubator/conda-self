@@ -29,13 +29,13 @@ subcommands:
 To check if your base environment is protected, run:
 
 ```
-conda doctor
+conda doctor base-protection
 ```
 
 To protect your base environment, run:
 
 ```
-conda doctor --fix base-protection
+conda doctor base-protection --fix
 ```
 
 This will:
