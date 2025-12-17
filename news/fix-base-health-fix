@@ -5,5 +5,3 @@
 ### Deprecations
 
 * The `conda migrate` command has been removed. Use `conda fix base` instead to protect your base environment.
-
-

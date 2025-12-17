@@ -8,11 +8,6 @@ from __future__ import annotations
 
 import argparse
 from textwrap import dedent
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
-
 
 SUMMARY = (
     "Protect the `base` environment from accidental modifications and provide a "
@@ -181,4 +176,3 @@ def execute(args: argparse.Namespace) -> int:
         print(SUCCESS_MESSAGE.format(env_name=args.default_env))
         print(BEST_PRACTICES)
     return 0
-

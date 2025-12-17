@@ -12,7 +12,7 @@ import conda_self
 def _skip_if_fix_unavailable(conda_cli):
     try:
         out, err, exc = conda_cli("fix", "--help", raises=SystemExit)
-    except SystemExit as exc:  # pragma: no cover - defensive
+    except SystemExit:  # pragma: no cover - defensive
         pytest.skip("conda 'fix' subcommand not available")
     else:
         if exc.value.code != 0:
