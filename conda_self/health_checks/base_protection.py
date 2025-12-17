@@ -13,12 +13,9 @@ from typing import TYPE_CHECKING
 
 from conda.base.constants import OK_MARK, PREFIX_FROZEN_FILE, X_MARK
 from conda.core.prefix_data import PrefixData
-from conda.plugins.hookspec import hookimpl
-from conda.plugins.types import CondaHealthCheck
 
 if TYPE_CHECKING:
     from argparse import Namespace
-    from collections.abc import Iterable
 
 
 def is_base_environment(prefix: str) -> bool:
@@ -75,15 +72,3 @@ def fix(prefix: str, args: Namespace) -> int:
     args.message = getattr(args, "message", "Protected by conda doctor --fix")
 
     return execute(args)
-
-
-@hookimpl
-def conda_health_checks() -> Iterable[CondaHealthCheck]:
-    """Register the base environment protection health check."""
-    yield CondaHealthCheck(
-        name="Base Environment Protection",
-        action=check,
-        fix=fix,
-        summary="Protect base environment from accidental modifications",
-    )
-
