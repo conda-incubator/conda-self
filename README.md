@@ -8,7 +8,7 @@ Manage your conda 'base' environment safely.
 
 ```
 $ conda self
-usage: conda self [-V] [-h] {install,protect,remove,reset,update} ...
+usage: conda self [-V] [-h] {install,remove,reset,update} ...
 
 Manage your conda 'base' environment safely.
 
@@ -17,13 +17,25 @@ options:
   -h, --help            Show this help message and exit.
 
 subcommands:
-  {install,protect,remove,reset,update}
+  {install,remove,reset,update}
     install             Add conda plugins to the 'base' environment.
-    protect             Protect 'base' environment from any further modifications
     remove              Remove conda plugins from the 'base' environment.
     reset               Reset 'base' environment to essential packages only.
     update              Update 'conda' and/or its plugins in the 'base' environment.
 ```
+
+## Base Environment Protection
+
+To protect your base environment from accidental modifications, run:
+
+```
+conda doctor --fix
+```
+
+This will check if your base environment is protected and offer to:
+1. Clone your current base environment to a new "default" environment
+2. Reset base to essential packages only
+3. Freeze the base environment to prevent modifications
 
 ## Installation
 

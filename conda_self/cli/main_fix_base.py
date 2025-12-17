@@ -1,7 +1,9 @@
-"""Implementation of the 'base' health fix for conda fix.
+"""Base environment protection workflow.
 
-This module provides the health fix that protects the base environment
-by cloning it and resetting it to essential packages only.
+This module protects the base environment by cloning it to a new default
+environment, resetting base to essential packages, and freezing it.
+
+Used by the health check fix in health_checks/base_protection.py.
 """
 
 from __future__ import annotations
@@ -59,7 +61,7 @@ BEST_PRACTICES = dedent(
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
-    """Configure the argument parser for the base health fix."""
+    """Configure the argument parser for the base protection workflow."""
     from conda.cli.helpers import add_output_and_prompt_options
 
     parser.description = SUMMARY
@@ -79,7 +81,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 
 def execute(args: argparse.Namespace) -> int:
-    """Execute the base health fix."""
+    """Execute the base protection workflow."""
     import json
     import sys
     from contextlib import redirect_stdout
