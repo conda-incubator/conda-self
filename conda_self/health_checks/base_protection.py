@@ -126,7 +126,7 @@ def fix(prefix: str, args: Namespace) -> int:
         return 0
 
     default_env = getattr(args, "default_env", "default")
-    message = getattr(args, "message", "Protected by conda doctor --fix")
+    message = getattr(args, "message", "Protected by Base Environment Protection health fix")
     base_prefix = Path(sys.prefix)
 
     if not context.quiet:
