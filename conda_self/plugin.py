@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from conda.plugins.hookspec import hookimpl
-from conda.plugins.types import CondaSubcommand
+from conda.plugins.types import CondaHealthCheck, CondaSubcommand
 
+from . import health_check
 from .cli import configure_parser, execute
 
 if TYPE_CHECKING:
@@ -16,10 +17,20 @@ if TYPE_CHECKING:
 @hookimpl
 def conda_subcommands() -> Iterable[CondaSubcommand]:
     """Expose the `self` subcommand."""
-
     yield CondaSubcommand(
         name="self",
         action=execute,
         configure_parser=configure_parser,
         summary="Manage your conda 'base' environment safely.",
+    )
+
+
+@hookimpl
+def conda_health_checks() -> Iterable[CondaHealthCheck]:
+    """Register the base environment health check."""
+    yield CondaHealthCheck(
+        name="Base Environment Protection",
+        action=health_check.check,
+        fix=health_check.fix,
+        summary="Protect base environment from accidental modifications",
     )
