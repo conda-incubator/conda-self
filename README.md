@@ -25,54 +25,10 @@ subcommands:
     update              Update 'conda' and/or its plugins in the 'base' environment.
 ```
 
-## `conda fix base`
-
-The `conda fix` command is provided by conda and offers a framework for
-health fixes. The `conda-self` plugin provides the `base` health fix.
-
-The `base` health fix helps you transition your conda setup to follow best practices
-by creating a duplicate environment for daily use while protecting the base
-environment from accidental modifications.
-
-```
-$ conda fix --list
-Available health fixes:
-
-  base    Protect the `base` environment from accidental modifications and
-          provide a modifiable copy that will be configured as default.
-```
-
-### What it does
-
-Running `conda fix base` will:
-
-1. Duplicate your `base` environment to a new environment (default: `default`).
-2. Reset the `base` environment to only the essential packages and plugins.
-3. Protect the `base` environment, preventing further modifications
-   (unless an override flag is used).
-
-This helps prevent issues like:
-
-- Accidental breakage of the conda installation
-- Bloated and complex environments that are difficult to update
-
-### Usage
-
-```
-$ conda fix base --help
-```
-
-To run the migration with a custom name for the new default environment:
-
-```
-$ conda fix base --default-env myenv
-```
-
 ## Installation
 
 1. `conda install -n base conda-self`
 2. `conda self --help`
-3. `conda fix --list`
 
 ## Contributing
 
