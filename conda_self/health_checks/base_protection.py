@@ -9,7 +9,6 @@ protect it by cloning to a default environment and resetting base.
 from __future__ import annotations
 
 import sys
-from textwrap import dedent
 from typing import TYPE_CHECKING
 
 from conda.base.constants import OK_MARK, PREFIX_FROZEN_FILE, X_MARK
@@ -17,49 +16,6 @@ from conda.core.prefix_data import PrefixData
 
 if TYPE_CHECKING:
     from argparse import Namespace
-
-WHAT_TO_EXPECT = dedent(
-    """
-    This will:
-
-    1. Duplicate your `base` environment to a new environment named `{env_name}`.
-    2. Reset the `base` environment to only the essential packages and plugins.
-    3. Protect the `base` environment, which prevents you from making further
-       changes to it (this behavior can be overridden using `--override-frozen`).
-
-    This helps prevent issues like:
-
-    1. Accidental breakage of the conda installation
-    2. Bloated and complex environments that are difficult to update
-    """
-).lstrip()
-
-SUCCESS_MESSAGE = dedent(
-    """
-    SUCCESS!
-    The following operations were completed:
-
-    1. Duplication of your current `base` environment to `{env_name}`.
-    2. Resetting of the `base` to only the essential packages and plugins.
-    3. Protection of the `base` which prevents it from being modified
-       (unless an override flag is used).
-
-    To use your packages, activate the new environment:
-
-        conda activate {env_name}
-    """
-).lstrip()
-
-BEST_PRACTICES = dedent(
-    """
-    BEST PRACTICES
-    Follow these tips for a smoother `conda` experience:
-
-    1. Do not modify the `base` environment.
-    2. Use a different environment for your work going forward.
-    3. Create a new environment for each new project.
-    """
-).lstrip()
 
 
 def is_base_environment(prefix: str) -> bool:
@@ -79,7 +35,6 @@ def check(prefix: str, verbose: bool) -> None:
     Only runs when checking the base environment.
     """
     if not is_base_environment(prefix):
-        # Only check when running on base environment
         return
 
     if is_base_protected():
@@ -87,11 +42,7 @@ def check(prefix: str, verbose: bool) -> None:
     else:
         print(f"{X_MARK} Base environment is not protected.\n")
         if verbose:
-            print(
-                "  The base environment should be protected to prevent accidental\n"
-                "  modifications that could break your conda installation.\n"
-                "  Run `conda doctor --fix` to protect it.\n"
-            )
+            print("  Run `conda doctor --fix` to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace) -> int:
@@ -116,7 +67,6 @@ def fix(prefix: str, args: Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import reset
 
-    # Skip if not base or already protected
     if not is_base_environment(prefix):
         print("Skipping: not running on base environment.")
         return 0
@@ -126,20 +76,17 @@ def fix(prefix: str, args: Namespace) -> int:
         return 0
 
     default_env = getattr(args, "default_env", "default")
-    message = getattr(args, "message", "Protected by Base Environment Protection health fix")
+    message = getattr(
+        args, "message", "Protected by Base Environment Protection health fix"
+    )
     base_prefix = Path(sys.prefix)
 
-    if not context.quiet:
-        print(WHAT_TO_EXPECT.format(env_name=default_env))
-
+    print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
     confirm_yn(
-        "Proceed with protecting your base environment?",
+        "Proceed?",
         default="no",
         dry_run=context.dry_run,
     )
-
-    if not context.quiet:
-        print("Protecting 'base' environment...")
 
     # Get packages to keep in base
     uninstallable_packages = permanent_dependencies()
@@ -149,8 +96,7 @@ def fix(prefix: str, args: Namespace) -> int:
 
     if dest_prefix_data.is_environment():
         confirm_yn(
-            f"WARNING: Environment '{default_env}' already exists.\n"
-            "Remove it and recreate from base?",
+            f"Environment '{default_env}' already exists. Remove and recreate?",
             default="no",
             dry_run=context.dry_run,
         )
@@ -158,8 +104,7 @@ def fix(prefix: str, args: Namespace) -> int:
         rm_rf(dest_prefix_data.prefix_path)
     elif dest_prefix_data.exists():
         confirm_yn(
-            f"WARNING: Directory exists at '{dest_prefix_data.prefix_path}' "
-            "but is not a conda environment.\nContinue?",
+            f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?",
             default="no",
             dry_run=context.dry_run,
         )
@@ -168,22 +113,19 @@ def fix(prefix: str, args: Namespace) -> int:
     snapshot_file = (
         base_prefix / "conda-meta" / f"explicit.{datetime.now():%Y-%m-%d-%H-%M-%S}.txt"
     )
-    if not context.quiet:
-        print(f"Taking snapshot: {snapshot_file}")
+    print(f"Saving snapshot to {snapshot_file}")
     with open(snapshot_file, "w") as f:
         with redirect_stdout(f):
             print_explicit(str(base_prefix))
 
     # Clone base to new default environment
-    if not context.quiet:
-        print(f"Cloning 'base' to '{default_env}'...")
+    print(f"Cloning 'base' to '{default_env}'...")
     clone_env(
         str(base_prefix), str(dest_prefix_data.prefix_path), verbose=False, quiet=True
     )
 
     # Reset base
-    if not context.quiet:
-        print("Resetting 'base' environment...")
+    print("Resetting 'base' environment...")
     reset(uninstallable_packages=uninstallable_packages)
 
     # Freeze base
@@ -194,13 +136,10 @@ def fix(prefix: str, args: Namespace) -> int:
         raise CondaOSError(f"Could not protect environment: {e}") from e
 
     # Update default activation environment
-    if not context.quiet:
-        print(f"Setting default environment to '{default_env}'")
+    print(f"Setting default environment to '{default_env}'")
     rc_config = _read_rc(sys_rc_path)
     rc_config["default_activation_env"] = str(dest_prefix_data.prefix_path)
     _write_rc(sys_rc_path, rc_config)
 
-    if not context.quiet:
-        print(SUCCESS_MESSAGE.format(env_name=default_env))
-        print(BEST_PRACTICES)
+    print(f"\nDone! To use your packages: conda activate {default_env}")
     return 0
