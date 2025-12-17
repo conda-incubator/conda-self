@@ -1,9 +1,9 @@
 # Copyright (C) 2012 Anaconda, Inc
 # SPDX-License-Identifier: BSD-3-Clause
-"""Health check implementation for base environment protection.
+"""Health check: Base environment protection.
 
-This module provides the check and fix functions for the base environment
-health check. The hookimpl is defined in plugin.py.
+Checks if the base environment is protected (frozen) and offers to
+protect it by cloning to a default environment and resetting base.
 """
 
 from __future__ import annotations
@@ -13,9 +13,12 @@ from typing import TYPE_CHECKING
 
 from conda.base.constants import OK_MARK, PREFIX_FROZEN_FILE, X_MARK
 from conda.core.prefix_data import PrefixData
+from conda.plugins.hookspec import hookimpl
+from conda.plugins.types import CondaHealthCheck
 
 if TYPE_CHECKING:
     from argparse import Namespace
+    from collections.abc import Iterable
 
 
 def is_base_environment(prefix: str) -> bool:
@@ -65,10 +68,22 @@ def fix(prefix: str, args: Namespace) -> int:
         return 0
 
     # Import and run the base protection workflow
-    from .cli.main_fix_base import execute
+    from ..cli.main_fix_base import execute
 
     # Set up args for the fix
     args.default_env = getattr(args, "default_env", "default")
     args.message = getattr(args, "message", "Protected by conda doctor --fix")
 
     return execute(args)
+
+
+@hookimpl
+def conda_health_checks() -> Iterable[CondaHealthCheck]:
+    """Register the base environment protection health check."""
+    yield CondaHealthCheck(
+        name="Base Environment Protection",
+        action=check,
+        fix=fix,
+        summary="Protect base environment from accidental modifications",
+    )
+
