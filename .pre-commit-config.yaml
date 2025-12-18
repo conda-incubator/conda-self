@@ -46,6 +46,10 @@ repos:
     hooks:
     - id: mypy
       exclude: ^docs/.*$
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.0
+    hooks:
+      - id: check-github-workflows
   - repo: meta
     # see https://pre-commit.com/#meta-hooks
     hooks:
