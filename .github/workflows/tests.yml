@@ -4,9 +4,23 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
   pull_request:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
 
 concurrency:
   # Concurrency group that uses the workflow name and PR number if available
