@@ -52,7 +52,7 @@ jobs:
           environments: ${{ env.PIXI_ENV_NAME }}
 
       - name: Build recipe
-        run: pixi run --environment ${PIXI_ENV_NAME} build --channel conda-forge
+        run: pixi run --environment ${{ env.PIXI_ENV_NAME }} build --channel conda-forge
 
       - name: Upload to conda-canary
         # Only publish canary builds after successful pushes to main in the canonical repo
