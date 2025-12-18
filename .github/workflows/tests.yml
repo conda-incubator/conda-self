@@ -29,10 +29,10 @@ jobs:
         python-version: ["310", "311", "312", "313"]
         include:
           - os: macos-15-intel
-            channel: defaults
+            channel: conda-forge
             python-version: "310"
           - os: macos-latest
-            channel: conda-forge
+            channel: defaults
             python-version: "313"
 
     steps:
@@ -53,6 +53,8 @@ jobs:
           echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
           pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
+        env:
+          TEST_CONDA_CHANNEL: ${{ matrix.channel }}
         run: >
           pixi run
           --environment test-py${{ matrix.python-version }}
