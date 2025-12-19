@@ -69,6 +69,22 @@ def permanent_dependencies() -> set[str]:
     # In some dev environments, conda-self is installed as a PyPI package
     # and does not have its conda-meta/conda-self-*.json entry, which makes it
     # invisible to PrefixData()... unless we enable interoperability.
+    installed = PrefixData(sys.prefix, interoperability=True)
+    prefix_graph = PrefixGraph(installed.iter_records())
+
+    packages = []
+    for pkg in PERMANENT_PACKAGES:
+        print(pkg)
+        node = prefix_graph.get_node_by_name(pkg)
+        packages.extend([record.name for record in prefix_graph.all_ancestors(node)])
+    return set(packages)
+
+
+def plugins_and_dependencies() -> set[str]:
+    """Get the full list of dependencies for conda, all plug-ins, and dependencies."""
+    # In some dev environments, conda-self is installed as a PyPI package
+    # and does not have its conda-meta/conda-self-*.json entry, which makes it
+    # invisible to PrefixData()... unless we enable interoperability.
     installed = list(PrefixData(sys.prefix, interoperability=True).iter_records())
     prefix_graph = PrefixGraph(installed)
 
@@ -81,7 +97,7 @@ def permanent_dependencies() -> set[str]:
                     break
 
     packages = []
-    for pkg in dict.fromkeys(protect):
+    for pkg in protect:
         node = next((rec for rec in prefix_graph.records if rec.name == pkg), None)
         if node:
             packages.append(node.name)
