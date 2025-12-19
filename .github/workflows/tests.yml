@@ -4,9 +4,23 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
   pull_request:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
 
 concurrency:
   # Concurrency group that uses the workflow name and PR number if available
@@ -26,24 +40,24 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         channel: [defaults, conda-forge]
-        python-version: ["39", "310", "311", "312"]
+        python-version: ["310", "311", "312", "313"]
         include:
           - os: macos-15-intel
-            channel: defaults
-            python-version: "39"
-          - os: macos-latest
             channel: conda-forge
-            python-version: "312"
+            python-version: "310"
+          - os: macos-latest
+            channel: defaults
+            python-version: "313"
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Patch channels in pixi config
         if: matrix.channel == 'defaults'
         shell: bash
         run: |
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
           rm pixi.lock
-      - uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
+      - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
           environments: test-py${{ matrix.python-version }}
       - name: Ensure package is installed
@@ -53,28 +67,11 @@ jobs:
           echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
           pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
+        env:
+          TEST_CONDA_CHANNEL: ${{ matrix.channel }}
         run: >
           pixi run
           --environment test-py${{ matrix.python-version }}
           test
           -vv
           --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
-
-  build-conda:
-    name: Build conda package (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
-    env:
-      PYTHONUNBUFFERED: "1"
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
-        with:
-          environments: build
-      - name: Build recipe
-        run: pixi run --environment build build

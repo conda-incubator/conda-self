@@ -34,7 +34,7 @@ repos:
       # auto format Python codes within docstrings
       - id: blacken-docs
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.3
+    rev: v0.14.9
     hooks:
       # lint & attempt to correct failures (e.g. pyupgrade)
       - id: ruff
@@ -42,10 +42,14 @@ repos:
       # compatible replacement for black
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.18.2'  # Use the sha / tag you want to point at
+    rev: 'v1.19.1'  # Use the sha / tag you want to point at
     hooks:
     - id: mypy
       exclude: ^docs/.*$
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.0
+    hooks:
+      - id: check-github-workflows
   - repo: meta
     # see https://pre-commit.com/#meta-hooks
     hooks:

@@ -30,7 +30,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     update_group.add_argument(
         "--all",
         action="store_true",
-        help="Update conda and all plugins.",
+        help="Update conda, all plugins, and dependencies.",
     )
     parser.set_defaults(func=execute)
 
@@ -66,9 +66,14 @@ def execute(args: argparse.Namespace) -> int:
             print(f"Installed {package_name}: {installed.version}")
             print(f"Latest {package_name}: {latest.version}")
 
-        if not update_available and not args.force_reinstall:
+        if not update_available and not args.force_reinstall and not args.all:
             print(f"{package_name} is already using the latest version available!")
         else:
+            if not update_available and args.all:
+                print(
+                    f"{package_name} is using the latest version available, "
+                    "but may have outdated dependencies."
+                )
             updates[package_name] = latest.version
 
     if args.dry_run:
@@ -80,4 +85,5 @@ def execute(args: argparse.Namespace) -> int:
         packages=updates,
         channel=channel,
         force_reinstall=args.force_reinstall,
+        update_dependencies=args.all,
     )

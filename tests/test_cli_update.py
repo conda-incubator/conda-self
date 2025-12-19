@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
-def test_help(conda_cli):
+def test_help(conda_cli: CondaCLIFixture):
     out, err, exc = conda_cli("self", "update", "--help", raises=SystemExit)
     assert exc.value.code == 0
 
@@ -43,7 +43,9 @@ def test_help(conda_cli):
         ),
     ),
 )
-def test_update_conda(conda_cli, mocker, latest_version, message):
+def test_update_conda(
+    conda_cli: CondaCLIFixture, mocker: MockerFixture, latest_version: str, message: str
+):
     mocker.patch.object(
         query,
         "latest",
@@ -63,7 +65,9 @@ def test_update_conda(conda_cli, mocker, latest_version, message):
 @pytest.mark.parametrize(
     "plugin_name,ok", (("conda-libmamba-solver", True), ("conda-fake-solver", False))
 )
-def test_update_plugin(conda_cli, plugin_name, ok):
+def test_update_plugin(
+    conda_cli: CondaCLIFixture, plugin_name: str, ok: tuple[str, bool]
+):
     conda_cli(
         "self",
         "update",
@@ -83,8 +87,14 @@ def test_update_plugin(conda_cli, plugin_name, ok):
                 "conda-libmamba-solver": clms_version,
             },
             (
-                "conda is already using the latest version available!",
-                "conda-libmamba-solver is already using the latest version available!",
+                (
+                    "conda is using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
+                (
+                    "conda-libmamba-solver is using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
             ),
             id="No updates",
         ),
@@ -94,7 +104,10 @@ def test_update_plugin(conda_cli, plugin_name, ok):
                 "conda-libmamba-solver": "2080",
             },
             (
-                "conda is already using the latest version available!",
+                (
+                    "conda is using the latest version "
+                    "available, but may have outdated dependencies."
+                ),
                 "Latest conda-libmamba-solver: 2080",
             ),
             id="Update one",
