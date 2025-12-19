@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-import sys
 from contextlib import redirect_stdout
 from typing import TYPE_CHECKING
 
@@ -16,12 +14,6 @@ if TYPE_CHECKING:
     from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
     from pytest import MonkeyPatch
 
-CONDA_CHANNEL = os.environ.get("TEST_CONDA_CHANNEL", "conda-forge")
-# Ensure that the Python version is the same in all environments
-# to avoid ABI incompatibilities between the python version in the
-# current working directory and the test environments.
-PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
-
 
 def test_help(conda_cli: CondaCLIFixture):
     out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
@@ -29,12 +21,18 @@ def test_help(conda_cli: CondaCLIFixture):
 
 
 def test_reset(
-    conda_cli: CondaCLIFixture, monkeypatch: MonkeyPatch, tmp_env: TmpEnvFixture
+    conda_cli: CondaCLIFixture,
+    monkeypatch: MonkeyPatch,
+    tmp_env: TmpEnvFixture,
+    conda_channel: str,
+    python_version: str,
 ):
-    monkeypatch.setenv("CONDA_CHANNELS", CONDA_CHANNEL)
+    monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
     # Adding conda-index too to test that non-default plugins are kept
-    with tmp_env("conda", "conda-self", f"python={PY_VER}", "conda-index") as prefix:
+    with tmp_env(
+        "conda", "conda-self", f"python={python_version}", "conda-index"
+    ) as prefix:
         assert not is_installed(prefix, "numpy")
 
         conda_cli("install", "numpy", "--yes", "--prefix", prefix)
@@ -57,11 +55,15 @@ def test_reset_migrate(
     conda_cli: CondaCLIFixture,
     monkeypatch: MonkeyPatch,
     tmp_env: TmpEnvFixture,
+    conda_channel: str,
+    python_version: str,
 ):
     conda_version = "25.7.0"
-    monkeypatch.setenv("CONDA_CHANNELS", CONDA_CHANNEL)
+    monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    with tmp_env(f"conda={conda_version}", f"python={PY_VER}", "conda-self") as prefix:
+    with tmp_env(
+        f"conda={conda_version}", f"python={python_version}", "conda-self"
+    ) as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE
         migrate_state = prefix / "conda-meta" / RESET_FILE_MIGRATE
 
