@@ -61,8 +61,12 @@ def test_reset_migrate(
     conda_version = "25.7.0"
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
+    # Adding conda-index too to test that non-default plugins are kept
     with tmp_env(
-        f"conda={conda_version}", f"python={python_version}", "conda-self"
+        f"conda={conda_version}",
+        f"python={python_version}",
+        "conda-self",
+        "conda-index",
     ) as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE
         migrate_state = prefix / "conda-meta" / RESET_FILE_MIGRATE
@@ -78,6 +82,7 @@ def test_reset_migrate(
         assert is_installed(prefix, f"conda={conda_version}"), (
             f"conda={conda_version} not in initial environment"
         )
+        assert is_installed(prefix, "conda-index")
 
         # Update conda and install an unrelated package
         conda_cli_subprocess(prefix, "self", "update")
@@ -97,4 +102,5 @@ def test_reset_migrate(
             *(("--snapshot", "migrate") if add_cli_arg else ()),
         )
         assert is_installed(prefix, f"conda={conda_version}"), "conda not reset"
+        assert is_installed(prefix, "conda-index"), "conda-index has been removed"
         assert not is_installed(prefix, "constructor")
