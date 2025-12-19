@@ -4,9 +4,23 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
   pull_request:
     branches:
       - main
+    paths:
+      - ".github/workflows/tests.yml"
+      - "conda_self/**"
+      - "pixi.lock"
+      - "pyproject.toml"
+      - "recipe/**"
+      - "tests/**"
 
 concurrency:
   # Concurrency group that uses the workflow name and PR number if available
@@ -61,22 +75,3 @@ jobs:
           test
           -vv
           --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
-
-  build-conda:
-    name: Build conda package (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
-    env:
-      PYTHONUNBUFFERED: "1"
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
-        with:
-          environments: build
-      - name: Build recipe
-        run: pixi run --environment build build --channel conda-forge
