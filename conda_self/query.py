@@ -64,7 +64,7 @@ def latest(
     return best
 
 
-def permanent_dependencies() -> set[str]:
+def permanent_dependencies(add_plugins: bool = False) -> set[str]:
     """Get the full list of dependencies for all the permanent packages."""
     # In some dev environments, conda-self is installed as a PyPI package
     # and does not have its conda-meta/conda-self-*.json entry, which makes it
@@ -73,15 +73,17 @@ def permanent_dependencies() -> set[str]:
     prefix_graph = PrefixGraph(installed)
 
     protect = [*PERMANENT_PACKAGES]
-    for record in installed:
-        with suppress(NoDistInfoDirFound):
-            for pkg_info in PackageInfo.from_record(record):
-                if "conda" in pkg_info.entry_points():
+    if add_plugins:
+        for record in installed:
+            with suppress(NoDistInfoDirFound):
+                if any(
+                    "conda" in pkg_info.entry_points()
+                    for pkg_info in PackageInfo.from_record(record)
+                ):
                     protect.append(record.name)
-                    break
 
     packages = []
-    for pkg in dict.fromkeys(protect):
+    for pkg in protect:
         node = next((rec for rec in prefix_graph.records if rec.name == pkg), None)
         if node:
             packages.append(node.name)
