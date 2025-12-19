@@ -4,7 +4,7 @@ A `self` command to manage your `base` environment safely.
 
 ```
 $ conda self
-usage: conda self [-V] [-h] {install,protect,remove,reset,update} ...
+usage: conda self [-V] [-h] {install,remove,reset,update} ...
 
 Manage your conda 'base' environment safely.
 
@@ -13,9 +13,8 @@ options:
   -h, --help            Show this help message and exit.
 
 subcommands:
-  {install,protect,remove,reset,update}
+  {install,remove,reset,update}
     install             Add conda plugins to the 'base' environment.
-    protect             Protect 'base' environment from any further modifications
     remove              Remove conda plugins from the 'base' environment.
     reset               Reset 'base' environment to essential packages only.
     update              Update 'conda' and/or its plugins in the 'base' environment.

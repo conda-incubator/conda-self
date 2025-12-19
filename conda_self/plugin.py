@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from conda import plugins
 
-from .cli import configure_parser, execute, main_migrate
+from .cli import configure_parser, execute
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -21,10 +21,4 @@ def conda_subcommands() -> Iterable[plugins.CondaSubcommand]:
         action=execute,
         configure_parser=configure_parser,
         summary="Manage your conda 'base' environment safely.",
-    )
-    yield plugins.CondaSubcommand(
-        name="migrate",
-        action=main_migrate.execute,
-        configure_parser=main_migrate.configure_parser,
-        summary="Protect and migrate your 'base' environment to a new one.",
     )
