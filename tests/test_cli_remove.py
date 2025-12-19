@@ -21,6 +21,7 @@ def test_help(conda_cli):
     "spec,error",
     (
         ("conda", SpecsCanNotBeRemoved),
+        ("conda-libmamba-solver", SpecsCanNotBeRemoved),
         ("python", SpecsCanNotBeRemoved),
         ("flask", None),
     ),
