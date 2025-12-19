@@ -112,7 +112,9 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.quiet:
         print("Resetting 'base' environment...")
-    uninstallable_packages = permanent_dependencies() if not reset_file else set()
+    uninstallable_packages = (
+        permanent_dependencies(add_plugins=True) if not reset_file else set()
+    )
     reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
 
     if not context.quiet:
