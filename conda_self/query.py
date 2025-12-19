@@ -64,6 +64,17 @@ def latest(
     return best
 
 
+def _find_plugins_in_record_list(installed: list[PrefixRecord]) -> list[str]:
+    plugins = []
+    for record in installed:
+        with suppress(NoDistInfoDirFound):
+            for pkg_info in PackageInfo.from_record(record):
+                if "conda" in pkg_info.entry_points():
+                    plugins.append(record.name)
+                    break
+    return plugins
+
+
 def permanent_dependencies(add_plugins: bool = False) -> set[str]:
     """Get the full list of dependencies for all the permanent packages."""
     # In some dev environments, conda-self is installed as a PyPI package
@@ -72,14 +83,9 @@ def permanent_dependencies(add_plugins: bool = False) -> set[str]:
     installed = list(PrefixData(sys.prefix, interoperability=True).iter_records())
     prefix_graph = PrefixGraph(installed)
 
-    protect = set(PERMANENT_PACKAGES)
+    protect = [*PERMANENT_PACKAGES]
     if add_plugins:
-        for record in installed:
-            with suppress(NoDistInfoDirFound):
-                for pkg_info in PackageInfo.from_record(record):
-                    if "conda" in pkg_info.entry_points():
-                        protect.add(record.name)
-                        break
+        protect.extend(_find_plugins_in_record_list(installed))
 
     packages = []
     for pkg in protect:
