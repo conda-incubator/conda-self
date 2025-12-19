@@ -19,7 +19,7 @@ def execute(args: argparse.Namespace) -> int:
     from ..install import uninstall_specs_in_protected_env
     from ..query import permanent_dependencies
 
-    uninstallable_packages = permanent_dependencies()
+    uninstallable_packages = permanent_dependencies(add_plugins=False)
     invalid_specs = []
     for spec in args.specs:
         if spec in uninstallable_packages:

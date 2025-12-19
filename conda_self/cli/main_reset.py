@@ -68,7 +68,7 @@ def execute(args: argparse.Namespace) -> int:
     from conda.reporters import confirm_yn
 
     from ..constants import RESET_FILE_INSTALLER, RESET_FILE_MIGRATE
-    from ..query import plugins_and_dependencies
+    from ..query import permanent_dependencies
     from ..reset import reset
 
     if not context.quiet:
@@ -112,7 +112,9 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.quiet:
         print("Resetting 'base' environment...")
-    uninstallable_packages = plugins_and_dependencies() if not reset_file else set()
+    uninstallable_packages = (
+        permanent_dependencies(add_plugins=True) if not reset_file else set()
+    )
     reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
 
     if not context.quiet:
