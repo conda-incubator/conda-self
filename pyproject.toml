@@ -84,7 +84,7 @@ conda = { cmd = "python -m conda", env = { CONDA_CHANNELS = "conda-forge" } }
 "conda-self" = { path  = ".", editable = true }
 
 [tool.pixi.feature.build]
-dependencies = { conda-build = "*" }
+dependencies = { conda-build = "*", anaconda-client = "*" }
 tasks = { build = "conda build recipe" }
 
 [tool.pixi.feature.docs]
