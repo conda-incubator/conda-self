@@ -48,14 +48,27 @@ jobs:
           - os: macos-latest
             channel: defaults
             python-version: "313"
+          # Test with conda canary builds to catch compatibility issues early
+          - os: ubuntu-latest
+            channel: conda-canary
+            python-version: "313"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Patch channels in pixi config
+      - name: Patch channels in pixi config (defaults)
         if: matrix.channel == 'defaults'
         shell: bash
         run: |
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
+          rm pixi.lock
+      - name: Patch channels in pixi config (conda-canary)
+        if: matrix.channel == 'conda-canary'
+        shell: bash
+        run: |
+          # Use conda-canary channel first for canary conda builds, with conda-forge as fallback for dependencies
+          sed -i.bak 's|channels = \["conda-forge"\]|channels = ["conda-canary/label/dev", "conda-forge"]|g' pyproject.toml
+          # Remove version constraint to allow canary builds
+          sed -i.bak 's|conda = ">=26.1.0"|conda = "*"|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:

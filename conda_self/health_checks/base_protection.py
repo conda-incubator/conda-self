@@ -17,6 +17,8 @@ from conda.core.prefix_data import PrefixData
 if TYPE_CHECKING:
     from argparse import Namespace
 
+    from conda.plugins.types import ConfirmCallback
+
 
 def is_base_environment(prefix: str) -> bool:
     """Check if the given prefix is the base environment."""
@@ -44,7 +46,7 @@ def check(prefix: str, _verbose: bool) -> None:
         print("  Run `conda doctor --fix` to protect it.\n")
 
 
-def fix(prefix: str, args: Namespace) -> int:
+def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     """Fix: Protect the base environment.
 
     This clones the base environment to a new 'default' environment,
@@ -61,7 +63,6 @@ def fix(prefix: str, args: Namespace) -> int:
     from conda.exceptions import CondaOSError
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
-    from conda.reporters import confirm_yn
 
     from ..query import permanent_dependencies
     from ..reset import reset
@@ -82,11 +83,7 @@ def fix(prefix: str, args: Namespace) -> int:
 
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
-    confirm_yn(
-        "Proceed?",
-        default="no",
-        dry_run=context.dry_run,
-    )
+    confirm("Proceed?")
 
     # Get packages to keep in base
     uninstallable_packages = permanent_dependencies()
@@ -95,19 +92,11 @@ def fix(prefix: str, args: Namespace) -> int:
     dest_prefix_data = PrefixData.from_name(default_env)
 
     if dest_prefix_data.is_environment():
-        confirm_yn(
-            f"Environment '{default_env}' already exists. Remove and recreate?",
-            default="no",
-            dry_run=context.dry_run,
-        )
+        confirm(f"Environment '{default_env}' already exists. Remove and recreate?")
         reset(prefix=dest_prefix_data.prefix_path)
         rm_rf(dest_prefix_data.prefix_path)
     elif dest_prefix_data.exists():
-        confirm_yn(
-            f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?",
-            default="no",
-            dry_run=context.dry_run,
-        )
+        confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
     # Take a snapshot
     snapshot_file = (
