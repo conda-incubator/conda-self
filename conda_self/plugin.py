@@ -33,10 +33,8 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
     """
     from .health_checks import base_protection
 
-    # Check if the new fixer API is available (conda >= 26.1.0)
-    has_fixer_api = "fixer" in CondaHealthCheck.__dataclass_fields__
-
-    if has_fixer_api:
+    try:
+        # Try to register with full fixer API (conda >= 26.1.0)
         yield CondaHealthCheck(
             name="base-protection",
             action=base_protection.check,
@@ -44,7 +42,7 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
             summary="Check if base environment is protected",
             fix="Clone base to 'default' environment, reset base, and freeze it",
         )
-    else:
+    except TypeError:
         # Fallback for older conda versions without fixer support
         yield CondaHealthCheck(
             name="base-protection",

@@ -162,7 +162,6 @@ def test_health_check_registered():
 
     Works with both old and new conda versions.
     """
-    from conda.plugins.types import CondaHealthCheck
 
     from conda_self.plugin import conda_health_checks
 
@@ -174,7 +173,7 @@ def test_health_check_registered():
     assert hc.action == base_protection.check
 
     # Additional fields only available in conda >= 26.1.0
-    if "fixer" in CondaHealthCheck.__dataclass_fields__:
+    if hasattr(hc, "fixer"):
         assert hc.fixer == base_protection.fix
         assert hc.summary is not None
         assert hc.fix is not None
