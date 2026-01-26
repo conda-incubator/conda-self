@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup Miniconda with canary conda
-        uses: conda-incubator/setup-miniconda@18f0153f21daf81e7d00eec67b5fc1f7fbf1b71c # v3.2.1
+        uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3
         with:
           auto-update-conda: false
           python-version: "3.12"
