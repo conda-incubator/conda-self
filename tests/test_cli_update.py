@@ -151,7 +151,7 @@ def test_update_all(
         "--dry-run",
         raises=DryRunExit,
     )
-    # Check that installed versions are reported (exact version may differ in canary builds)
+    # Check that installed versions are reported (exact version may differ in canary)
     assert "Installed conda:" in out
     assert "Installed conda-libmamba-solver:" in out
     for message in message_parts:

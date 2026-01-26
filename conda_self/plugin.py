@@ -41,7 +41,7 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
             name="base-protection",
             action=base_protection.check,
             fixer=base_protection.fix,
-            summary="Check if base environment is protected from accidental modifications",
+            summary="Check if base environment is protected",
             fix="Clone base to 'default' environment, reset base, and freeze it",
         )
     else:

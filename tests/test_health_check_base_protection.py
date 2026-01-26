@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import sys
 from argparse import Namespace
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -16,6 +15,8 @@ from conda.core.prefix_data import PrefixData
 from conda_self.health_checks import base_protection
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pytest import CaptureFixture, MonkeyPatch
 
 
@@ -77,9 +78,7 @@ def test_check_skips_non_base_environment(tmp_path: Path, capsys: CaptureFixture
     assert captured.out == ""
 
 
-def test_check_reports_protected_base(
-    protected_base_env: Path, capsys: CaptureFixture
-):
+def test_check_reports_protected_base(protected_base_env: Path, capsys: CaptureFixture):
     """Reports OK when base is protected."""
     PrefixData._cache_.clear()
     base_protection.check(str(protected_base_env), False)
@@ -118,9 +117,7 @@ def test_fix_skips_non_base_environment(tmp_path: Path, capsys: CaptureFixture):
     assert len(confirm_called) == 0
 
 
-def test_fix_skips_already_protected(
-    protected_base_env: Path, capsys: CaptureFixture
-):
+def test_fix_skips_already_protected(protected_base_env: Path, capsys: CaptureFixture):
     """Returns early when base is already protected."""
     args = Namespace()
     confirm_called = []
