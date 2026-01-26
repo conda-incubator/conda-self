@@ -68,12 +68,15 @@ jobs:
       - name: Install test dependencies
         shell: bash -el {0}
         run: |
-          conda install -y pytest pytest-mock
+          # Install conda from canary channel (has unreleased health check API)
+          conda install -y -c conda-canary/label/dev -c conda-forge conda pytest pytest-mock
           pip install -e .
 
       - name: Show conda info
         shell: bash -el {0}
-        run: conda info
+        run: |
+          conda info
+          python -c "from conda.plugins.types import ConfirmCallback; print('ConfirmCallback available')"
 
       - name: Run tests
         shell: bash -el {0}
