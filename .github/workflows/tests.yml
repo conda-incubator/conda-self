@@ -58,9 +58,10 @@ jobs:
       matrix:
         include:
           # Only test with conda-canary until conda 26.1.0 is released
+          # Use Python 3.12 as conda-canary may not have Python 3.13 builds for all platforms
           - os: ubuntu-latest
             channel: conda-canary
-            python-version: "313"
+            python-version: "312"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -71,6 +72,8 @@ jobs:
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["conda-canary/label/dev", "conda-forge"]|g' pyproject.toml
           # Remove version constraint to allow canary builds
           sed -i.bak 's|conda = ">=25.7.0"|conda = "*"|g' pyproject.toml
+          # Restrict to linux-64 only for canary testing (conda-canary may not have all platform builds)
+          sed -i.bak 's|platforms = \["linux-64", "osx-64", "osx-arm64", "win-64"\]|platforms = ["linux-64"]|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
