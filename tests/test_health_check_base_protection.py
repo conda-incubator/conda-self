@@ -163,14 +163,9 @@ def test_fix_calls_confirm_callback(fake_base_env: Path):
 def test_health_check_registered():
     """Verify the health check is registered correctly.
 
-    This test requires conda >= 26.1.0 which has the 'fixer' parameter.
+    Works with both old and new conda versions.
     """
     from conda.plugins.types import CondaHealthCheck
-
-    if "fixer" not in CondaHealthCheck.__dataclass_fields__:
-        pytest.skip(
-            "conda version doesn't support 'fixer' parameter (requires >= 26.1.0)"
-        )
 
     from conda_self.plugin import conda_health_checks
 
@@ -180,6 +175,9 @@ def test_health_check_registered():
     hc = health_checks[0]
     assert hc.name == "base-protection"
     assert hc.action == base_protection.check
-    assert hc.fixer == base_protection.fix
-    assert hc.summary is not None
-    assert hc.fix is not None
+
+    # Additional fields only available in conda >= 26.1.0
+    if "fixer" in CondaHealthCheck.__dataclass_fields__:
+        assert hc.fixer == base_protection.fix
+        assert hc.summary is not None
+        assert hc.fix is not None
