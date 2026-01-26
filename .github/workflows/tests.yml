@@ -33,36 +33,38 @@ concurrency:
 
 jobs:
   tests:
+    # TODO: Re-enable full matrix when conda 26.1.0 is released
+    # This PR requires the new health check API (fixer with ConfirmCallback)
+    # which is only available in conda-canary builds for now.
+    #
+    # Full matrix to restore:
+    #   os: [ubuntu-latest, windows-latest]
+    #   channel: [defaults, conda-forge]
+    #   python-version: ["310", "311", "312", "313"]
+    #   include:
+    #     - os: macos-15-intel
+    #       channel: conda-forge
+    #       python-version: "310"
+    #     - os: macos-latest
+    #       channel: defaults
+    #       python-version: "313"
+    #     - os: ubuntu-latest
+    #       channel: conda-canary
+    #       python-version: "313"
     name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        channel: [defaults, conda-forge]
-        python-version: ["310", "311", "312", "313"]
         include:
-          - os: macos-15-intel
-            channel: conda-forge
-            python-version: "310"
-          - os: macos-latest
-            channel: defaults
-            python-version: "313"
-          # Test with conda canary builds to catch compatibility issues early
+          # Only test with conda-canary until conda 26.1.0 is released
           - os: ubuntu-latest
             channel: conda-canary
             python-version: "313"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Patch channels in pixi config (defaults)
-        if: matrix.channel == 'defaults'
-        shell: bash
-        run: |
-          sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
-          rm pixi.lock
       - name: Patch channels in pixi config (conda-canary)
-        if: matrix.channel == 'conda-canary'
         shell: bash
         run: |
           # Use conda-canary channel first for canary conda builds, with conda-forge as fallback for dependencies
