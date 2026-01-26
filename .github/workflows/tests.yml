@@ -76,7 +76,8 @@ jobs:
         shell: bash -el {0}
         run: |
           conda info
-          python -c "from conda.plugins.types import ConfirmCallback; print('ConfirmCallback available')"
+          # Verify the health check fixer API exists (ConfirmCallback is TYPE_CHECKING only)
+          python -c "from conda.plugins.types import CondaHealthCheck; print(f'fixer field: {CondaHealthCheck.__dataclass_fields__[\"fixer\"]}')"
 
       - name: Run tests
         shell: bash -el {0}
