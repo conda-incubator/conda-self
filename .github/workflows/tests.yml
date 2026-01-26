@@ -68,7 +68,7 @@ jobs:
           # Use conda-canary channel first for canary conda builds, with conda-forge as fallback for dependencies
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["conda-canary/label/dev", "conda-forge"]|g' pyproject.toml
           # Remove version constraint to allow canary builds
-          sed -i.bak 's|conda = ">=26.1.0"|conda = "*"|g' pyproject.toml
+          sed -i.bak 's|conda = ">=25.7.0"|conda = "*"|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
