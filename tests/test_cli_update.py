@@ -78,6 +78,10 @@ def test_update_plugin(
     )
 
 
+@pytest.mark.skipif(
+    "conda-canary" in __import__("os").environ.get("TEST_CONDA_CHANNEL", ""),
+    reason="Version mismatch between Python module and installed package in canary",
+)
 @pytest.mark.parametrize(
     "latest_versions,message_parts",
     (
