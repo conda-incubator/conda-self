@@ -32,64 +32,51 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
-    # TODO: Re-enable full matrix when conda 26.1.0 is released
-    # This PR requires the new health check API (fixer with ConfirmCallback)
-    # which is only available in conda-canary builds for now.
-    #
-    # Full matrix to restore:
-    #   os: [ubuntu-latest, windows-latest]
-    #   channel: [defaults, conda-forge]
-    #   python-version: ["310", "311", "312", "313"]
-    #   include:
-    #     - os: macos-15-intel
-    #       channel: conda-forge
-    #       python-version: "310"
-    #     - os: macos-latest
-    #       channel: defaults
-    #       python-version: "313"
-    #     - os: ubuntu-latest
-    #       channel: conda-canary
-    #       python-version: "313"
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Only test with conda-canary until conda 26.1.0 is released
-          # Use Python 3.12 as conda-canary may not have Python 3.13 builds for all platforms
-          - os: ubuntu-latest
-            channel: conda-canary
-            python-version: "312"
+  # TODO: Re-enable full pixi-based matrix when conda 26.1.0 is released
+  # This PR requires the new health check API (fixer with ConfirmCallback)
+  # which is only available in conda-canary builds for now.
+  #
+  # Full matrix to restore:
+  #   os: [ubuntu-latest, windows-latest]
+  #   channel: [defaults, conda-forge]
+  #   python-version: ["310", "311", "312", "313"]
+  #   include:
+  #     - os: macos-15-intel
+  #       channel: conda-forge
+  #       python-version: "310"
+  #     - os: macos-latest
+  #       channel: defaults
+  #       python-version: "313"
+  #     - os: ubuntu-latest
+  #       channel: conda-canary
+  #       python-version: "313"
 
+  tests:
+    name: ubuntu-latest, py312, conda-canary
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Patch channels in pixi config (conda-canary)
-        shell: bash
-        run: |
-          # Use conda-canary channel first for canary conda builds, with conda-forge as fallback for dependencies
-          sed -i.bak 's|channels = \["conda-forge"\]|channels = ["conda-canary/label/dev", "conda-forge"]|g' pyproject.toml
-          # Remove version constraint to allow canary builds
-          sed -i.bak 's|conda = ">=25.7.0"|conda = "*"|g' pyproject.toml
-          # Restrict to linux-64 only for canary testing (conda-canary may not have all platform builds)
-          sed -i.bak 's|platforms = \["linux-64", "osx-64", "osx-arm64", "win-64"\]|platforms = ["linux-64"]|g' pyproject.toml
-          rm pixi.lock
-      - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
+
+      - name: Setup Miniconda with canary conda
+        uses: conda-incubator/setup-miniconda@18f0153f21daf81e7d00eec67b5fc1f7fbf1b71c # v3.2.1
         with:
-          environments: test-py${{ matrix.python-version }}
-      - name: Ensure package is installed
-        run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
-      - name: Setup project
+          auto-update-conda: false
+          python-version: "3.12"
+          channels: conda-canary/label/dev,conda-forge
+          channel-priority: strict
+
+      - name: Install test dependencies
+        shell: bash -el {0}
         run: |
-          echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
-          pixi run --environment test-py${{ matrix.python-version }} python -m conda info
+          conda install -y pytest pytest-mock
+          pip install -e .
+
+      - name: Show conda info
+        shell: bash -el {0}
+        run: conda info
+
       - name: Run tests
+        shell: bash -el {0}
         env:
-          TEST_CONDA_CHANNEL: ${{ matrix.channel }}
-        run: >
-          pixi run
-          --environment test-py${{ matrix.python-version }}
-          test
-          -vv
-          --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
+          TEST_CONDA_CHANNEL: conda-canary
+        run: pytest -vv
