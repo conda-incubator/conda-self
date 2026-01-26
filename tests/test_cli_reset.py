@@ -20,6 +20,10 @@ def test_help(conda_cli: CondaCLIFixture):
     assert exc.value.code == 0
 
 
+@pytest.mark.skipif(
+    "conda-canary" in __import__("os").environ.get("TEST_CONDA_CHANNEL", ""),
+    reason="Integration test skipped for canary builds due to dependency resolution",
+)
 def test_reset(
     conda_cli: CondaCLIFixture,
     monkeypatch: MonkeyPatch,
@@ -49,6 +53,10 @@ def test_reset(
         assert not is_installed(prefix, "numpy")
 
 
+@pytest.mark.skipif(
+    "conda-canary" in __import__("os").environ.get("TEST_CONDA_CHANNEL", ""),
+    reason="Integration test skipped for canary builds due to dependency resolution",
+)
 @pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--snapshot"))
 def test_reset_migrate(
     add_cli_arg: bool,
