@@ -46,16 +46,19 @@ jobs:
             channel: conda-forge
             python-version: "310"
           - os: macos-latest
-            channel: defaults
+            channel: conda-forge
             python-version: "313"
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Patch channels in pixi config
+      - name: Patch pixi config for defaults channel
         if: matrix.channel == 'defaults'
         shell: bash
         run: |
+          # Use defaults channel instead of conda-forge
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
+          # Remove macOS platforms (conda not available on defaults for macOS)
+          sed -i.bak 's|platforms = \["linux-64", "osx-64", "osx-arm64", "win-64"\]|platforms = ["linux-64", "win-64"]|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
