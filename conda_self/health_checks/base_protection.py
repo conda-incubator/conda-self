@@ -11,15 +11,8 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
-from conda.base.constants import PREFIX_FROZEN_FILE
+from conda.base.constants import OK_MARK, PREFIX_FROZEN_FILE, X_MARK
 from conda.core.prefix_data import PrefixData
-
-# These constants may not be available in older conda versions
-try:
-    from conda.base.constants import OK_MARK, X_MARK
-except ImportError:
-    OK_MARK = "✓"
-    X_MARK = "✗"
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -80,8 +73,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
     confirm("Proceed?")
 
-    # Import remaining dependencies only after user confirms
-    # (some imports require unreleased conda versions)
+    # Lazy import heavy dependencies to avoid slowing down conda startup
     import json
     from contextlib import redirect_stdout
     from datetime import datetime
