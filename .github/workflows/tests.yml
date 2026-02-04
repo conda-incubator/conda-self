@@ -46,7 +46,7 @@ jobs:
             channel: conda-forge
             python-version: "310"
           - os: macos-latest
-            channel: conda-forge
+            channel: defaults
             python-version: "313"
 
     steps:
@@ -57,8 +57,8 @@ jobs:
         run: |
           # Use defaults channel instead of conda-forge
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
-          # Remove macOS platforms (conda not available on defaults for macOS)
-          sed -i.bak 's|platforms = \["linux-64", "osx-64", "osx-arm64", "win-64"\]|platforms = ["linux-64", "win-64"]|g' pyproject.toml
+          # Remove osx-64 (conda not available on defaults for macOS Intel)
+          sed -i.bak 's|platforms = \["linux-64", "osx-64", "osx-arm64", "win-64"\]|platforms = ["linux-64", "osx-arm64", "win-64"]|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
