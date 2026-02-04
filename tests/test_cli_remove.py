@@ -35,10 +35,6 @@ def test_remove_plugin(conda_cli, spec, error):
     )
 
 
-@pytest.mark.skipif(
-    "conda-canary" in __import__("os").environ.get("TEST_CONDA_CHANNEL", ""),
-    reason="Integration test skipped for canary builds due to dependency resolution",
-)
 def test_remove_nonessential_plugin(
     monkeypatch: MonkeyPatch,
     tmp_env: TmpEnvFixture,
