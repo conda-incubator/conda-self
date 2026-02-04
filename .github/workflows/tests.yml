@@ -32,55 +32,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # TODO: Re-enable full pixi-based matrix when conda 26.1.0 is released
-  # This PR requires the new health check API (fixer with ConfirmCallback)
-  # which is only available in conda-canary builds for now.
-  #
-  # Full matrix to restore:
-  #   os: [ubuntu-latest, windows-latest]
-  #   channel: [defaults, conda-forge]
-  #   python-version: ["310", "311", "312", "313"]
-  #   include:
-  #     - os: macos-15-intel
-  #       channel: conda-forge
-  #       python-version: "310"
-  #     - os: macos-latest
-  #       channel: defaults
-  #       python-version: "313"
-  #     - os: ubuntu-latest
-  #       channel: conda-canary
-  #       python-version: "313"
-
   tests:
-    name: ubuntu-latest, py312, conda-canary
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        channel: [defaults, conda-forge]
+        python-version: ["310", "311", "312", "313"]
+        include:
+          - os: macos-15-intel
+            channel: conda-forge
+            python-version: "310"
+          - os: macos-latest
+            channel: defaults
+            python-version: "313"
+
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Setup Miniconda with canary conda
-        uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3
+      - name: Patch channels in pixi config
+        if: matrix.channel == 'defaults'
+        shell: bash
+        run: |
+          sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
+          rm pixi.lock
+      - uses: prefix-dev/setup-pixi@82d477f15f3a381dbcc8adc1206ce643fe110fb7 # v0.9.3
         with:
-          auto-update-conda: false
-          python-version: "3.12"
-          channels: conda-canary/label/dev,conda-forge
-          channel-priority: strict
-
-      - name: Install test dependencies
-        shell: bash -el {0}
+          environments: test-py${{ matrix.python-version }}
+      - name: Ensure package is installed
+        run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
+      - name: Setup project
         run: |
-          # Install conda from canary channel (has unreleased health check API)
-          conda install -y -c conda-canary/label/dev -c conda-forge conda pytest pytest-mock
-          pip install -e .
-
-      - name: Show conda info
-        shell: bash -el {0}
-        run: |
-          conda info
-          # Verify the health check fixer API exists (ConfirmCallback is TYPE_CHECKING only)
-          python -c "from conda.plugins.types import CondaHealthCheck; print(f'fixer field: {CondaHealthCheck.__dataclass_fields__[\"fixer\"]}')"
-
+          echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
+          pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
-        shell: bash -el {0}
         env:
-          TEST_CONDA_CHANNEL: conda-canary
-        run: pytest -vv
+          TEST_CONDA_CHANNEL: ${{ matrix.channel }}
+        run: >
+          pixi run
+          --environment test-py${{ matrix.python-version }}
+          test
+          -vv
+          --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}

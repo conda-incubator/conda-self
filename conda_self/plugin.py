@@ -26,25 +26,13 @@ def conda_subcommands() -> Iterable[CondaSubcommand]:
 
 @hookimpl
 def conda_health_checks() -> Iterable[CondaHealthCheck]:
-    """Register the base environment protection health check.
-
-    The fixer API (with ConfirmCallback) requires conda >= 26.1.0.
-    On older conda versions, only the check action is registered.
-    """
+    """Register the base environment protection health check."""
     from .health_checks import base_protection
 
-    try:
-        # Try to register with full fixer API (conda >= 26.1.0)
-        yield CondaHealthCheck(
-            name="base-protection",
-            action=base_protection.check,
-            fixer=base_protection.fix,
-            summary="Check if base environment is protected",
-            fix="Clone base to 'default' environment, reset base, and freeze it",
-        )
-    except TypeError:
-        # Fallback for older conda versions without fixer support
-        yield CondaHealthCheck(
-            name="base-protection",
-            action=base_protection.check,
-        )
+    yield CondaHealthCheck(
+        name="base-protection",
+        action=base_protection.check,
+        fixer=base_protection.fix,
+        summary="Check if base environment is protected",
+        fix="Clone base to 'default' environment, reset base, and freeze it",
+    )
