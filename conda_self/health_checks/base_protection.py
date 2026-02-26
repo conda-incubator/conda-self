@@ -97,7 +97,6 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     if dest_prefix_data.is_environment():
         confirm(f"Environment '{default_env}' already exists. Remove and recreate?")
-        reset(prefix=dest_prefix_data.prefix_path)
         rm_rf(dest_prefix_data.prefix_path)
     elif dest_prefix_data.exists():
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
