@@ -20,7 +20,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy"
 ]
 dependencies = [
-  # "conda >=26.1.1",  # not on PyPI, installed via conda
+  # "conda >=26.1.0",  # not on PyPI, installed via conda
   "importlib-metadata>=4.8.3; python_version < '3.12'",
 ]
 dynamic = ["version"]
@@ -75,7 +75,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
 python = ">=3.10"
-conda = ">=26.1.1"
+conda = ">=26.1.0"
 
 [tool.pixi.tasks]
 conda = { cmd = "python -m conda", env = { CONDA_CHANNELS = "conda-forge" } }
