@@ -100,7 +100,9 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     elif dest_prefix_data.exists():
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
-    # Take a snapshot
+    # Take a snapshot using conda's explicit format.
+    # TODO: This doesn't capture pip-installed packages; consider a format
+    #       that supports them if needed in the future.
     snapshot_file = (
         base_prefix / "conda-meta" / f"explicit.{datetime.now():%Y-%m-%d-%H-%M-%S}.txt"
     )
