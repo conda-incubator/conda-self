@@ -65,10 +65,8 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         print("Base environment is already protected.")
         return 0
 
-    default_env = getattr(args, "default_env", "default")
-    message = getattr(
-        args, "message", "Protected by Base Environment Protection health fix"
-    )
+    default_env = "default"
+    message = "Protected by Base Environment Protection health fix"
 
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
