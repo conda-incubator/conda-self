@@ -37,6 +37,7 @@ def check(prefix: str, _verbose: bool) -> None:
     Only runs when checking the base environment.
     """
     if not is_base_environment(prefix):
+        print("Skipping base protection: not running on base environment.\n")
         return
 
     if is_base_protected():

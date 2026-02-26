@@ -71,11 +71,12 @@ def test_is_base_protected_returns_false_when_not_frozen(fake_base_env: Path):
 
 
 def test_check_skips_non_base_environment(tmp_path: Path, capsys: CaptureFixture):
-    """Does nothing when not on base environment."""
+    """Prints skip message when not on base environment."""
     base_protection.check(str(tmp_path), False)
 
     captured = capsys.readouterr()
-    assert captured.out == ""
+    assert "Skipping" in captured.out
+    assert "not running on base environment" in captured.out
 
 
 def test_check_reports_protected_base(protected_base_env: Path, capsys: CaptureFixture):
