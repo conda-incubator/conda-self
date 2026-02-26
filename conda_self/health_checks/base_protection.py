@@ -78,10 +78,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from datetime import datetime
 
     from conda.cli.condarc import ConfigurationFile
-    from conda.cli.main_list import print_explicit
     from conda.exceptions import CondaOSError
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
+    from conda.models.environment import Environment
 
     from ..query import permanent_dependencies
     from ..reset import reset
@@ -100,17 +100,20 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     elif dest_prefix_data.exists():
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
-    # Take a snapshot using conda's explicit format.
-    # TODO: This doesn't capture pip-installed packages; consider a format
-    #       that supports them if needed in the future.
+    # Take a snapshot using the environment exporter plugin system,
+    # which captures both conda and pip-installed packages.
+    env = Environment.from_prefix(
+        str(base_prefix), name="base", platform=context.subdir
+    )
+    exporter = context.plugin_manager.get_environment_exporter_by_format("yaml")
     snapshot_file = (
-        base_prefix / "conda-meta" / f"explicit.{datetime.now():%Y-%m-%d-%H-%M-%S}.txt"
+        base_prefix
+        / "conda-meta"
+        / f"environment.{datetime.now():%Y-%m-%d-%H-%M-%S}.yml"
     )
     if not context.quiet:
         print(f"Saving snapshot to {snapshot_file}")
-    with open(snapshot_file, "w") as f:
-        with redirect_stdout(f):
-            print_explicit(str(base_prefix))
+    snapshot_file.write_text(exporter.export(env))
 
     if not context.quiet:
         print(f"Cloning 'base' to '{default_env}'...")
