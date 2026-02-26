@@ -72,9 +72,9 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
     confirm("Proceed?")
 
-    # Lazy import heavy dependencies to avoid slowing down conda startup
+    import io
     import json
-    from contextlib import redirect_stdout
+    from contextlib import nullcontext, redirect_stdout
     from datetime import datetime
 
     from conda.cli.condarc import ConfigurationFile
@@ -110,17 +110,20 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         with redirect_stdout(f):
             print_explicit(str(base_prefix))
 
-    # Clone base to new default environment
     if not context.quiet:
         print(f"Cloning 'base' to '{default_env}'...")
-    clone_env(
-        str(base_prefix), str(dest_prefix_data.prefix_path), verbose=False, quiet=True
-    )
-
-    # Reset base
-    if not context.quiet:
         print("Resetting 'base' environment...")
-    reset(uninstallable_packages=uninstallable_packages)
+
+    # Suppress conda's transaction spinner output when --quiet
+    stdout_ctx = redirect_stdout(io.StringIO()) if context.quiet else nullcontext()
+    with stdout_ctx:
+        clone_env(
+            str(base_prefix),
+            str(dest_prefix_data.prefix_path),
+            verbose=False,
+            quiet=True,
+        )
+        reset(uninstallable_packages=uninstallable_packages)
 
     # Freeze base
     try:
