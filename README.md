@@ -1,6 +1,10 @@
 # conda-self
 
-A `self` command to manage your `base` environment safely.
+Commands to manage your `base` environment safely.
+
+## `conda self`
+
+Manage your conda 'base' environment safely.
 
 ```
 $ conda self
@@ -19,6 +23,32 @@ subcommands:
     reset               Reset 'base' environment to essential packages only.
     update              Update 'conda' and/or its plugins in the 'base' environment.
 ```
+
+## Base Environment Protection
+
+To check if your base environment is protected, run:
+
+```
+conda doctor base-protection
+```
+
+To protect your base environment, run:
+
+```
+conda doctor base-protection --fix
+```
+
+This will:
+1. Clone your current base environment to a new "default" environment
+2. Reset base to essential packages only
+3. Freeze the base environment to prevent modifications
+
+To see all available health checks, run:
+
+```
+conda doctor --list
+```
+
 ## Installation
 
 1. `conda install -n base conda-self`
