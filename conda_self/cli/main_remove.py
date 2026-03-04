@@ -9,12 +9,18 @@ HELP = "Remove conda plugins from the 'base' environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
+    from conda.cli.helpers import add_output_and_prompt_options
+
     parser.description = HELP
+    add_output_and_prompt_options(parser)
     parser.add_argument("specs", nargs="+", help="Plugins to remove/uninstall")
     parser.set_defaults(func=execute)
 
 
 def execute(args: argparse.Namespace) -> int:
+    from conda.base.context import context
+    from conda.reporters import confirm_yn
+
     from ..exceptions import SpecsCanNotBeRemoved
     from ..install import uninstall_specs_in_protected_env
     from ..query import permanent_dependencies
@@ -30,5 +36,11 @@ def execute(args: argparse.Namespace) -> int:
 
     print("Removing plugins:", *args.specs)
 
-    uninstall_specs_in_protected_env(args.specs, yes=False)
+    confirm_yn(
+        "Proceed with removing plugins?[y/n]:\n",
+        default="no",
+        dry_run=context.dry_run,
+    )
+
+    uninstall_specs_in_protected_env(args.specs, json=context.json, yes=True)
     return 0

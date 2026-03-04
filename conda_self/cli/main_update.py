@@ -9,13 +9,10 @@ HELP = "Update 'conda' and/or its plugins in the 'base' environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
+    from conda.cli.helpers import add_output_and_prompt_options
+
     parser.description = HELP
-    parser.add_argument(
-        "-d",
-        "--dry-run",
-        action="store_true",
-        help="Only report available updates, do not install.",
-    )
+    add_output_and_prompt_options(parser)
     parser.add_argument(
         "--force-reinstall",
         action="store_true",
@@ -76,7 +73,7 @@ def execute(args: argparse.Namespace) -> int:
                 )
             updates[package_name] = latest.version
 
-    if args.dry_run:
+    if context.dry_run:
         raise DryRunExit()
     elif not updates:
         return 0
@@ -86,4 +83,6 @@ def execute(args: argparse.Namespace) -> int:
         channel=channel,
         force_reinstall=args.force_reinstall,
         update_dependencies=args.all,
+        json=context.json,
+        yes=context.always_yes,
     )
