@@ -27,6 +27,7 @@ def install_package_list_in_protected_env(
     force_reinstall: bool = False,
     update_dependencies: bool = False,
     json: bool = False,
+    yes: bool = False,
 ) -> int:
     specs = [f"{name}={version}" for name, version in packages.items()]
     process = run(
@@ -43,6 +44,7 @@ def install_package_list_in_protected_env(
             ),
             *(("--force-reinstall",) if force_reinstall else ()),
             *(("--json",) if json else ()),
+            *(("--yes",) if yes else ()),
             "--all" if update_dependencies else "--update-specs",
             "--override-channels",
             f"--channel={channel}",
