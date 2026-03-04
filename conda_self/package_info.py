@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import configparser
+import json
 import os
 import sys
 from pathlib import Path
@@ -20,6 +21,25 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     optionxform = staticmethod(str)  # type: ignore
 
 
+def _file_paths_from_extracted_package(pkg_dir: str) -> list[str]:
+    """Read file paths from an extracted package directory.
+
+    Tries info/paths.json first (canonical per CEP), then falls back
+    to info/files (deprecated legacy format).
+    """
+    pkg_path = Path(pkg_dir)
+
+    paths_json = pkg_path / "info/paths.json"
+    if paths_json.is_file():
+        data = json.loads(paths_json.read_text())
+        return [entry["_path"] for entry in data.get("paths", [])]
+
+    try:
+        return (pkg_path / "info/files").read_text().splitlines()
+    except FileNotFoundError:
+        return []
+
+
 class PackageInfo:
     def __init__(self, dist_info_path: Path):
         """Describe the dist-info for a Python package installed as a conda package"""
@@ -29,16 +49,10 @@ class PackageInfo:
     def from_record(
         cls, record: PrefixRecord | PackageCacheRecord
     ) -> list[PackageInfo]:
+        had_manifest = True
         if not (paths := getattr(record, "files", None)):
-            try:
-                paths = (
-                    Path(record.extracted_package_dir, "info/files")
-                    .read_text()
-                    .splitlines()
-                )
-            except FileNotFoundError:
-                # missing info/files -> empty package
-                paths = []
+            paths = _file_paths_from_extracted_package(record.extracted_package_dir)
+            had_manifest = bool(paths)
         dist_infos = set()
         for path in paths:
             if (maybe_dist_info := os.path.dirname(path)).endswith(".dist-info"):
@@ -47,6 +61,15 @@ class PackageInfo:
             basedir = sys.prefix
         else:
             basedir = record.extracted_package_dir
+
+        if not dist_infos and not had_manifest:
+            # Last resort: scan the extracted directory for .dist-info
+            # directories directly (e.g. bare wheel with no conda metadata).
+            basepath = Path(basedir)
+            for candidate in basepath.rglob("*.dist-info"):
+                if candidate.is_dir():
+                    dist_infos.add(str(candidate.relative_to(basepath)))
+
         if not dist_infos:
             raise NoDistInfoDirFound(record.name, basedir)
         return [cls(Path(basedir, p)) for p in dist_infos]
