@@ -58,7 +58,7 @@ def test_reset_migrate(
     conda_channel: str,
     python_version: str,
 ):
-    conda_version = "25.7.0"
+    conda_version = "26.1.0"
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
     # Adding conda-index too to test that non-default plugins are kept
