@@ -23,15 +23,24 @@ def test_help(conda_cli):
         ("conda", SpecsCanNotBeRemoved),
         ("conda-libmamba-solver", SpecsCanNotBeRemoved),
         ("python", SpecsCanNotBeRemoved),
-        ("flask", None),
     ),
 )
-def test_remove_plugin(conda_cli, spec, error):
+def test_remove_protected_plugin(conda_cli, spec, error):
     conda_cli(
         "self",
         "remove",
         spec,
         raises=error,
+    )
+
+
+def test_remove_unprotected_plugin_passes_validation(conda_cli):
+    """Verify non-essential specs pass validation and reach the confirmation prompt."""
+    conda_cli(
+        "self",
+        "remove",
+        "--yes",
+        "flask",
     )
 
 
@@ -52,6 +61,7 @@ def test_remove_nonessential_plugin(
             prefix,
             "self",
             "remove",
+            "--yes",
             "conda-index",
         )
         assert not is_installed(prefix, "conda-index")

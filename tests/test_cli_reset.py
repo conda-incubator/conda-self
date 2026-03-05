@@ -85,7 +85,7 @@ def test_reset_migrate(
         assert is_installed(prefix, "conda-index")
 
         # Update conda and install an unrelated package
-        conda_cli_subprocess(prefix, "self", "update")
+        conda_cli_subprocess(prefix, "self", "update", "--yes")
         assert is_installed(prefix, "conda")
         assert not is_installed(prefix, f"conda={conda_version}"), "conda not updated"
         conda_cli(
