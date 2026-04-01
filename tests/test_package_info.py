@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass, field
 
 import pytest
+from conda.models.records import PrefixRecord
 
 from conda_self.exceptions import NoDistInfoDirFound
 from conda_self.package_info import PackageInfo
@@ -28,53 +29,56 @@ def cache_record(tmp_path):
     return _make
 
 
-def test_finds_dist_info_via_info_files(tmp_path, cache_record):
-    dist_info = tmp_path / "lib/python3.12/site-packages/pkg-1.0.dist-info"
+def test_finds_dist_info_via_record_files(tmp_path, cache_record):
+    dist_info = tmp_path / "site-packages/pkg-1.0.dist-info"
     dist_info.mkdir(parents=True)
     (dist_info / "entry_points.txt").write_text("[conda]\nplugin = pkg.plugin\n")
 
-    info_dir = tmp_path / "info"
-    info_dir.mkdir()
-    (info_dir / "files").write_text(
-        "lib/python3.12/site-packages/pkg-1.0.dist-info/entry_points.txt\n"
-        "lib/python3.12/site-packages/pkg/__init__.py\n"
+    record = cache_record(
+        files=[
+            "site-packages/pkg-1.0.dist-info/entry_points.txt",
+            "site-packages/pkg/__init__.py",
+        ]
     )
-
-    infos = PackageInfo.from_record(cache_record())
+    infos = PackageInfo.from_record(record)
 
     assert len(infos) == 1
     assert infos[0].dist_info_path == dist_info
     assert "conda" in infos[0].entry_points()
 
 
-def test_finds_dist_info_via_paths_json(tmp_path, cache_record):
+@pytest.mark.parametrize("manifest", ["info_files", "paths_json"])
+def test_finds_dist_info_via_manifest(tmp_path, cache_record, manifest):
     dist_info = tmp_path / "site-packages/pkg-1.0.dist-info"
     dist_info.mkdir(parents=True)
     (dist_info / "entry_points.txt").write_text("[conda]\nplugin = pkg.plugin\n")
 
     info_dir = tmp_path / "info"
     info_dir.mkdir()
-    (info_dir / "paths.json").write_text(
-        json.dumps(
-            {
-                "paths_version": 1,
-                "paths": [
-                    {
-                        "_path": "site-packages/pkg-1.0.dist-info/entry_points.txt",
-                        "path_type": "hardlink",
-                        "sha256": "abc123",
-                        "size_in_bytes": 39,
-                    },
-                    {
-                        "_path": "site-packages/pkg/__init__.py",
-                        "path_type": "hardlink",
-                        "sha256": "def456",
-                        "size_in_bytes": 100,
-                    },
-                ],
-            }
+
+    file_paths = [
+        "site-packages/pkg-1.0.dist-info/entry_points.txt",
+        "site-packages/pkg/__init__.py",
+    ]
+    if manifest == "paths_json":
+        (info_dir / "paths.json").write_text(
+            json.dumps(
+                {
+                    "paths_version": 1,
+                    "paths": [
+                        {
+                            "_path": p,
+                            "path_type": "hardlink",
+                            "sha256": "x",
+                            "size_in_bytes": 1,
+                        }
+                        for p in file_paths
+                    ],
+                }
+            )
         )
-    )
+    else:
+        (info_dir / "files").write_text("\n".join(file_paths) + "\n")
 
     infos = PackageInfo.from_record(cache_record())
 
@@ -158,6 +162,21 @@ def test_no_fallback_when_manifest_exists(tmp_path, cache_record):
 
     with pytest.raises(NoDistInfoDirFound):
         PackageInfo.from_record(cache_record())
+
+
+def test_no_filesystem_fallback_for_prefix_record(tmp_path):
+    """PrefixRecord must never trigger the rglob scan because basedir would
+    be the entire prefix, picking up .dist-info dirs from other packages."""
+    record = PrefixRecord(
+        name="some-clib",
+        version="1.0",
+        build="0",
+        build_number=0,
+        extracted_package_dir=str(tmp_path),
+    )
+
+    with pytest.raises(NoDistInfoDirFound):
+        PackageInfo.from_record(record)
 
 
 def test_entry_points_missing_file(tmp_path):
