@@ -62,9 +62,10 @@ class PackageInfo:
         else:
             basedir = record.extracted_package_dir
 
-        if not dist_infos and not had_manifest:
-            # Last resort: scan the extracted directory for .dist-info
-            # directories directly (e.g. bare wheel with no conda metadata).
+        if not dist_infos and not had_manifest and not isinstance(record, PrefixRecord):
+            # Last resort for package cache records: scan the extracted
+            # directory for .dist-info (e.g. bare wheel with no conda metadata).
+            # Not safe for PrefixRecord where basedir is the entire prefix.
             basepath = Path(basedir)
             for candidate in basepath.rglob("*.dist-info"):
                 if candidate.is_dir():
