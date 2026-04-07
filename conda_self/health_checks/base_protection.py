@@ -91,15 +91,12 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from datetime import datetime
 
     from conda.cli.condarc import ConfigurationFile
-    from conda.exceptions import CondaOSError
+    from conda.exceptions import CondaOSError, CondaValueError
     from conda.gateways.disk.delete import rm_rf
     from conda.misc import clone_env
-    from conda.models.environment import Environment
 
     from ..query import permanent_dependencies
     from ..reset import reset
-
-    base_prefix = Path(sys.prefix)
 
     # Get packages to keep in base
     uninstallable_packages = permanent_dependencies()
@@ -113,20 +110,27 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     elif dest_prefix_data.exists():
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
-    # Take a snapshot using the environment exporter plugin system,
-    # which captures both conda and pip-installed packages.
-    env = Environment.from_prefix(
-        str(base_prefix), name="base", platform=context.subdir
-    )
-    exporter = context.plugin_manager.get_environment_exporter_by_format("yaml")
-    snapshot_file = (
-        base_prefix
-        / "conda-meta"
-        / f"environment.{datetime.now():%Y-%m-%d-%H-%M-%S}.yml"
-    )
+    # Take snapshots using the environment exporter plugin system.
+    timestamp = f"{datetime.now():%Y-%m-%d-%H-%M-%S}"
+    snapshot_dir = base_prefix / "conda-meta"
+
+    yaml_exporter = context.plugin_manager.get_environment_exporter_by_format("yaml")
+    yaml_file = snapshot_dir / f"environment.{timestamp}.yml"
     if not context.quiet:
-        print(f"Saving snapshot to {snapshot_file}")
-    snapshot_file.write_text(exporter.export(env))
+        print(f"Saving YAML snapshot to {yaml_file}")
+    yaml_file.write_text(yaml_exporter.export(env))
+
+    try:
+        explicit_exporter = context.plugin_manager.get_environment_exporter_by_format(
+            "explicit"
+        )
+        explicit_file = snapshot_dir / f"environment.{timestamp}.txt"
+        if not context.quiet:
+            print(f"Saving explicit snapshot to {explicit_file}")
+        explicit_file.write_text(explicit_exporter.export(env))
+    except CondaValueError:
+        if not context.quiet:
+            print("  Skipping explicit snapshot (non-conda packages present).")
 
     if not context.quiet:
         print(f"Cloning 'base' to '{default_env}'...")
