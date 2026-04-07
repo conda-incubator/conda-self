@@ -51,21 +51,11 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     This clones the base environment to a new 'default' environment,
     resets base to essentials, and freezes it.
     """
-    import io
-    import json
-    from contextlib import nullcontext, redirect_stdout
     from pathlib import Path
 
     from conda.base.context import context
-    from conda.cli.condarc import ConfigurationFile
-    from conda.exceptions import CondaOSError, CondaValueError
-    from conda.gateways.disk.delete import rm_rf
-    from conda.misc import clone_env
-    from conda.models.environment import Environment
 
-    from ..constants import DEFAULT_ENV_NAME, SNAPSHOT_FILE_BASE_PROTECTION
-    from ..query import permanent_dependencies
-    from ..reset import reset
+    from ..constants import DEFAULT_ENV_NAME
 
     if not is_base_environment(prefix):
         print("Skipping: not running on base environment.")
@@ -74,6 +64,20 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     if is_base_protected():
         print("Base environment is already protected.")
         return 0
+
+    import io
+    import json
+    from contextlib import nullcontext, redirect_stdout
+
+    from conda.cli.condarc import ConfigurationFile
+    from conda.exceptions import CondaOSError, CondaValueError
+    from conda.gateways.disk.delete import rm_rf
+    from conda.misc import clone_env
+    from conda.models.environment import Environment
+
+    from ..constants import SNAPSHOT_FILE_BASE_PROTECTION
+    from ..query import permanent_dependencies
+    from ..reset import reset
 
     default_env = DEFAULT_ENV_NAME
     message = "Protected by Base Environment Protection health fix"
