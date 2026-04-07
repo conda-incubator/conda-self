@@ -6,4 +6,4 @@ DEFAULT_ENV_NAME: Final = "default"
 
 RESET_FILE_INSTALLER = "initial-state.explicit.txt"
 RESET_FILE_MIGRATE = "migrate-state.explicit.txt"
-SNAPSHOT_PREFIX_BASE_PROTECTION = "base-protection"
+SNAPSHOT_FILE_BASE_PROTECTION = "base-protection-state.explicit.txt"

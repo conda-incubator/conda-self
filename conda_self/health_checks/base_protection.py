@@ -54,7 +54,6 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     import io
     import json
     from contextlib import nullcontext, redirect_stdout
-    from datetime import datetime
     from pathlib import Path
 
     from conda.base.context import context
@@ -64,7 +63,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from conda.misc import clone_env
     from conda.models.environment import Environment
 
-    from ..constants import DEFAULT_ENV_NAME, SNAPSHOT_PREFIX_BASE_PROTECTION
+    from ..constants import DEFAULT_ENV_NAME, SNAPSHOT_FILE_BASE_PROTECTION
     from ..query import permanent_dependencies
     from ..reset import reset
 
@@ -91,8 +90,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         print(
             f"  Warning: Base environment contains {len(env.external_packages)} "
             "non-conda package(s) that will become non-functional after reset.\n"
-            f"  They are preserved in the cloned '{default_env}' environment "
-            "and recorded in the YAML snapshot."
+            f"  They are preserved in the cloned '{default_env}' environment."
         )
     confirm("Proceed?")
 
@@ -108,28 +106,18 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     elif dest_prefix_data.exists():
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
-    # Take snapshots using the environment exporter plugin system.
-    timestamp = f"{datetime.now():%Y-%m-%d-%H-%M-%S}"
-    snapshot_dir = base_prefix / "conda-meta"
-    snapshot_stem = f"{SNAPSHOT_PREFIX_BASE_PROTECTION}.{timestamp}"
-
-    yaml_exporter = context.plugin_manager.get_environment_exporter_by_format("yaml")
-    yaml_file = snapshot_dir / f"{snapshot_stem}.yml"
-    if not context.quiet:
-        print(f"Saving YAML snapshot to {yaml_file}")
-    yaml_file.write_text(yaml_exporter.export(env))
-
+    # Save explicit snapshot for potential restore via conda self reset.
+    snapshot_file = base_prefix / "conda-meta" / SNAPSHOT_FILE_BASE_PROTECTION
     try:
         explicit_exporter = context.plugin_manager.get_environment_exporter_by_format(
             "explicit"
         )
-        explicit_file = snapshot_dir / f"{snapshot_stem}.txt"
         if not context.quiet:
-            print(f"Saving explicit snapshot to {explicit_file}")
-        explicit_file.write_text(explicit_exporter.export(env))
+            print(f"Saving snapshot to {snapshot_file}")
+        snapshot_file.write_text(explicit_exporter.export(env))
     except CondaValueError:
         if not context.quiet:
-            print("  Skipping explicit snapshot (non-conda packages present).")
+            print("  Skipping snapshot (non-conda packages present).")
 
     if not context.quiet:
         print(f"Cloning 'base' to '{default_env}'...")
