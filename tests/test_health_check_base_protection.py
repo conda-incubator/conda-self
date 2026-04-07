@@ -157,10 +157,7 @@ def test_fix_calls_confirm_callback(fake_base_env: Path):
 
 
 def test_health_check_registered():
-    """Verify the health check is registered correctly.
-
-    Works with both old and new conda versions.
-    """
+    """Verify the health check is registered correctly."""
 
     from conda_self.plugin import conda_health_checks
 
@@ -171,8 +168,6 @@ def test_health_check_registered():
     assert hc.name == "base-protection"
     assert hc.action == base_protection.check
 
-    # Additional fields only available in conda >= 26.1.0
-    if hasattr(hc, "fixer"):
-        assert hc.fixer == base_protection.fix
-        assert hc.summary is not None
-        assert hc.fix is not None
+    assert hc.fixer == base_protection.fix
+    assert hc.summary is not None
+    assert hc.fix is not None
