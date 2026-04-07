@@ -64,6 +64,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from conda.misc import clone_env
     from conda.models.environment import Environment
 
+    from ..constants import DEFAULT_ENV_NAME, SNAPSHOT_PREFIX_BASE_PROTECTION
     from ..query import permanent_dependencies
     from ..reset import reset
 
@@ -75,7 +76,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         print("Base environment is already protected.")
         return 0
 
-    default_env = "default"
+    default_env = DEFAULT_ENV_NAME
     message = "Protected by Base Environment Protection health fix"
 
     base_prefix = Path(sys.prefix)
@@ -110,9 +111,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     # Take snapshots using the environment exporter plugin system.
     timestamp = f"{datetime.now():%Y-%m-%d-%H-%M-%S}"
     snapshot_dir = base_prefix / "conda-meta"
+    snapshot_stem = f"{SNAPSHOT_PREFIX_BASE_PROTECTION}.{timestamp}"
 
     yaml_exporter = context.plugin_manager.get_environment_exporter_by_format("yaml")
-    yaml_file = snapshot_dir / f"environment.{timestamp}.yml"
+    yaml_file = snapshot_dir / f"{snapshot_stem}.yml"
     if not context.quiet:
         print(f"Saving YAML snapshot to {yaml_file}")
     yaml_file.write_text(yaml_exporter.export(env))
@@ -121,7 +123,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         explicit_exporter = context.plugin_manager.get_environment_exporter_by_format(
             "explicit"
         )
-        explicit_file = snapshot_dir / f"environment.{timestamp}.txt"
+        explicit_file = snapshot_dir / f"{snapshot_stem}.txt"
         if not context.quiet:
             print(f"Saving explicit snapshot to {explicit_file}")
         explicit_file.write_text(explicit_exporter.export(env))
