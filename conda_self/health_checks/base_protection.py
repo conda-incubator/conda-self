@@ -51,9 +51,21 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     This clones the base environment to a new 'default' environment,
     resets base to essentials, and freezes it.
     """
+    import io
+    import json
+    from contextlib import nullcontext, redirect_stdout
+    from datetime import datetime
     from pathlib import Path
 
     from conda.base.context import context
+    from conda.cli.condarc import ConfigurationFile
+    from conda.exceptions import CondaOSError, CondaValueError
+    from conda.gateways.disk.delete import rm_rf
+    from conda.misc import clone_env
+    from conda.models.environment import Environment
+
+    from ..query import permanent_dependencies
+    from ..reset import reset
 
     if not is_base_environment(prefix):
         print("Skipping: not running on base environment.")
@@ -65,8 +77,6 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     default_env = "default"
     message = "Protected by Base Environment Protection health fix"
-
-    from conda.models.environment import Environment
 
     base_prefix = Path(sys.prefix)
 
@@ -84,19 +94,6 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             "and recorded in the YAML snapshot."
         )
     confirm("Proceed?")
-
-    import io
-    import json
-    from contextlib import nullcontext, redirect_stdout
-    from datetime import datetime
-
-    from conda.cli.condarc import ConfigurationFile
-    from conda.exceptions import CondaOSError, CondaValueError
-    from conda.gateways.disk.delete import rm_rf
-    from conda.misc import clone_env
-
-    from ..query import permanent_dependencies
-    from ..reset import reset
 
     # Get packages to keep in base
     uninstallable_packages = permanent_dependencies()
