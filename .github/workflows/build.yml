@@ -33,12 +33,8 @@ concurrency:
 
 jobs:
   build-conda:
-    name: Build conda package (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
+    name: Build conda package
+    runs-on: ubuntu-latest
     env:
       CONDA_BLD_PATH: ${{ github.workspace }}/pkgs
       PIXI_ENV_NAME: build
@@ -56,11 +52,8 @@ jobs:
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} build --channel conda-forge
 
       - name: Upload to conda-canary
-        # Only publish canary builds after successful pushes to main in the canonical repo
-        # Since this is a noarch package, only one platform is needed
         if: >-
-          matrix.os == 'ubuntu-latest'
-          && github.event_name == 'push'
+          github.event_name == 'push'
           && !cancelled()
           && !github.event.repository.fork
           && github.ref_name == 'main'
