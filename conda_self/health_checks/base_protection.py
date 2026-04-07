@@ -1,5 +1,3 @@
-# Copyright (C) 2012 Anaconda, Inc
-# SPDX-License-Identifier: BSD-3-Clause
 """Health check: Base environment protection.
 
 Checks if the base environment is protected (frozen) and offers to
