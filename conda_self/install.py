@@ -1,6 +1,8 @@
 import sys
 from subprocess import run
 
+from conda.base.context import context
+
 
 def install_package_in_protected_env(
     package_name: str,
@@ -35,7 +37,11 @@ def install_package_list_in_protected_env(
             "conda",
             "install",
             f"--prefix={sys.prefix}",
-            "--override-frozen",
+            *(
+                ("--override-frozen",)
+                if hasattr(context, "protect_frozen_envs")
+                else ()
+            ),
             *(("--force-reinstall",) if force_reinstall else ()),
             *(("--json",) if json else ()),
             *(("--yes",) if yes else ()),
@@ -59,7 +65,7 @@ def uninstall_specs_in_protected_env(
         "conda",
         "remove",
         f"--prefix={sys.prefix}",
-        "--override-frozen",
+        *(("--override-frozen",) if hasattr(context, "protect_frozen_envs") else ()),
         *(("--json",) if json else ()),
         *(("--yes",) if yes else ()),
         *specs,
