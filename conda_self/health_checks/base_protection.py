@@ -66,8 +66,23 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     default_env = "default"
     message = "Protected by Base Environment Protection health fix"
 
+    from conda.models.environment import Environment
+
+    base_prefix = Path(sys.prefix)
+
+    env = Environment.from_prefix(
+        str(base_prefix), name="base", platform=context.subdir
+    )
+
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
+    if env.external_packages:
+        print(
+            f"  Warning: Base environment contains {len(env.external_packages)} "
+            "non-conda package(s) that will become non-functional after reset.\n"
+            f"  They are preserved in the cloned '{default_env}' environment "
+            "and recorded in the YAML snapshot."
+        )
     confirm("Proceed?")
 
     import io
