@@ -1,4 +1,4 @@
-""" """
+"""Package queries for conda-self."""
 
 from __future__ import annotations
 
