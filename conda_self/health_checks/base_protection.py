@@ -75,7 +75,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from conda.misc import clone_env
     from conda.models.environment import Environment
 
-    from ..constants import SNAPSHOT_FILE_BASE_PROTECTION
+    from ..constants import RESET_FILE_BASE_PROTECTION
     from ..query import permanent_dependencies
     from ..reset import reset
 
@@ -111,7 +111,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         confirm(f"Directory exists at '{dest_prefix_data.prefix_path}'. Continue?")
 
     # Save explicit snapshot for potential restore via conda self reset.
-    snapshot_file = base_prefix / "conda-meta" / SNAPSHOT_FILE_BASE_PROTECTION
+    snapshot_file = base_prefix / "conda-meta" / RESET_FILE_BASE_PROTECTION
     try:
         explicit_exporter = context.plugin_manager.get_environment_exporter_by_format(
             "explicit"
