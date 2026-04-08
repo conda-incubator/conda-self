@@ -18,9 +18,7 @@ def test_help(conda_cli: CondaCLIFixture):
 
 
 def test_update_plugin_invalid(conda_cli: CondaCLIFixture):
-    conda_cli(
-        "self", "update", "--plugin", "conda-fake-solver", raises=CondaValueError
-    )
+    conda_cli("self", "update", "--plugin", "conda-fake-solver", raises=CondaValueError)
 
 
 @pytest.mark.parametrize(
