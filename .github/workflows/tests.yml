@@ -42,9 +42,6 @@ jobs:
         channel: [defaults, conda-forge]
         python-version: ["310", "311", "312", "313", "314"]
         include:
-          - os: macos-15-intel
-            channel: conda-forge
-            python-version: "310"
           - os: macos-latest
             channel: defaults
             python-version: "313"
@@ -55,6 +52,7 @@ jobs:
         if: matrix.channel == 'defaults'
         shell: bash
         run: |
+          # Use defaults channel instead of conda-forge
           sed -i.bak 's|channels = \["conda-forge"\]|channels = ["https://repo.anaconda.com/pkgs/main", "https://repo.anaconda.com/pkgs/r", "https://repo.anaconda.com/pkgs/msys2"]|g' pyproject.toml
           rm pixi.lock
       - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5

@@ -49,7 +49,7 @@ jobs:
           environments: ${{ env.PIXI_ENV_NAME }}
 
       - name: Build recipe
-        run: pixi run --environment ${{ env.PIXI_ENV_NAME }} build --channel conda-forge
+        run: pixi run --environment ${{ env.PIXI_ENV_NAME }} build --channel conda-forge --channel main
 
       - name: Upload to conda-canary
         if: >-
