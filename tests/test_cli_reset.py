@@ -7,7 +7,7 @@ import pytest
 from conda.base.constants import PREFIX_FROZEN_FILE
 from conda.cli.main_list import print_explicit
 
-from conda_self.constants import RESET_FILE_MIGRATE
+from conda_self.constants import RESET_FILE_BASE_PROTECTION
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ def test_reset(
 
 
 @pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--snapshot"))
-def test_reset_migrate(
+def test_reset_base_protection(
     add_cli_arg: bool,
     conda_cli: CondaCLIFixture,
     monkeypatch: MonkeyPatch,
@@ -69,15 +69,15 @@ def test_reset_migrate(
         "conda-index",
     ) as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE
-        migrate_state = prefix / "conda-meta" / RESET_FILE_MIGRATE
+        protection_state = prefix / "conda-meta" / RESET_FILE_BASE_PROTECTION
 
-        # Add sentintel files of a protected environment after migration
+        # Add sentinel files of a protected environment after base-protection fix
         frozen_file.touch()
-        with migrate_state.open(mode="w") as f:
+        with protection_state.open(mode="w") as f:
             with redirect_stdout(f):
                 print_explicit(prefix)
         assert frozen_file.exists()
-        assert migrate_state.exists()
+        assert protection_state.exists()
 
         assert is_installed(prefix, f"conda={conda_version}"), (
             f"conda={conda_version} not in initial environment"
@@ -99,7 +99,7 @@ def test_reset_migrate(
             "self",
             "reset",
             "--yes",
-            *(("--snapshot", "migrate") if add_cli_arg else ()),
+            *(("--snapshot", "base-protection") if add_cli_arg else ()),
         )
         assert is_installed(prefix, f"conda={conda_version}"), "conda not reset"
         assert is_installed(prefix, "conda-index"), "conda-index has been removed"
