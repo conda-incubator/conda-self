@@ -49,6 +49,18 @@ To see all available health checks, run:
 conda doctor --list
 ```
 
+### Unprotecting base
+
+To remove protection entirely, delete the frozen file:
+
+```
+rm $CONDA_PREFIX/conda-meta/frozen
+```
+
+To bypass protection for a single command, pass `--override-frozen` or set
+`CONDA_OVERRIDE_FROZEN=1`. To disable it permanently, add `override_frozen: true`
+to your `.condarc`.
+
 ## Installation
 
 1. `conda install -n base conda-self`
