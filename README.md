@@ -24,6 +24,20 @@ subcommands:
     update              Update 'conda' and/or its plugins in the 'base' environment.
 ```
 
+### Custom channels
+
+`conda self install` and `conda self update` use your configured channels.
+To install plugins from a custom channel (e.g. a company or community channel
+on anaconda.org or prefix.dev), add it to your configuration first:
+
+```
+conda config --add channels my-channel
+conda self install my-plugin
+```
+
+This keeps channel configuration consistent across install, update, and
+dependency resolution.
+
 ## Base Environment Protection
 
 To check if your base environment is protected, run:
