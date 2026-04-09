@@ -68,7 +68,11 @@ def install_specs_in_protected_env(
             "conda",
             "install",
             f"--prefix={sys.prefix}",
-            *(("--override-frozen",) if hasattr(context, "protect_frozen_envs") else ()),
+            *(
+                ("--override-frozen",)
+                if hasattr(context, "protect_frozen_envs")
+                else ()
+            ),
             *(("--force-reinstall",) if force_reinstall else ()),
             *(("--json",) if json else ()),
             *(("--yes",) if yes else ()),

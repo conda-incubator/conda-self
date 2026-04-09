@@ -33,7 +33,10 @@ def execute(args: argparse.Namespace) -> int:
     from conda.models.match_spec import MatchSpec
 
     from ..exceptions import SpecsAreNotPlugins
-    from ..install import install_specs_in_protected_env, uninstall_specs_in_protected_env
+    from ..install import (
+        install_specs_in_protected_env,
+        uninstall_specs_in_protected_env,
+    )
     from ..validate import conda_plugin_packages, reload_plugin_packages
 
     specs_to_add = [MatchSpec(spec) for spec in args.specs]
@@ -50,7 +53,9 @@ def execute(args: argparse.Namespace) -> int:
 
     if context.dry_run:
         # Use in-process solver for dry-run so PackagesNotFoundError propagates correctly
-        Solver(sys.prefix, context.channels, specs_to_add=specs_to_add).solve_for_transaction()
+        Solver(
+            sys.prefix, context.channels, specs_to_add=specs_to_add
+        ).solve_for_transaction()
         raise DryRunExit()
 
     returncode = install_specs_in_protected_env(
