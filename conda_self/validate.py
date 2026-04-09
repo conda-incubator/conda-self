@@ -22,6 +22,11 @@ def conda_plugin_packages():
     )
 
 
+def reload_plugin_packages() -> None:
+    """Invalidate the cache to pick up newly installed packages."""
+    conda_plugin_packages.cache_clear()
+
+
 def validate_plugin_is_installed(name: str) -> None:
     if name not in conda_plugin_packages():
         raise CondaValueError(

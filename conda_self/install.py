@@ -54,6 +54,30 @@ def install_package_list_in_protected_env(
     return process.returncode
 
 
+def install_specs_in_protected_env(
+    specs: list[str],
+    force_reinstall: bool = False,
+    json: bool = False,
+    yes: bool = False,
+) -> int:
+    """Install new specs (without pinned versions) into the protected base env."""
+    process = run(
+        [
+            sys.executable,
+            "-m",
+            "conda",
+            "install",
+            f"--prefix={sys.prefix}",
+            *(("--override-frozen",) if hasattr(context, "protect_frozen_envs") else ()),
+            *(("--force-reinstall",) if force_reinstall else ()),
+            *(("--json",) if json else ()),
+            *(("--yes",) if yes else ()),
+            *specs,
+        ]
+    )
+    return process.returncode
+
+
 def uninstall_specs_in_protected_env(
     specs: list[str],
     json: bool = False,
