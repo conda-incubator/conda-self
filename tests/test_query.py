@@ -48,7 +48,8 @@ def permanent_packages_condarc(self_plugin_manager):
             )
         }
     )
-    return self_plugin_manager
+    yield self_plugin_manager
+    reset_context()
 
 
 def test_permanent_dependencies_with_setting(permanent_packages_condarc):
