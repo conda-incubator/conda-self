@@ -52,7 +52,7 @@ def execute(args: argparse.Namespace) -> int:
     print("Installing plugins:", *args.specs)
 
     if context.dry_run:
-        # Use in-process solver for dry-run so PackagesNotFoundError propagates correctly
+        # Use in-process solver for dry-run so exceptions propagate correctly
         Solver(
             sys.prefix, context.channels, specs_to_add=specs_to_add
         ).solve_for_transaction()
