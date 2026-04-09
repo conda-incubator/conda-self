@@ -1,5 +1,5 @@
 import pytest
-from conda.exceptions import DryRunExit, PackagesNotFoundError
+from conda.exceptions import CondaValueError, DryRunExit, PackagesNotFoundError
 
 from conda_self.exceptions import SpecsAreNotPlugins
 
@@ -41,3 +41,14 @@ def test_install_not_plugins(conda_cli, plugin_name, error):
         plugin_name,
         raises=error,
     )
+
+
+@pytest.mark.parametrize(
+    "spec",
+    (
+        "conda-forge::conda-libmamba-solver",
+        "defaults::conda-libmamba-solver",
+    ),
+)
+def test_install_channel_in_spec_rejected(conda_cli, spec):
+    conda_cli("self", "install", spec, raises=CondaValueError)
