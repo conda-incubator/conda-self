@@ -55,6 +55,14 @@ def execute(args: argparse.Namespace) -> int:
     else:
         specs_to_add = [MatchSpec(spec) for spec in args.specs]
 
+    specs_with_channels = [str(s) for s in specs_to_add if s.get("channel")]
+    if specs_with_channels:
+        joined = ", ".join(specs_with_channels)
+        raise CondaValueError(
+            f"Channel specifications are not supported: {joined}\n"
+            "Configure channels via `conda config --add channels <channel>` instead."
+        )
+
     solver = Solver(sys.prefix, context.channels, specs_to_add=specs_to_add)
     transaction = solver.solve_for_transaction()
 
