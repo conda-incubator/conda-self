@@ -1,5 +1,4 @@
 import pytest
-
 from conda.base.context import context, reset_context
 from conda.common.configuration import YamlRawParameter
 from conda.common.serialize import yaml
