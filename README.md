@@ -38,6 +38,9 @@ conda self install my-plugin
 This keeps channel configuration consistent across install, update, and
 dependency resolution.
 
+Inline channel specs (e.g. `conda-forge::my-plugin`) are not supported and
+will result in an error.
+
 ## Base Environment Protection
 
 To check if your base environment is protected, run:
