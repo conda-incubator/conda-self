@@ -51,11 +51,12 @@ def execute(args: argparse.Namespace) -> int:
 
     print("Installing plugins:", *args.specs)
 
+    # Pre-flight solve: validates specs exist and raises PackagesNotFoundError early
+    Solver(
+        sys.prefix, context.channels, specs_to_add=specs_to_add
+    ).solve_for_transaction()
+
     if context.dry_run:
-        # Use in-process solver for dry-run so exceptions propagate correctly
-        Solver(
-            sys.prefix, context.channels, specs_to_add=specs_to_add
-        ).solve_for_transaction()
         raise DryRunExit()
 
     returncode = install_specs_in_protected_env(
