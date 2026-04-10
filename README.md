@@ -31,7 +31,7 @@ To install plugins from a custom channel (e.g. a company or community channel
 on anaconda.org or prefix.dev), add it to your configuration first:
 
 ```
-conda config --add channels my-channel
+conda config --add channels my-channel -n base
 conda self install my-plugin
 ```
 
