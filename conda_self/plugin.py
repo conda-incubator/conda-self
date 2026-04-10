@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from conda.common.configuration import PrimitiveParameter, SequenceParameter
 from conda.plugins.hookspec import hookimpl
-from conda.plugins.types import CondaHealthCheck, CondaSubcommand
+from conda.plugins.types import CondaHealthCheck, CondaSetting, CondaSubcommand
 
 from .cli import configure_parser, execute
+from .constants import PERMANENT_PACKAGES, SELF_PERMANENT_PACKAGES_SETTING
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -35,4 +37,18 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
         fixer=base_protection.fix,
         summary="Check if base is frozen to prevent accidental modifications",
         fix="Clone base to 'default' environment, reset base, and freeze it",
+    )
+
+
+@hookimpl
+def conda_settings() -> Iterable[CondaSetting]:
+    """Register conda-self plugin settings."""
+    yield CondaSetting(
+        name=SELF_PERMANENT_PACKAGES_SETTING,
+        description=(
+            f"Additional packages (besides {', '.join(PERMANENT_PACKAGES)})"
+            " to always keep in the 'base' environment. "
+            "These packages and their dependencies will not be removed."
+        ),
+        parameter=SequenceParameter(PrimitiveParameter("", element_type=str)),
     )

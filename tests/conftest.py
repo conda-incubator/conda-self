@@ -2,6 +2,8 @@ import os
 import sys
 
 import pytest
+from conda.plugins.hookspec import CondaSpecs
+from conda.plugins.manager import CondaPluginManager
 
 pytest_plugins = (
     # Add testing fixtures and internal pytest plugins here
@@ -18,3 +20,11 @@ def conda_channel() -> str:
 @pytest.fixture
 def python_version() -> str:
     return f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
+@pytest.fixture
+def plugin_manager(mocker) -> CondaPluginManager:
+    pm = CondaPluginManager()
+    pm.add_hookspecs(CondaSpecs)
+    mocker.patch("conda.plugins.manager.get_plugin_manager", return_value=pm)
+    return pm

@@ -78,6 +78,27 @@ To bypass protection for a single command, pass `--override-frozen` or set
 `CONDA_OVERRIDE_FROZEN=1`. To disable it permanently, add `override_frozen: true`
 to your `.condarc`.
 
+## Configuration
+
+### Permanent packages
+
+By default, `conda self reset` keeps only `conda`, `conda-self`, and their
+plugins installed. To keep additional packages (and their dependencies) in
+the base environment, add them to the `self_permanent_packages` setting in
+your `.condarc`:
+
+```yaml
+plugins:
+  self_permanent_packages:
+    - anaconda-anon-usage
+```
+
+Or use `conda config`:
+
+```bash
+conda config --add plugins.self_permanent_packages anaconda-anon-usage
+```
+
 ## Installation
 
 1. `conda install -n base conda-self`
