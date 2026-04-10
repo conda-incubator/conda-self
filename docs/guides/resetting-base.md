@@ -11,7 +11,7 @@ conda self reset
 
 conda-self tries snapshots in this order:
 
-1. `base-protection` -- the snapshot saved by `conda doctor --fix`
+1. `base-protection` -- the snapshot saved by [conda doctor base-protection --fix](inv:conda:std:doc#commands/doctor)
 2. `installer` -- the snapshot saved by the installer
 3. `current` -- strip to essentials without a snapshot
 
@@ -40,7 +40,7 @@ installers provide this file.
 
 ### Current essentials
 
-Strip base to only conda, its plugins, and their dependencies,
+Strip base to only conda, its [plugins](inv:conda:std:doc#dev-guide/plugins/index), and their dependencies,
 without using any snapshot file:
 
 ```bash
@@ -59,7 +59,7 @@ conda self reset --snapshot installer --dry-run
 ## After a reset
 
 After resetting, your base environment contains only essentials.
-You may need to reinstall plugins:
+[conda info](inv:conda:std:doc#commands/info) lists what is left in base. You may need to reinstall plugins:
 
 ```bash
 conda self install conda-index

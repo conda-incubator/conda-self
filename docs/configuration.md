@@ -3,14 +3,14 @@
 ## conda settings
 
 conda-self registers one custom setting via conda's `conda_settings`
-plugin hook.
+[plugin hook](inv:conda:std:doc#dev-guide/plugins/index).
 
 ### self_permanent_packages
 
 A list of package names that should never be removed by
 `conda self remove` or stripped during `conda self reset`.
 
-Configure in `.condarc`:
+Configure in [`.condarc`](inv:conda:std:doc#configuration):
 
 ```yaml
 self_permanent_packages:
@@ -19,7 +19,7 @@ self_permanent_packages:
 ```
 
 These packages are added to the set of "permanent" dependencies
-(alongside conda itself and its plugins) when determining what
+(alongside conda itself and its [plugins](inv:conda:std:doc#dev-guide/plugins/index)) when determining what
 can be safely removed.
 
 ## Snapshot files

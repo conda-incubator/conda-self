@@ -1,6 +1,6 @@
 # Managing plugins
 
-This tutorial covers the complete lifecycle of conda plugins in a
+This tutorial covers the complete lifecycle of [conda plugins](inv:conda:std:doc#dev-guide/plugins/index) in a
 protected base environment: installing, updating, and removing them.
 
 ## Prerequisites
@@ -16,7 +16,7 @@ protected base environment: installing, updating, and removing them.
 conda self install conda-index
 ```
 
-conda-self runs `conda install` as a subprocess with
+conda-self runs [conda install](inv:conda:std:doc#commands/install) as a subprocess with
 `--override-frozen`, then validates that the installed package is
 a real conda plugin by checking its entry points. If validation
 fails, the package is automatically uninstalled.
@@ -65,7 +65,7 @@ If you try, you will see a `SpecsCanNotBeRemoved` error.
 
 ## Channel configuration
 
-conda-self uses your configured channels. To install plugins from
+conda-self uses your configured channels. Use [conda config](inv:conda:std:doc#commands/config) to add or change channels before installing. To install plugins from
 a custom channel:
 
 ```bash
@@ -82,7 +82,8 @@ consistent across all operations.
 
 ## Verify installed plugins
 
-After installing, you can verify which plugins are registered:
+After installing, you can verify which plugins are registered with
+[conda info](inv:conda:std:doc#commands/info):
 
 ```bash
 conda info
