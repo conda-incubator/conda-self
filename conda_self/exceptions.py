@@ -10,12 +10,14 @@ if TYPE_CHECKING:
 
 class SpecsAreNotPlugins(CondaError):
     def __init__(self, specs: list[str]):
-        super().__init__(f"The following requested specs are not plugins: {specs}.")
+        names = ", ".join(specs)
+        super().__init__(f"The following requested specs are not plugins: {names}")
 
 
 class SpecsCanNotBeRemoved(CondaError):
     def __init__(self, specs: list[str]):
-        super().__init__(f"Packages '{specs}' can not be removed.")
+        names = ", ".join(specs)
+        super().__init__(f"Packages '{names}' can not be removed.")
 
 
 class NoDistInfoDirFound(CondaError):
