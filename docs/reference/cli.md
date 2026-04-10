@@ -14,7 +14,7 @@ conda self install <specs>... [--force-reinstall] [--dry-run] [--yes] [--json] [
 
 `specs`
 : One or more package names to install. Inline channel specs
-  (`channel::pkg`) are rejected -- use `conda config` instead.
+  (`channel::pkg`) are rejected -- use [conda config](inv:conda:std:doc#commands/config) instead.
 
 `--force-reinstall`
 : Reinstall the plugin even if it is already installed.
@@ -155,8 +155,9 @@ conda self reset --snapshot current
 ## conda doctor base-protection
 
 Check and fix the base environment protection status. This is a
-health check registered via conda's `conda_health_checks` plugin
-hook.
+health check registered via conda's `conda_health_checks`
+[plugin hook](inv:conda:std:doc#dev-guide/plugins/index). See also
+[conda doctor](inv:conda:std:doc#commands/doctor) for how health checks work.
 
 ```
 conda doctor base-protection [--fix] [--dry-run]

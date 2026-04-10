@@ -13,9 +13,14 @@ author = "conda-self contributors"
 
 extensions = [
     "myst_parser",
+    "sphinx.ext.intersphinx",
     "sphinx_copybutton",
     "sphinx_design",
 ]
+
+intersphinx_mapping = {
+    "conda": ("https://docs.conda.io/projects/conda/en/stable/", None),
+}
 
 myst_enable_extensions = [
     "colon_fence",

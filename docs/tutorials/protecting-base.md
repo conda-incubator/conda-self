@@ -13,7 +13,7 @@ conda self --version
 
 ## Check current status
 
-First, see if base is already protected:
+First, see if base is already protected with [conda doctor](inv:conda:std:doc#commands/doctor):
 
 ```bash
 conda doctor base-protection
@@ -54,12 +54,12 @@ exact restoration later.
 
 ### Step 3: Reset base
 
-Base is stripped down to conda, its registered plugins, and their
+Base is stripped down to conda, its registered [plugins](inv:conda:std:doc#dev-guide/plugins/index), and their
 dependencies. Everything else is removed.
 
 ### Step 4: Freeze base
 
-A freeze file is written to base, preventing regular `conda install`
+A freeze file is written to base, preventing regular [conda install](inv:conda:std:doc#commands/install)
 from modifying it. Only `conda self` commands (which pass
 `--override-frozen`) can make changes.
 

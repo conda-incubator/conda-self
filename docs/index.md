@@ -2,11 +2,13 @@
 
 Manage your conda `base` environment safely.
 
-conda-self provides commands to install, update, and remove conda plugins
-in a protected base environment. It integrates with `conda doctor` to
-set up base protection -- cloning your current base to a `default`
-environment, resetting base to essentials, and freezing it so only
-`conda self` commands can modify it.
+conda-self provides commands to install, update, and remove
+[conda plugins](inv:conda:std:doc#dev-guide/plugins/index)
+in a protected base environment. It integrates with
+[conda doctor](inv:conda:std:doc#commands/doctor) to set up base
+protection -- cloning your current base to a `default` environment,
+resetting base to essentials, and freezing it so only `conda self`
+commands can modify it.
 
 ## Quick example
 

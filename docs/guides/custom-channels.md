@@ -4,8 +4,8 @@ How to install plugins from custom or private channels.
 
 ## Configure channels first
 
-conda-self uses your configured channels for all operations. To add
-a custom channel:
+conda-self uses your configured channels for all operations. Use
+[conda config](inv:conda:std:doc#commands/config) to add a custom channel:
 
 ```bash
 conda config --add channels my-channel -n base
@@ -33,7 +33,7 @@ Channels are searched in the order they appear in your configuration.
 The first channel with a matching package wins (in strict mode) or
 packages from all channels are considered (in flexible mode).
 
-Check your current channel configuration:
+You can inspect channels with [conda info](inv:conda:std:doc#commands/info) or by showing config values:
 
 ```bash
 conda config --show channels
@@ -50,7 +50,7 @@ conda token set <token> -c https://my-channel.example.com
 ```
 
 Or use conda's standard authentication mechanisms. conda-self
-inherits all authentication settings from your conda configuration.
+inherits all authentication settings from your [conda configuration](inv:conda:std:doc#configuration).
 
 ## Multiple channels
 
