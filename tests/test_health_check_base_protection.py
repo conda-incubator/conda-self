@@ -138,9 +138,7 @@ def test_is_base_environment(tmp_path: Path, use_base: bool, expected: bool):
     ],
     ids=["frozen", "not-frozen"],
 )
-def test_is_base_protected(
-    fake_base_env: Path, frozen: bool, expected: bool
-):
+def test_is_base_protected(fake_base_env: Path, frozen: bool, expected: bool):
     if frozen:
         (fake_base_env / PREFIX_FROZEN_FILE).write_text("{}")
     PrefixData._cache_.clear()
@@ -188,7 +186,7 @@ def test_fix_skips(
     capsys: CaptureFixture,
 ):
     prefix = str(request.getfixturevalue(env_fixture))
-    confirm_called = []
+    confirm_called: list[str] = []
 
     PrefixData._cache_.clear()
     result = base_protection.fix(prefix, Namespace(), confirm_called.append)
@@ -199,7 +197,7 @@ def test_fix_skips(
 
 
 def test_fix_calls_confirm_callback(fake_base_env: Path):
-    confirm_called = []
+    confirm_called: list[str] = []
 
     class UserCancelled(Exception):
         pass
