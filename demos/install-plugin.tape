@@ -7,6 +7,10 @@ Hide
 Type `source demos/_setup.sh`
 Enter
 Wait /\$/
+# Pre-update conda so the install step only shows the plugin
+Type `conda update --yes --quiet --override-frozen conda 2>&1 | tail -1`
+Enter
+Wait /\$/
 Type "clear"
 Enter
 Wait /\$/
