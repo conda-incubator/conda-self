@@ -36,18 +36,8 @@ WHAT_TO_EXPECT = dedent(
     and their dependencies.
     """
 ).lstrip()
-SUCCESS = dedent(
-    """
-    SUCCESS!
-    Reset the 'base' environment to only the essential packages and plugins.
-    """
-).lstrip()
-SUCCESS_SNAPSHOT = dedent(
-    """
-    SUCCESS!
-    Reset the 'base' environment to {snapshot_name} snapshot.
-    """
-).lstrip()
+SUCCESS = "Reset the 'base' environment to only the essential packages and plugins.\n"
+SUCCESS_SNAPSHOT = "Reset the 'base' environment to {snapshot_name} snapshot.\n"
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
