@@ -4,10 +4,7 @@ Output demos/install-plugin.gif
 Output demos/install-plugin.mp4
 
 Hide
-Type `eval "$(pixi shell-hook -s bash -e dev)"`
-Enter
-Wait /\)/
-Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
+Type `source demos/_setup.sh`
 Enter
 Wait /\$/
 Type "clear"
@@ -15,7 +12,7 @@ Enter
 Wait /\$/
 Show
 
-Type "# Install a conda plugin into the protected base"
+Type "# Install a conda plugin into the base environment"
 Enter
 Sleep 500ms
 
