@@ -22,7 +22,7 @@ This:
    `conda-meta/base-protection-state.explicit.txt`
 3. **Resets** base to only conda, its plugins, and their dependencies
 4. **Freezes** base by writing a `PREFIX_FROZEN_FILE`, preventing
-   regular `conda install` from modifying it
+   regular [conda install](inv:conda:std:doc#commands/install) from modifying it
 
 After protection, only `conda self` commands can modify base.
 
@@ -53,7 +53,7 @@ The install command:
 1. Runs `conda install` as a subprocess with `--override-frozen`
 2. After installation, scans `importlib.metadata` entry points for
    the `conda` group
-3. If the installed package is not a valid conda plugin, uninstalls
+3. If the installed package is not a valid [conda plugin](inv:conda:std:doc#dev-guide/plugins/index), uninstalls
    it and raises an error
 
 This prevents non-plugin packages from accumulating in base.
@@ -103,7 +103,7 @@ Snapshots are stored as `@EXPLICIT` files in `conda-meta/`:
 ## Health check integration
 
 conda-self registers a `base-protection` health check with conda's
-`conda doctor` system:
+[conda doctor](inv:conda:std:doc#commands/doctor) system:
 
 ```bash
 conda doctor --list              # see all health checks
@@ -132,7 +132,7 @@ packages that should never be removed by `conda self remove` or
 stripped during `conda self reset`. This is useful for packages that
 are essential to your workflow but are not conda plugins.
 
-Configure it in `.condarc`:
+Configure it in the [`.condarc` configuration file](inv:conda:std:doc#configuration):
 
 ```yaml
 self_permanent_packages:

@@ -11,7 +11,7 @@ managing plugins with conda-self.
 
 ![Base protection demo](../demos/base-protection.gif)
 
-Check whether base is currently protected:
+Using [conda doctor](inv:conda:std:doc#commands/doctor), check whether base is currently protected:
 
 ```bash
 conda doctor base-protection
@@ -27,7 +27,7 @@ This does three things:
 
 1. Clones your current base environment to a new `default` environment
 2. Resets base to only conda, its plugins, and their dependencies
-3. Freezes base so regular `conda install` cannot modify it
+3. Freezes base so regular [conda install](inv:conda:std:doc#commands/install) cannot modify it
 
 :::{tip}
 You only need to run this once. After protection, use `conda self`
@@ -43,7 +43,7 @@ conda self install conda-index
 ```
 
 conda-self installs the package via subprocess, validates that it
-registers as a conda plugin (via entry points), and rolls back if
+registers as a [conda plugin](inv:conda:std:doc#dev-guide/plugins/index) (via entry points), and rolls back if
 it does not.
 
 ## Update plugins

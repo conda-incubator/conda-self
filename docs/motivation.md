@@ -6,7 +6,7 @@ conda-self is a conda plugin that manages conda installations
 themselves -- specifically the `base` environment where conda, its
 plugins, and their dependencies live. It provides safe commands to
 install, update, and remove plugins in base, and integrates with
-`conda doctor` to protect base from accidental modification.
+[conda doctor](inv:conda:std:doc#commands/doctor) to protect base from accidental modification.
 
 The name `conda self` reflects this purpose: conda managing itself.
 
@@ -23,7 +23,7 @@ packages directly, but doing so creates real risks:
 
 Many users have experienced the frustration of a broken base
 environment. The usual advice is "don't install anything in base,"
-but conda itself needs plugins (like the solver, authentication
+but conda itself needs [plugins](inv:conda:std:doc#dev-guide/plugins/index) (like the solver, authentication
 handlers, or custom subcommands) installed there to be discovered.
 
 ## How we got here
@@ -82,7 +82,7 @@ live in named environments.
 ## Design choices
 
 Subprocess over in-process API
-: `conda self install` uses subprocess calls to `conda install`
+: `conda self install` uses subprocess calls to [conda install](inv:conda:std:doc#commands/install)
   rather than the in-process Solver API. This ensures frozen
   environment protection (which lives in conda's CLI layer) is
   always respected. It also means all of conda's safety checks,
@@ -106,7 +106,7 @@ Snapshot-based recovery
 
 Channel configuration over inline specs
 : `conda self install conda-forge::pkg` is rejected. Instead,
-  channels are configured via `conda config`, keeping channel
+  channels are configured via [conda config](inv:conda:std:doc#commands/config), keeping channel
   settings consistent across install, update, and dependency
   resolution.
 
