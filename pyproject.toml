@@ -22,7 +22,6 @@ classifiers = [
 ]
 dependencies = [
   # "conda >=26.1.1",  # not on PyPI, installed via conda
-  "importlib-metadata>=4.8.3; python_version < '3.12'",
 ]
 dynamic = ["version"]
 
@@ -122,11 +121,9 @@ pre-commit = "*"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
-importlib-metadata = ">=4.8.3"
 
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
-importlib-metadata = ">=4.8.3"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"

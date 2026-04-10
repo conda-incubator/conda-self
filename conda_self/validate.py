@@ -1,12 +1,7 @@
-import sys
 from functools import cache
+from importlib.metadata import entry_points
 
 from conda.exceptions import CondaValueError
-
-if sys.version_info >= (3, 12):
-    from importlib.metadata import entry_points
-else:
-    from importlib_metadata import entry_points
 
 
 def _normalize(name: str) -> str:
@@ -16,8 +11,6 @@ def _normalize(name: str) -> str:
 
 @cache
 def conda_plugin_packages():
-    # Both Python 3.12+ and importlib-metadata support ep.dist
-    # but the return type and attributes differ slightly.
     # Normalize names to use hyphens (conda convention) since
     # importlib.metadata may return underscores (Python convention).
     return set(
