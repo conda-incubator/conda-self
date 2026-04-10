@@ -10,6 +10,9 @@ Wait /\)/
 Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
 Enter
 Wait /\$/
+Type "conda install --yes --quiet --override-frozen conda=26.1.1 2>&1 | tail -1"
+Enter
+Wait /\$/
 Type "clear"
 Enter
 Wait /\$/
