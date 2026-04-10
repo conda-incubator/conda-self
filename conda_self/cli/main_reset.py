@@ -32,20 +32,20 @@ SNAPSHOT_HELP = dedent(
 
 WHAT_TO_EXPECT = dedent(
     """
-    This will reset your `base` to ONLY contain `conda`, its plugins,
+    This will reset your 'base' to ONLY contain 'conda', its plugins,
     and their dependencies.
     """
 ).lstrip()
 SUCCESS = dedent(
     """
     SUCCESS!
-    Reset the `base` environment to only the essential packages and plugins.
+    Reset the 'base' environment to only the essential packages and plugins.
     """
 ).lstrip()
 SUCCESS_SNAPSHOT = dedent(
     """
     SUCCESS!
-    Reset the `base` environment to {snapshot_name} snapshot.
+    Reset the 'base' environment to {snapshot_name} snapshot.
     """
 ).lstrip()
 
@@ -101,7 +101,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{args.snapshot}`.\n"
+            f"Failed to reset to '{args.snapshot}'.\n"
             f"Required file {reset_file} not found."
         )
 
