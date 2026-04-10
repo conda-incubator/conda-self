@@ -9,16 +9,14 @@ HELP = "Add conda plugins to the 'base' environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
+    from conda.cli.helpers import add_output_and_prompt_options
+
     parser.description = HELP
+    add_output_and_prompt_options(parser)
     parser.add_argument(
         "--force-reinstall",
         action="store_true",
         help="Reinstall plugin even if it's already installed.",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Only report available updates, do not install.",
     )
     parser.add_argument("specs", nargs="+", help="Plugins to install")
     parser.set_defaults(func=execute)
