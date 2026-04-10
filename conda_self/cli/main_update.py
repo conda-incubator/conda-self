@@ -50,25 +50,18 @@ def execute(args: argparse.Namespace) -> int:
 
     prefix_data = PrefixData(context.root_prefix)
 
-    # Look up installed records for channel detection and status display.
-    channel = ""
     info_parts = []
     for name in package_names:
         installed = prefix_data.get(name)
         if not installed:
             raise PackageNotInstalledError(context.root_prefix, name)
-        if not channel:
-            channel = installed.channel
         info_parts.append(f"{name} (installed: {installed.version})")
 
     if not context.quiet:
         print(f"Updating {', '.join(info_parts)}...")
-        print("Channels:")
-        print(f"  - {channel}")
 
     return install_specs_in_protected_env(
         specs=package_names,
-        channel=channel,
         force_reinstall=args.force_reinstall,
         update_dependencies=args.all,
         dry_run=context.dry_run,

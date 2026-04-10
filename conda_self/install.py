@@ -6,19 +6,13 @@ from conda.base.context import context
 
 def install_specs_in_protected_env(
     specs: list[str],
-    channel: str = "",
     force_reinstall: bool = False,
     update_dependencies: bool = False,
     dry_run: bool = False,
     json: bool = False,
     yes: bool = False,
 ) -> int:
-    """Install or update specs into the protected base env via subprocess.
-
-    When channel is given, restricts resolution to that channel via
-    --override-channels (used by `conda self update`). Otherwise uses
-    configured channels (used by `conda self install`).
-    """
+    """Install or update specs into the protected base env via subprocess."""
     process = run(
         [
             sys.executable,
@@ -36,7 +30,6 @@ def install_specs_in_protected_env(
             *(("--json",) if json else ()),
             *(("--yes",) if yes else ()),
             "--all" if update_dependencies else "--update-specs",
-            *(("--override-channels", f"--channel={channel}") if channel else ()),
             *specs,
         ]
     )
