@@ -2,23 +2,31 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from conda.common.io import dashlist
 from conda.exceptions import CondaError
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
+def _plural(word: str, count: int) -> str:
+    return word if count == 1 else f"{word}s"
+
+
 class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
-        super().__init__(
-            f"The following requested specs are not plugins:{dashlist(specs)}"
-        )
+        names = ", ".join(specs)
+        if len(specs) == 1:
+            msg = f"The requested package is not a plugin: {names}"
+        else:
+            msg = f"The requested packages are not plugins: {names}"
+        super().__init__(msg)
 
 
 class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
-        super().__init__(f"Packages can not be removed:{dashlist(specs)}")
+        names = ", ".join(specs)
+        noun = _plural("package", len(specs))
+        super().__init__(f"{noun.capitalize()} can not be removed: {names}")
 
 
 class NoDistInfoDirFound(CondaError):

@@ -90,12 +90,12 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
-    if env.external_packages:
-        print(
-            f"  Warning: Base environment contains {len(env.external_packages)} "
-            "non-conda package(s) that will become non-functional after reset.\n"
-            f"  They are preserved in the cloned '{default_env}' environment."
-        )
+        if env.external_packages:
+            print(
+                f"  Warning: Base environment contains {len(env.external_packages)} "
+                "non-conda package(s) that will become non-functional after reset.\n"
+                f"  They are preserved in the cloned '{default_env}' environment."
+            )
     confirm("Proceed?")
 
     # Prefer the installer snapshot for resetting base so that
