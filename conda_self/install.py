@@ -57,6 +57,7 @@ def install_package_list_in_protected_env(
 def install_specs_in_protected_env(
     specs: list[str],
     force_reinstall: bool = False,
+    dry_run: bool = False,
     json: bool = False,
     yes: bool = False,
 ) -> int:
@@ -74,6 +75,7 @@ def install_specs_in_protected_env(
                 else ()
             ),
             *(("--force-reinstall",) if force_reinstall else ()),
+            *(("--dry-run",) if dry_run else ()),
             *(("--json",) if json else ()),
             *(("--yes",) if yes else ()),
             *specs,

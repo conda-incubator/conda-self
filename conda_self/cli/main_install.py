@@ -25,9 +25,6 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 
 def execute(args: argparse.Namespace) -> int:
-    import sys
-
-    from conda.api import Solver
     from conda.base.context import context
     from conda.exceptions import CondaValueError, DryRunExit
     from conda.models.match_spec import MatchSpec
@@ -51,23 +48,19 @@ def execute(args: argparse.Namespace) -> int:
 
     print("Installing plugins:", *args.specs)
 
-    # Pre-flight solve: validates specs exist and raises PackagesNotFoundError early
-    Solver(
-        sys.prefix, context.channels, specs_to_add=specs_to_add
-    ).solve_for_transaction()
-
-    if context.dry_run:
-        raise DryRunExit()
-
     returncode = install_specs_in_protected_env(
         args.specs,
         force_reinstall=args.force_reinstall,
+        dry_run=context.dry_run,
         json=context.json,
         yes=context.always_yes,
     )
 
     if returncode != 0:
         return returncode
+
+    if context.dry_run:
+        raise DryRunExit()
 
     reload_plugin_packages()
 

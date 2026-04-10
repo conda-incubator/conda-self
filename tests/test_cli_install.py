@@ -1,5 +1,5 @@
 import pytest
-from conda.exceptions import CondaValueError, DryRunExit, PackagesNotFoundError
+from conda.exceptions import CondaValueError, DryRunExit
 
 from conda_self.exceptions import SpecsAreNotPlugins
 
@@ -9,38 +9,23 @@ def test_help(conda_cli):
     assert exc.value.code == 0
 
 
-@pytest.mark.parametrize(
-    "plugin_name,ok",
-    (
-        ("conda-libmamba-solver", True),
-        ("conda-fake-solver", False),
-    ),
-)
-def test_install_plugin_dry_run(conda_cli, plugin_name, ok):
-    conda_cli(
-        "self",
-        "install",
-        "--dry-run",
-        plugin_name,
-        raises=DryRunExit if ok else Exception,
-    )
+def test_install_plugin_dry_run(conda_cli):
+    conda_cli("self", "install", "--dry-run", "conda-libmamba-solver", raises=DryRunExit)
 
 
-@pytest.mark.parametrize(
-    "plugin_name,error",
-    (
-        ("idontexist", PackagesNotFoundError),
-        ("flask", SpecsAreNotPlugins),
-        ("numpy", SpecsAreNotPlugins),
-    ),
-)
-def test_install_not_plugins(conda_cli, plugin_name, error):
-    conda_cli(
-        "self",
-        "install",
-        plugin_name,
-        raises=error,
-    )
+def test_install_plugin_dry_run_not_found(conda_cli):
+    _, _, code = conda_cli("self", "install", "--dry-run", "conda-fake-solver")
+    assert code != 0
+
+
+def test_install_package_not_found(conda_cli):
+    _, _, code = conda_cli("self", "install", "idontexist")
+    assert code != 0
+
+
+@pytest.mark.parametrize("plugin_name", ("flask", "numpy"))
+def test_install_not_plugins(conda_cli, plugin_name):
+    conda_cli("self", "install", plugin_name, raises=SpecsAreNotPlugins)
 
 
 @pytest.mark.parametrize(
