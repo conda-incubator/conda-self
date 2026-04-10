@@ -62,8 +62,13 @@ def execute(args: argparse.Namespace) -> int:
 
     reload_plugin_packages()
 
+    plugin_names = conda_plugin_packages()
     spec_names = [spec.name for spec in specs_to_add]
-    invalid_names = [name for name in spec_names if name not in conda_plugin_packages()]
+    invalid_names = [
+        name
+        for name in spec_names
+        if name.lower().replace("_", "-") not in plugin_names
+    ]
 
     if invalid_names:
         uninstall_specs_in_protected_env(invalid_names, yes=True)
