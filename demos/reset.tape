@@ -4,10 +4,11 @@ Output demos/reset.gif
 Output demos/reset.mp4
 
 Hide
-Type `eval "$(pixi shell-hook -s bash -e dev)"`
+Type `source demos/_setup.sh`
 Enter
-Wait /\)/
-Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
+Wait /\$/
+# Install a plugin so reset has something to clean up
+Type `conda self install --yes --quiet conda-index 2>&1 | tail -1`
 Enter
 Wait /\$/
 Type "clear"

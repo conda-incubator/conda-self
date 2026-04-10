@@ -4,13 +4,11 @@ Output demos/update.gif
 Output demos/update.mp4
 
 Hide
-Type `eval "$(pixi shell-hook -s bash -e dev)"`
-Enter
-Wait /\)/
-Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
+Type `source demos/_setup.sh`
 Enter
 Wait /\$/
-Type "conda install --yes --quiet --override-frozen conda=26.1.1 2>&1 | tail -1"
+# Downgrade conda so the update demo shows a real upgrade
+Type `conda install --yes --quiet --override-frozen conda=26.1.1 2>&1 | tail -1`
 Enter
 Wait /\$/
 Type "clear"

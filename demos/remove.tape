@@ -4,10 +4,11 @@ Output demos/remove.gif
 Output demos/remove.mp4
 
 Hide
-Type `eval "$(pixi shell-hook -s bash -e dev)"`
+Type `source demos/_setup.sh`
 Enter
-Wait /\)/
-Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
+Wait /\$/
+# Install a plugin so we can demonstrate removing it
+Type `conda self install --yes --quiet conda-index 2>&1 | tail -1`
 Enter
 Wait /\$/
 Type "clear"
@@ -15,20 +16,20 @@ Enter
 Wait /\$/
 Show
 
-Type "# conda itself cannot be removed"
+Type "# Remove a plugin from the base environment"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self remove conda"
+Type@80ms "conda self remove --yes conda-index"
 Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Permanent packages are also protected"
+Type "# Essential packages like conda itself cannot be removed"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self remove conda-self"
+Type@80ms "conda self remove conda"
 Enter
 Wait /\$/
 Sleep 3s

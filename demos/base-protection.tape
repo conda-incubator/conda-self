@@ -4,10 +4,7 @@ Output demos/base-protection.gif
 Output demos/base-protection.mp4
 
 Hide
-Type `eval "$(pixi shell-hook -s bash -e dev)"`
-Enter
-Wait /\)/
-Type `export PS1="$DEMO_PS1" CONDA_CHANNELS=conda-forge`
+Type `source demos/_setup.sh`
 Enter
 Wait /\$/
 Type "clear"
