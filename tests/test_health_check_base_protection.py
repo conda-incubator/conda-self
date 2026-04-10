@@ -153,6 +153,133 @@ def test_fix_calls_confirm_callback(fake_base_env: Path):
     assert confirm_called == ["Proceed?"]
 
 
+# -- fix reset strategy tests --
+
+
+class _FakePrefixData:
+    """Minimal stand-in for PrefixData.from_name() return value."""
+
+    def __init__(self, tmp_path: Path):
+        self.prefix_path = tmp_path / "envs" / "default"
+
+    def is_environment(self) -> bool:
+        return False
+
+    def exists(self) -> bool:
+        return False
+
+
+class _FakeEnvironment:
+    """Minimal stand-in for Environment.from_prefix()."""
+
+    external_packages: list = []
+
+
+class _FakeConfigFile:
+    """Minimal stand-in for ConfigurationFile context manager."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def set_key(self, key, value):
+        pass
+
+
+@pytest.fixture
+def reset_calls():
+    """Accumulator for calls to the patched reset function."""
+    return []
+
+
+@pytest.fixture
+def perm_deps_calls():
+    """Accumulator for calls to the patched permanent_dependencies function."""
+    return []
+
+
+@pytest.fixture
+def fixable_base_env(
+    fake_base_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+    perm_deps_calls: list,
+):
+    """A fake base env wired with lightweight stubs for fix() to run end-to-end."""
+    from conda.exceptions import CondaValueError
+
+    PrefixData._cache_.clear()
+
+    def fake_reset(**kwargs):
+        reset_calls.append(kwargs)
+
+    def fake_perm_deps(**kwargs):
+        perm_deps_calls.append(kwargs)
+        return {"conda", "conda-self"}
+
+    def fake_get_exporter(fmt):
+        raise CondaValueError("no exporter")
+
+    monkeypatch.setattr("conda.base.context.context.quiet", True, raising=False)
+    monkeypatch.setattr(
+        "conda.base.context.context.plugin_manager.get_environment_exporter_by_format",
+        fake_get_exporter,
+    )
+    monkeypatch.setattr("conda_self.reset.reset", fake_reset)
+    monkeypatch.setattr("conda.misc.clone_env", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        "conda.models.environment.Environment.from_prefix",
+        lambda *a, **kw: _FakeEnvironment(),
+    )
+    monkeypatch.setattr("conda_self.query.permanent_dependencies", fake_perm_deps)
+    monkeypatch.setattr(
+        PrefixData, "from_name", lambda *a, **kw: _FakePrefixData(fake_base_env)
+    )
+    monkeypatch.setattr(
+        "conda.cli.condarc.ConfigurationFile.from_user_condarc",
+        _FakeConfigFile,
+    )
+
+    return fake_base_env
+
+
+def test_fix_uses_installer_snapshot_when_available(
+    fixable_base_env: Path,
+    reset_calls: list,
+    perm_deps_calls: list,
+):
+    """When the installer snapshot exists, reset() is called with it."""
+    from conda_self.constants import RESET_FILE_INSTALLER
+
+    snapshot = fixable_base_env / "conda-meta" / RESET_FILE_INSTALLER
+    snapshot.write_text("@EXPLICIT\n")
+
+    args = Namespace()
+    base_protection.fix(str(fixable_base_env), args, lambda msg: None)
+
+    assert len(reset_calls) == 1
+    assert reset_calls[0]["snapshot"] == snapshot
+    assert "uninstallable_packages" not in reset_calls[0]
+    assert perm_deps_calls == []
+
+
+def test_fix_falls_back_to_permanent_deps_without_snapshot(
+    fixable_base_env: Path,
+    reset_calls: list,
+    perm_deps_calls: list,
+):
+    """Without an installer snapshot, reset() uses permanent_dependencies()."""
+    args = Namespace()
+    base_protection.fix(str(fixable_base_env), args, lambda msg: None)
+
+    assert len(reset_calls) == 1
+    assert reset_calls[0]["uninstallable_packages"] == {"conda", "conda-self"}
+    assert "snapshot" not in reset_calls[0]
+    assert len(perm_deps_calls) == 1
+
+
 # -- plugin registration tests --
 
 
