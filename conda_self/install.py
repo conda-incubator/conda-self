@@ -4,32 +4,15 @@ from subprocess import run
 from conda.base.context import context
 
 
-def install_package_in_protected_env(
-    package_name: str,
-    package_version: str,
-    channel: str,
+def install_specs_in_protected_env(
+    specs: list[str],
     force_reinstall: bool = False,
     update_dependencies: bool = False,
-    json: bool = False,
-) -> int:
-    return install_package_list_in_protected_env(
-        {package_name: package_version},
-        channel,
-        force_reinstall=force_reinstall,
-        update_dependencies=update_dependencies,
-        json=json,
-    )
-
-
-def install_package_list_in_protected_env(
-    packages: dict[str, str],
-    channel: str,
-    force_reinstall: bool = False,
-    update_dependencies: bool = False,
+    dry_run: bool = False,
     json: bool = False,
     yes: bool = False,
 ) -> int:
-    specs = [f"{name}={version}" for name, version in packages.items()]
+    """Install or update specs into the protected base env via subprocess."""
     process = run(
         [
             sys.executable,
@@ -43,11 +26,10 @@ def install_package_list_in_protected_env(
                 else ()
             ),
             *(("--force-reinstall",) if force_reinstall else ()),
+            *(("--dry-run",) if dry_run else ()),
             *(("--json",) if json else ()),
             *(("--yes",) if yes else ()),
             "--all" if update_dependencies else "--update-specs",
-            "--override-channels",
-            f"--channel={channel}",
             *specs,
         ]
     )
