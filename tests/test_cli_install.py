@@ -10,7 +10,9 @@ def test_help(conda_cli):
 
 
 def test_install_plugin_dry_run(conda_cli):
-    conda_cli("self", "install", "--dry-run", "conda-libmamba-solver", raises=DryRunExit)
+    conda_cli(
+        "self", "install", "--dry-run", "conda-libmamba-solver", raises=DryRunExit
+    )
 
 
 def test_install_plugin_dry_run_not_found(conda_cli):
