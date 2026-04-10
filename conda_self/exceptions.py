@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from conda.common.io import dashlist
 from conda.exceptions import CondaError
 
 if TYPE_CHECKING:
@@ -10,14 +11,14 @@ if TYPE_CHECKING:
 
 class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
-        names = ", ".join(specs)
-        super().__init__(f"The following requested specs are not plugins: {names}")
+        super().__init__(
+            f"The following requested specs are not plugins:{dashlist(specs)}"
+        )
 
 
 class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
-        names = ", ".join(specs)
-        super().__init__(f"Packages '{names}' can not be removed.")
+        super().__init__(f"Packages can not be removed:{dashlist(specs)}")
 
 
 class NoDistInfoDirFound(CondaError):
