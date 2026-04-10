@@ -80,6 +80,11 @@ conda = ">=26.1.1"
 [tool.pixi.tasks]
 conda = { cmd = "python -m conda", env = { CONDA_CHANNELS = "conda-forge" } }
 
+[tool.pixi.tasks.demos]
+cmd = """bash -c 'if [ -n "$1" ]; then vhs "demos/$1.tape"; else for tape in demos/*.tape; do [[ "$(basename "$tape")" == _* ]] && continue; vhs "$tape"; done; fi' -- {{ name }}"""
+args = [{ arg = "name", default = "" }]
+description = "Record demo GIFs"
+
 [tool.pixi.pypi-dependencies]
 "conda-self" = { path  = ".", editable = true }
 
@@ -99,14 +104,10 @@ clean = { cmd = "rm -rf _build", cwd = "docs" }
 [tool.pixi.feature.docs.dependencies]
 python = "3.10.*"
 conda-sphinx-theme = { version = "*", channel = "conda-forge" }
-linkify-it-py = "*"
 myst-parser = "*"
 sphinx = "*"
 sphinx-copybutton = "*"
 sphinx-design = "*"
-sphinx-reredirects = "*"
-sphinx-sitemap = "*"
-sphinxcontrib-programoutput = "*"
 
 [tool.pixi.feature.test.tasks]
 test = 'python -m pytest'
