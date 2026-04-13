@@ -27,7 +27,7 @@ def execute(args: argparse.Namespace) -> int:
     from conda.exceptions import CondaValueError, DryRunExit
     from conda.models.match_spec import MatchSpec
 
-    from ..exceptions import NotPluginError
+    from ..exceptions import NotAPluginError
     from ..install import (
         install_specs_in_protected_env,
         uninstall_specs_in_protected_env,
@@ -72,6 +72,6 @@ def execute(args: argparse.Namespace) -> int:
 
     if invalid_names:
         uninstall_specs_in_protected_env(invalid_names, yes=True)
-        raise NotPluginError(invalid_names)
+        raise NotAPluginError(invalid_names)
 
     return 0

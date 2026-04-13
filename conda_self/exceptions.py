@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class NotPluginError(CondaError):
+class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
         super().__init__(f"The following requested specs are not plugins: {specs}.")
 
