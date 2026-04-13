@@ -34,15 +34,6 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Update all plugins"
-Enter
-Sleep 500ms
-
-Type@80ms "conda self update --yes"
-Enter
-Wait /\$/
-Sleep 3s
-
 Type "# Reset to essentials"
 Enter
 Sleep 500ms
