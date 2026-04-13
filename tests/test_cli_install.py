@@ -65,7 +65,7 @@ def test_install_not_plugins(
             text=True,
         )
         assert result.returncode != 0
-        assert "SpecsAreNotPlugins" in result.stderr
+        assert "NotPluginError" in result.stderr
         assert not is_installed(prefix, plugin_name)
 
 
