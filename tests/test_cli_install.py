@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import pytest
 from conda.exceptions import CondaValueError, DryRunExit
 
-from conda_self.exceptions import SpecsAreNotPlugins
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
@@ -37,8 +36,29 @@ def test_install_not_found(conda_cli: CondaCLIFixture, spec: str):
 
 
 @pytest.mark.parametrize("plugin_name", ("flask", "numpy"))
-def test_install_not_plugins(conda_cli: CondaCLIFixture, plugin_name: str):
-    conda_cli("self", "install", plugin_name, raises=SpecsAreNotPlugins)
+def test_install_not_plugins(
+    plugin_name: str,
+    monkeypatch: MonkeyPatch,
+    tmp_env: TmpEnvFixture,
+    conda_channel: str,
+    python_version: str,
+):
+    monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
+
+    with tmp_env("conda", "conda-self", f"python={python_version}") as prefix:
+        result = conda_cli_subprocess(
+            prefix,
+            "self",
+            "install",
+            "--yes",
+            plugin_name,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode != 0
+        assert "not" in result.stderr.lower() and "plugin" in result.stderr.lower()
+        assert not is_installed(prefix, plugin_name)
 
 
 @pytest.mark.parametrize(
