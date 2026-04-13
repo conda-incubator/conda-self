@@ -34,11 +34,10 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
-    from conda.exceptions import DryRunExit
-    from conda.reporters import get_spinner
+    from conda.core.prefix_data import PrefixData
+    from conda.exceptions import PackageNotInstalledError
 
-    from ..install import install_package_list_in_protected_env
-    from ..query import check_updates
+    from ..install import install_specs_in_protected_env
     from ..validate import conda_plugin_packages, validate_plugin_is_installed
 
     if args.plugin:
@@ -49,40 +48,23 @@ def execute(args: argparse.Namespace) -> int:
     else:
         package_names = ["conda"]
 
-    updates = {}
-    channel = ""
-    for package_name in package_names:
-        with get_spinner(f"Checking updates for {package_name}"):
-            update_available, installed, latest = check_updates(
-                package_name, context.root_prefix
-            )
-        if not channel:
-            channel = installed.channel
+    prefix_data = PrefixData(context.root_prefix)
 
-        if not context.quiet:
-            print(f"Installed {package_name}: {installed.version}")
-            print(f"Latest {package_name}: {latest.version}")
+    info_parts = []
+    for name in package_names:
+        installed = prefix_data.get(name)
+        if not installed:
+            raise PackageNotInstalledError(context.root_prefix, name)
+        info_parts.append(f"{name} (installed: {installed.version})")
 
-        if not update_available and not args.force_reinstall and not args.all:
-            print(f"{package_name} is already using the latest version available!")
-        else:
-            if not update_available and args.all:
-                print(
-                    f"{package_name} is using the latest version available, "
-                    "but may have outdated dependencies."
-                )
-            updates[package_name] = latest.version
+    if not context.quiet:
+        print(f"Updating {', '.join(info_parts)}...")
 
-    if context.dry_run:
-        raise DryRunExit()
-    elif not updates:
-        return 0
-
-    return install_package_list_in_protected_env(
-        packages=updates,
-        channel=channel,
+    return install_specs_in_protected_env(
+        specs=package_names,
         force_reinstall=args.force_reinstall,
         update_dependencies=args.all,
+        dry_run=context.dry_run,
         json=context.json,
         yes=context.always_yes,
     )

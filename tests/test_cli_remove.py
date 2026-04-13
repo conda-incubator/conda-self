@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from conda_self.exceptions import SpecsCanNotBeRemoved
+from conda_self.exceptions import PluginRemoveError
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
@@ -20,9 +20,9 @@ def test_help(conda_cli):
 @pytest.mark.parametrize(
     "spec,error",
     (
-        ("conda", SpecsCanNotBeRemoved),
-        ("conda-libmamba-solver", SpecsCanNotBeRemoved),
-        ("python", SpecsCanNotBeRemoved),
+        ("conda", PluginRemoveError),
+        ("conda-libmamba-solver", PluginRemoveError),
+        ("python", PluginRemoveError),
     ),
 )
 def test_remove_protected_plugin(conda_cli, spec, error):

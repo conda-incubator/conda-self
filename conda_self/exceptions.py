@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class SpecsAreNotPlugins(CondaError):
+class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
         super().__init__(f"The following requested specs are not plugins: {specs}.")
 
 
-class SpecsCanNotBeRemoved(CondaError):
+class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
         super().__init__(f"Packages '{specs}' can not be removed.")
 
