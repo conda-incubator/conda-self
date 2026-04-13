@@ -18,7 +18,12 @@ def test_help(conda_cli: CondaCLIFixture):
     assert exc.value.code == 0
 
 
-def test_install_plugin_dry_run(conda_cli: CondaCLIFixture):
+def test_install_plugin_dry_run(
+    conda_cli: CondaCLIFixture,
+    monkeypatch: MonkeyPatch,
+    conda_channel: str,
+):
+    monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
     conda_cli(
         "self", "install", "--dry-run", "conda-libmamba-solver", raises=DryRunExit
     )
