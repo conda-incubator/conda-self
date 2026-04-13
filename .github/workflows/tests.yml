@@ -60,10 +60,8 @@ jobs:
           environments: test-py${{ matrix.python-version }}
       - name: Ensure package is installed
         run: pixi reinstall --environment test-py${{ matrix.python-version }} conda-self
-      - name: Setup project
-        run: |
-          echo "channels: [${{ matrix.channel }}]" > .pixi/envs/test-py${{ matrix.python-version }}/.condarc
-          pixi run --environment test-py${{ matrix.python-version }} python -m conda info
+      - name: Show conda info
+        run: pixi run --environment test-py${{ matrix.python-version }} python -m conda info
       - name: Run tests
         env:
           TEST_CONDA_CHANNEL: ${{ matrix.channel }}
