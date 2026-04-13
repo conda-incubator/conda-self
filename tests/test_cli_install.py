@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import pytest
@@ -46,6 +47,13 @@ def test_install_not_plugins(
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
     with tmp_env("conda", "conda-self", f"python={python_version}") as prefix:
+        # Verify the subprocess targets this prefix (install.py uses sys.prefix)
+        result = conda_cli_subprocess(
+            prefix, "info", "--json", capture_output=True, text=True
+        )
+        info = json.loads(result.stdout)
+        assert info["sys.prefix"] == str(prefix)
+
         result = conda_cli_subprocess(
             prefix,
             "self",
@@ -57,7 +65,7 @@ def test_install_not_plugins(
             text=True,
         )
         assert result.returncode != 0
-        assert "not" in result.stderr.lower() and "plugin" in result.stderr.lower()
+        assert "SpecsAreNotPlugins" in result.stderr
         assert not is_installed(prefix, plugin_name)
 
 
