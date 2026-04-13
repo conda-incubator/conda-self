@@ -21,7 +21,7 @@ def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
     from conda.reporters import confirm_yn
 
-    from ..exceptions import SpecsCanNotBeRemoved
+    from ..exceptions import PluginRemoveError
     from ..install import uninstall_specs_in_protected_env
     from ..query import permanent_dependencies
 
@@ -32,7 +32,7 @@ def execute(args: argparse.Namespace) -> int:
             invalid_specs.append(spec)
 
     if invalid_specs:
-        raise SpecsCanNotBeRemoved(invalid_specs)
+        raise PluginRemoveError(invalid_specs)
 
     print("Removing plugins:", *args.specs)
 
