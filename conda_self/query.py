@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from contextlib import suppress
 
+from conda.base.context import context
 from conda.core.prefix_data import PrefixData
 from conda.models.prefix_graph import PrefixGraph
 
