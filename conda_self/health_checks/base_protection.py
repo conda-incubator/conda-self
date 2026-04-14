@@ -42,7 +42,7 @@ def check(prefix: str, _verbose: bool) -> None:
         print(f"{OK_MARK} Base environment is protected (frozen).\n")
     else:
         print(f"{X_MARK} Base environment is not protected.\n")
-        print("  Run `conda doctor --fix` to protect it.\n")
+        print("Run 'conda doctor --fix' to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
@@ -75,7 +75,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from conda.misc import clone_env
     from conda.models.environment import Environment
 
-    from ..constants import RESET_FILE_BASE_PROTECTION
+    from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
     from ..query import permanent_dependencies
     from ..reset import reset
 
@@ -90,16 +90,18 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
-    if env.external_packages:
-        print(
-            f"  Warning: Base environment contains {len(env.external_packages)} "
-            "non-conda package(s) that will become non-functional after reset.\n"
-            f"  They are preserved in the cloned '{default_env}' environment."
-        )
+        if env.external_packages:
+            print(
+                f"  Warning: Base environment contains {len(env.external_packages)} "
+                "non-conda package(s) that will become non-functional after reset.\n"
+                f"  They are preserved in the cloned '{default_env}' environment."
+            )
     confirm("Proceed?")
 
-    # Get packages to keep in base
-    uninstallable_packages = permanent_dependencies()
+    # Prefer the installer snapshot for resetting base so that
+    # installer-provided packages (e.g. mamba in Miniforge) are preserved.
+    installer_snapshot = base_prefix / "conda-meta" / RESET_FILE_INSTALLER
+    use_snapshot = installer_snapshot.exists()
 
     # Check destination environment
     dest_prefix_data = PrefixData.from_name(default_env)
@@ -136,7 +138,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             verbose=False,
             quiet=True,
         )
-        reset(uninstallable_packages=uninstallable_packages)
+        if use_snapshot:
+            reset(snapshot=installer_snapshot)
+        else:
+            reset(uninstallable_packages=permanent_dependencies())
 
     # Freeze base
     try:
