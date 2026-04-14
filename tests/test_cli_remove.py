@@ -8,7 +8,9 @@ from conda_self.exceptions import PluginRemoveError
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
-    from conda.testing.fixtures import TmpEnvFixture
+    from pathlib import Path
+
+    from conda.testing.fixtures import CondaCLIFixture
     from pytest import MonkeyPatch
 
 
@@ -45,23 +47,20 @@ def test_remove_unprotected_plugin_passes_validation(conda_cli):
 
 
 def test_remove_nonessential_plugin(
+    conda_cli: CondaCLIFixture,
     monkeypatch: MonkeyPatch,
-    tmp_env: TmpEnvFixture,
+    base_env: Path,
     conda_channel: str,
-    python_version: str,
 ):
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    # Adding conda-index as a non-essential plug-in
-    with tmp_env(
-        "conda", "conda-self", f"python={python_version}", "conda-index"
-    ) as prefix:
-        assert is_installed(prefix, "conda-index")
-        conda_cli_subprocess(
-            prefix,
-            "self",
-            "remove",
-            "--yes",
-            "conda-index",
-        )
-        assert not is_installed(prefix, "conda-index")
+    conda_cli("install", "conda-index", "--yes", "--prefix", base_env)
+    assert is_installed(base_env, "conda-index")
+    conda_cli_subprocess(
+        base_env,
+        "self",
+        "remove",
+        "--yes",
+        "conda-index",
+    )
+    assert not is_installed(base_env, "conda-index")

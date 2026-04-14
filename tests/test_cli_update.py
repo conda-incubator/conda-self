@@ -8,7 +8,9 @@ from conda.exceptions import CondaValueError
 from conda_self.testing import conda_cli_subprocess
 
 if TYPE_CHECKING:
-    from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
+    from pathlib import Path
+
+    from conda.testing.fixtures import CondaCLIFixture
     from pytest import MonkeyPatch
 
 
@@ -42,22 +44,20 @@ def test_update(
     extra_args: tuple[str, ...],
     expected: str,
     monkeypatch: MonkeyPatch,
-    tmp_env: TmpEnvFixture,
+    base_env: Path,
     conda_channel: str,
-    python_version: str,
 ):
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    with tmp_env("conda", "conda-self", f"python={python_version}") as prefix:
-        result = conda_cli_subprocess(
-            prefix,
-            "self",
-            "update",
-            *extra_args,
-            "--dry-run",
-            "--yes",
-            capture_output=True,
-            text=True,
-        )
-        assert "Updating" in result.stdout
-        assert expected in result.stdout
+    result = conda_cli_subprocess(
+        base_env,
+        "self",
+        "update",
+        *extra_args,
+        "--dry-run",
+        "--yes",
+        capture_output=True,
+        text=True,
+    )
+    assert "Updating" in result.stdout
+    assert expected in result.stdout
