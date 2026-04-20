@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from contextlib import suppress
 
+from conda.base.context import context
 from conda.core.prefix_data import PrefixData
 from conda.models.prefix_graph import PrefixGraph
 
@@ -21,7 +22,8 @@ def permanent_dependencies(add_plugins: bool = False) -> set[str]:
     installed = list(PrefixData(sys.prefix, interoperability=True).iter_records())
     prefix_graph = PrefixGraph(installed)
 
-    protect = [*PERMANENT_PACKAGES]
+    protect = [*PERMANENT_PACKAGES, *context.plugins.self_permanent_packages]
+
     if add_plugins:
         for record in installed:
             with suppress(NoDistInfoDirFound):
