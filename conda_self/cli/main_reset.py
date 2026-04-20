@@ -20,13 +20,16 @@ SNAPSHOT_HELP = dedent(
     Snapshot to reset the `base` environment to.
     `current` removes all packages except for `conda`, its plugins,
     and their dependencies.
-    `installer` resets the `base` environment to the snapshot provided
-    by the installer.
-    `base-protection` resets the `base` environment to the snapshot saved
+    `installer-exact` restores the `base` environment to exactly what the
+    installer shipped (may downgrade packages you have updated).
+    `installer-updates` keeps the packages the installer shipped at their
+    currently installed versions (no downgrade).
+    `base-protection` restores the `base` environment to the snapshot saved
     by `conda doctor --fix` before protecting base.
 
     If not set, `conda self` will try to reset to the base-protection snapshot
-    first, then to the installer-provided, and finally to the current snapshot.
+    first, then to the installer-provided (preserving updates), and finally
+    to the current snapshot.
     """
 ).lstrip()
 
@@ -57,7 +60,12 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     add_output_and_prompt_options(parser)
     parser.add_argument(
         "--snapshot",
-        choices=("current", "installer", "base-protection"),
+        choices=(
+            "current",
+            "installer-exact",
+            "installer-updates",
+            "base-protection",
+        ),
         help=SNAPSHOT_HELP,
     )
     parser.set_defaults(func=execute)
@@ -69,15 +77,19 @@ def execute(args: argparse.Namespace) -> int:
 
     from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
     from ..query import permanent_dependencies
-    from ..reset import reset
+    from ..reset import names_from_explicit, reset
 
     if not context.quiet:
         print(WHAT_TO_EXPECT)
 
     reset_data: dict[str, SnapshotData] = {
-        "installer": {
+        "installer-exact": {
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
-            "snapshot_name": "installer-provided",
+            "snapshot_name": "installer-provided (exact)",
+        },
+        "installer-updates": {
+            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
+            "snapshot_name": "installer-provided (with updates)",
         },
         "base-protection": {
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION),
@@ -87,21 +99,23 @@ def execute(args: argparse.Namespace) -> int:
 
     reset_file: Path | None = None
     snapshot_name = ""
-    if not args.snapshot:
-        for snapshot in ("base-protection", "installer"):
-            snapshot_data = reset_data[snapshot]
-            if not snapshot_data["file_path"].exists():
-                continue
-            reset_file = snapshot_data["file_path"]
-            snapshot_name = snapshot_data["snapshot_name"]
-            break
-    elif args.snapshot in reset_data:
-        reset_file = reset_data[args.snapshot]["file_path"]
-        snapshot_name = reset_data[args.snapshot]["snapshot_name"]
+    snapshot_choice = args.snapshot
+
+    if not snapshot_choice:
+        for fallback in ("base-protection", "installer-updates"):
+            snapshot_data = reset_data[fallback]
+            if snapshot_data["file_path"].exists():
+                reset_file = snapshot_data["file_path"]
+                snapshot_name = snapshot_data["snapshot_name"]
+                snapshot_choice = fallback
+                break
+    elif snapshot_choice in reset_data:
+        reset_file = reset_data[snapshot_choice]["file_path"]
+        snapshot_name = reset_data[snapshot_choice]["snapshot_name"]
 
     if reset_file and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{args.snapshot}`.\n"
+            f"Failed to reset to `{snapshot_choice}`.\n"
             f"Required file {reset_file} not found."
         )
 
@@ -112,10 +126,18 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.quiet:
         print("Resetting 'base' environment...")
-    uninstallable_packages = (
-        permanent_dependencies(add_plugins=True) if not reset_file else set()
-    )
-    reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
+
+    if snapshot_choice == "installer-exact":
+        reset(snapshot=reset_file)
+    elif snapshot_choice == "installer-updates":
+        keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
+            reset_file
+        )
+        reset(uninstallable_packages=keep)
+    elif snapshot_choice == "base-protection":
+        reset(snapshot=reset_file)
+    else:
+        reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
 
     if not context.quiet:
         if snapshot_name:

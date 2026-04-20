@@ -77,7 +77,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
     from ..query import permanent_dependencies
-    from ..reset import reset
+    from ..reset import names_from_explicit, reset
 
     default_env = DEFAULT_ENV_NAME
     message = "Protected by Base Environment Protection health fix"
@@ -139,7 +139,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             quiet=True,
         )
         if use_snapshot:
-            reset(snapshot=installer_snapshot)
+            keep = permanent_dependencies() | names_from_explicit(
+                installer_snapshot
+            )
+            reset(uninstallable_packages=keep)
         else:
             reset(uninstallable_packages=permanent_dependencies())
 
