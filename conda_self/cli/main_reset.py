@@ -22,7 +22,7 @@ SNAPSHOT_HELP = dedent(
     and their dependencies.
     `installer-exact` restores the `base` environment to exactly what the
     installer shipped (may downgrade packages you have updated).
-    `installer-updates` keeps the packages the installer shipped at their
+    `installer-updated` keeps the packages the installer shipped at their
     currently installed versions (no downgrade).
     `base-protection` restores the `base` environment to the snapshot saved
     by `conda doctor --fix` before protecting base.
@@ -63,7 +63,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         choices=(
             "current",
             "installer-exact",
-            "installer-updates",
+            "installer-updated",
             "base-protection",
         ),
         help=SNAPSHOT_HELP,
@@ -87,7 +87,7 @@ def execute(args: argparse.Namespace) -> int:
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
             "snapshot_name": "installer-provided (exact)",
         },
-        "installer-updates": {
+        "installer-updated": {
             "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
             "snapshot_name": "installer-provided (with updates)",
         },
@@ -102,7 +102,7 @@ def execute(args: argparse.Namespace) -> int:
     snapshot_choice = args.snapshot
 
     if not snapshot_choice:
-        for fallback in ("base-protection", "installer-updates"):
+        for fallback in ("base-protection", "installer-updated"):
             snapshot_data = reset_data[fallback]
             if snapshot_data["file_path"].exists():
                 reset_file = snapshot_data["file_path"]
@@ -129,7 +129,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if snapshot_choice in ("installer-exact", "base-protection"):
         reset(snapshot=reset_file)
-    elif snapshot_choice == "installer-updates":
+    elif snapshot_choice == "installer-updated":
         assert reset_file is not None
         keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
             reset_file

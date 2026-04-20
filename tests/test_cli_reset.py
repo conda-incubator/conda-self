@@ -72,8 +72,8 @@ def test_help(conda_cli: CondaCLIFixture):
 
 @pytest.mark.parametrize(
     "choice",
-    ["installer-exact", "installer-updates"],
-    ids=["installer-exact", "installer-updates"],
+    ["installer-exact", "installer-updated"],
+    ids=["installer-exact", "installer-updated"],
 )
 def test_help_shows_installer_choices(conda_cli: CondaCLIFixture, choice: str):
     out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
@@ -95,7 +95,7 @@ def test_installer_updates_uses_names_only(
     snapshot = fake_reset_env / "conda-meta" / RESET_FILE_INSTALLER
     snapshot.write_text(INSTALLER_SNAPSHOT_CONTENT)
 
-    conda_cli("self", "reset", "--yes", "--snapshot", "installer-updates")
+    conda_cli("self", "reset", "--yes", "--snapshot", "installer-updated")
 
     assert len(reset_calls) == 1
     call = reset_calls[0]
@@ -141,7 +141,7 @@ def test_installer_exact_uses_snapshot_path(
     ],
     ids=[
         "prefers-base-protection",
-        "installer-updates-when-no-bp",
+        "installer-updated-when-no-bp",
         "current-when-no-snapshots",
     ],
 )
