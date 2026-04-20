@@ -94,25 +94,18 @@ def fixable_base_env(
     def fake_get_exporter(fmt):
         raise CondaValueError("no exporter")
 
+    monkeypatch.setattr("conda.base.context.context.quiet", True, raising=False)
     monkeypatch.setattr(
-        "conda.base.context.context.quiet", True, raising=False
-    )
-    monkeypatch.setattr(
-        "conda.base.context.context.plugin_manager"
-        ".get_environment_exporter_by_format",
+        "conda.base.context.context.plugin_manager.get_environment_exporter_by_format",
         fake_get_exporter,
     )
     monkeypatch.setattr("conda_self.reset.reset", fake_reset)
-    monkeypatch.setattr(
-        "conda.misc.clone_env", lambda *a, **kw: None
-    )
+    monkeypatch.setattr("conda.misc.clone_env", lambda *a, **kw: None)
     monkeypatch.setattr(
         "conda.models.environment.Environment.from_prefix",
         lambda *a, **kw: _FakeEnvironment(),
     )
-    monkeypatch.setattr(
-        "conda_self.query.permanent_dependencies", fake_perm_deps
-    )
+    monkeypatch.setattr("conda_self.query.permanent_dependencies", fake_perm_deps)
     monkeypatch.setattr(
         PrefixData,
         "from_name",
@@ -134,9 +127,7 @@ def fixable_base_env(
     ],
     ids=["base", "other"],
 )
-def test_is_base_environment(
-    tmp_path: Path, use_base: bool, expected: bool
-):
+def test_is_base_environment(tmp_path: Path, use_base: bool, expected: bool):
     prefix = sys.prefix if use_base else str(tmp_path)
     assert base_protection.is_base_environment(prefix) is expected
 
@@ -149,9 +140,7 @@ def test_is_base_environment(
     ],
     ids=["frozen", "not-frozen"],
 )
-def test_is_base_protected(
-    fake_base_env: Path, frozen: bool, expected: bool
-):
+def test_is_base_protected(fake_base_env: Path, frozen: bool, expected: bool):
     if frozen:
         (fake_base_env / PREFIX_FROZEN_FILE).write_text("{}")
     PrefixData._cache_.clear()
@@ -202,9 +191,7 @@ def test_fix_skips(
     confirm_called: list[str] = []
 
     PrefixData._cache_.clear()
-    result = base_protection.fix(
-        prefix, Namespace(), confirm_called.append
-    )
+    result = base_protection.fix(prefix, Namespace(), confirm_called.append)
 
     assert result == 0
     assert expected_output in capsys.readouterr().out
@@ -223,9 +210,7 @@ def test_fix_calls_confirm_callback(fake_base_env: Path):
 
     PrefixData._cache_.clear()
     with pytest.raises(UserCancelled):
-        base_protection.fix(
-            str(fake_base_env), Namespace(), confirm
-        )
+        base_protection.fix(str(fake_base_env), Namespace(), confirm)
 
     assert confirm_called == ["Proceed?"]
 
@@ -258,9 +243,7 @@ def test_fix_reset_strategy(
     expected_keep: set[str],
 ):
     if create_snapshot:
-        snapshot = (
-            fixable_base_env / "conda-meta" / RESET_FILE_INSTALLER
-        )
+        snapshot = fixable_base_env / "conda-meta" / RESET_FILE_INSTALLER
         snapshot.write_text(
             "@EXPLICIT\n"
             "https://conda.anaconda.org/conda-forge/noarch/"
@@ -269,9 +252,7 @@ def test_fix_reset_strategy(
             "pip-24.0-pyhd8ed1ab_0.conda\n"
         )
 
-    base_protection.fix(
-        str(fixable_base_env), Namespace(), lambda msg: None
-    )
+    base_protection.fix(str(fixable_base_env), Namespace(), lambda msg: None)
 
     assert len(reset_calls) == 1
     assert "snapshot" not in reset_calls[0]

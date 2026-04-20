@@ -127,15 +127,14 @@ def execute(args: argparse.Namespace) -> int:
     if not context.quiet:
         print("Resetting 'base' environment...")
 
-    if snapshot_choice == "installer-exact":
+    if snapshot_choice in ("installer-exact", "base-protection"):
         reset(snapshot=reset_file)
     elif snapshot_choice == "installer-updates":
+        assert reset_file is not None
         keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
             reset_file
         )
         reset(uninstallable_packages=keep)
-    elif snapshot_choice == "base-protection":
-        reset(snapshot=reset_file)
     else:
         reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
 

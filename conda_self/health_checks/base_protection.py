@@ -139,9 +139,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             quiet=True,
         )
         if use_snapshot:
-            keep = permanent_dependencies() | names_from_explicit(
-                installer_snapshot
-            )
+            keep = permanent_dependencies() | names_from_explicit(installer_snapshot)
             reset(uninstallable_packages=keep)
         else:
             reset(uninstallable_packages=permanent_dependencies())

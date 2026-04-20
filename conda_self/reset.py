@@ -26,9 +26,7 @@ def names_from_explicit(path: Path) -> set[str]:
     network access, unlike :func:`conda.misc.get_package_records_from_explicit`.
     """
     return {
-        MatchSpec(line).name
-        for line in yield_lines(path)
-        if line != EXPLICIT_MARKER
+        MatchSpec(line).name for line in yield_lines(path) if line != EXPLICIT_MARKER
     }
 
 

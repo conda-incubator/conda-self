@@ -59,20 +59,14 @@ def fake_reset_env(
         perm_deps_calls.append(kwargs)
         return {"conda", "conda-self"}
 
-    monkeypatch.setattr(
-        "conda.base.context.context.quiet", True, raising=False
-    )
+    monkeypatch.setattr("conda.base.context.context.quiet", True, raising=False)
     monkeypatch.setattr("conda_self.reset.reset", fake_reset)
-    monkeypatch.setattr(
-        "conda_self.query.permanent_dependencies", fake_perm_deps
-    )
+    monkeypatch.setattr("conda_self.query.permanent_dependencies", fake_perm_deps)
     return tmp_path
 
 
 def test_help(conda_cli: CondaCLIFixture):
-    out, err, exc = conda_cli(
-        "self", "reset", "--help", raises=SystemExit
-    )
+    out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
     assert exc.value.code == 0
 
 
@@ -81,12 +75,8 @@ def test_help(conda_cli: CondaCLIFixture):
     ["installer-exact", "installer-updates"],
     ids=["installer-exact", "installer-updates"],
 )
-def test_help_shows_installer_choices(
-    conda_cli: CondaCLIFixture, choice: str
-):
-    out, err, exc = conda_cli(
-        "self", "reset", "--help", raises=SystemExit
-    )
+def test_help_shows_installer_choices(conda_cli: CondaCLIFixture, choice: str):
+    out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
     assert choice in out
 
 
@@ -211,9 +201,7 @@ def test_reset(
         assert not is_installed(prefix, "numpy")
 
 
-@pytest.mark.parametrize(
-    "add_cli_arg", (True, False), ids=("no arg", "--snapshot")
-)
+@pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--snapshot"))
 def test_reset_base_protection(
     add_cli_arg: bool,
     conda_cli: CondaCLIFixture,
@@ -232,9 +220,7 @@ def test_reset_base_protection(
         "conda-index",
     ) as prefix:
         frozen_file = prefix / PREFIX_FROZEN_FILE
-        protection_state = (
-            prefix / "conda-meta" / RESET_FILE_BASE_PROTECTION
-        )
+        protection_state = prefix / "conda-meta" / RESET_FILE_BASE_PROTECTION
 
         frozen_file.touch()
         with protection_state.open(mode="w") as f:
@@ -250,9 +236,7 @@ def test_reset_base_protection(
 
         conda_cli_subprocess(prefix, "self", "update", "--yes")
         assert is_installed(prefix, "conda")
-        assert not is_installed(
-            prefix, f"conda={conda_version}"
-        ), "conda not updated"
+        assert not is_installed(prefix, f"conda={conda_version}"), "conda not updated"
         conda_cli(
             "install",
             "constructor",
@@ -268,16 +252,8 @@ def test_reset_base_protection(
             "self",
             "reset",
             "--yes",
-            *(
-                ("--snapshot", "base-protection")
-                if add_cli_arg
-                else ()
-            ),
+            *(("--snapshot", "base-protection") if add_cli_arg else ()),
         )
-        assert is_installed(
-            prefix, f"conda={conda_version}"
-        ), "conda not reset"
-        assert is_installed(
-            prefix, "conda-index"
-        ), "conda-index has been removed"
+        assert is_installed(prefix, f"conda={conda_version}"), "conda not reset"
+        assert is_installed(prefix, "conda-index"), "conda-index has been removed"
         assert not is_installed(prefix, "constructor")
