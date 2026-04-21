@@ -9,7 +9,9 @@ from conda.exceptions import CondaValueError, DryRunExit
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
-    from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
+    from pathlib import Path
+
+    from conda.testing.fixtures import CondaCLIFixture
     from pytest import MonkeyPatch
 
 
@@ -45,33 +47,30 @@ def test_install_not_found(conda_cli: CondaCLIFixture, spec: str):
 def test_install_not_plugins(
     plugin_name: str,
     monkeypatch: MonkeyPatch,
-    tmp_env: TmpEnvFixture,
+    base_env: Path,
     conda_channel: str,
-    python_version: str,
 ):
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    with tmp_env("conda", "conda-self", f"python={python_version}") as prefix:
-        # Verify the subprocess targets this prefix (install.py uses sys.prefix)
-        result = conda_cli_subprocess(
-            prefix, "info", "--json", capture_output=True, text=True
-        )
-        info = json.loads(result.stdout)
-        assert info["sys.prefix"] == str(prefix)
+    result = conda_cli_subprocess(
+        base_env, "info", "--json", capture_output=True, text=True
+    )
+    info = json.loads(result.stdout)
+    assert info["sys.prefix"] == str(base_env)
 
-        result = conda_cli_subprocess(
-            prefix,
-            "self",
-            "install",
-            "--yes",
-            plugin_name,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode != 0
-        assert "NotAPluginError" in result.stderr
-        assert not is_installed(prefix, plugin_name)
+    result = conda_cli_subprocess(
+        base_env,
+        "self",
+        "install",
+        "--yes",
+        plugin_name,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "NotAPluginError" in result.stderr
+    assert not is_installed(base_env, plugin_name)
 
 
 @pytest.mark.parametrize(
@@ -87,19 +86,17 @@ def test_install_channel_in_spec_rejected(conda_cli: CondaCLIFixture, spec: str)
 
 def test_install_plugin(
     monkeypatch: MonkeyPatch,
-    tmp_env: TmpEnvFixture,
+    base_env: Path,
     conda_channel: str,
-    python_version: str,
 ):
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    with tmp_env("conda", "conda-self", f"python={python_version}") as prefix:
-        assert not is_installed(prefix, "conda-index")
-        conda_cli_subprocess(
-            prefix,
-            "self",
-            "install",
-            "--yes",
-            "conda-index",
-        )
-        assert is_installed(prefix, "conda-index")
+    assert not is_installed(base_env, "conda-index")
+    conda_cli_subprocess(
+        base_env,
+        "self",
+        "install",
+        "--yes",
+        "conda-index",
+    )
+    assert is_installed(base_env, "conda-index")
