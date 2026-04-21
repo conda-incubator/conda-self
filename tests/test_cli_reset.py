@@ -177,28 +177,21 @@ def test_fallback_ordering(
 def test_reset(
     conda_cli: CondaCLIFixture,
     monkeypatch: MonkeyPatch,
-    tmp_env: TmpEnvFixture,
+    base_env: Path,
     conda_channel: str,
-    python_version: str,
 ):
     monkeypatch.setenv("CONDA_CHANNELS", conda_channel)
 
-    with tmp_env(
-        "conda",
-        "conda-self",
-        f"python={python_version}",
-        "conda-index",
-    ) as prefix:
-        assert not is_installed(prefix, "numpy")
+    prefix = base_env
+    conda_cli("install", "conda-index", "numpy", "--yes", "--prefix", prefix)
+    assert is_installed(prefix, "conda-index")
+    assert is_installed(prefix, "numpy")
 
-        conda_cli("install", "numpy", "--yes", "--prefix", prefix)
-        assert is_installed(prefix, "numpy")
-
-        conda_cli_subprocess(prefix, "self", "reset", "--yes")
-        assert is_installed(prefix, "conda")
-        assert is_installed(prefix, "conda-self")
-        assert is_installed(prefix, "conda-index")
-        assert not is_installed(prefix, "numpy")
+    conda_cli_subprocess(prefix, "self", "reset", "--yes")
+    assert is_installed(prefix, "conda")
+    assert is_installed(prefix, "conda-self")
+    assert is_installed(prefix, "conda-index")
+    assert not is_installed(prefix, "numpy")
 
 
 @pytest.mark.parametrize("add_cli_arg", (True, False), ids=("no arg", "--snapshot"))
