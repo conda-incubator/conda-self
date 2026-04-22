@@ -1,17 +1,64 @@
 from __future__ import annotations
 
 import sys
+from enum import Enum
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
+from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
+
 if TYPE_CHECKING:
     import argparse
-    from typing import TypedDict
 
-    class SnapshotData(TypedDict):
-        file_path: Path
-        snapshot_name: str
+
+class Snapshot(Enum):
+    """Snapshot modes accepted by ``conda self reset --snapshot``.
+
+    Plain :class:`enum.Enum` for Python 3.10 compatibility; the string values
+    double as argparse choices and user-facing mode names. Switch to
+    :class:`enum.StrEnum` when 3.11 becomes the minimum supported version
+    (mirrors the TODO on conda's ``EnvironmentFormat``).
+    """
+
+    CURRENT = "current"
+    INSTALLER_EXACT = "installer-exact"
+    INSTALLER_UPDATED = "installer-updated"
+    BASE_PROTECTION = "base-protection"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @property
+    def display_name(self) -> str:
+        match self:
+            case Snapshot.CURRENT:
+                return "current"
+            case Snapshot.INSTALLER_EXACT:
+                return "installer-provided (exact)"
+            case Snapshot.INSTALLER_UPDATED:
+                return "installer-provided (with updates)"
+            case Snapshot.BASE_PROTECTION:
+                return "base-protection"
+
+    @property
+    def file_path(self) -> Path | None:
+        """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
+        match self:
+            case Snapshot.INSTALLER_EXACT | Snapshot.INSTALLER_UPDATED:
+                return Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER)
+            case Snapshot.BASE_PROTECTION:
+                return Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION)
+            case Snapshot.CURRENT:
+                return None
+
+
+# Tried in order when --snapshot is not provided; the first mode whose file
+# exists on disk wins, otherwise we fall through to CURRENT.
+FALLBACK_ORDER: tuple[Snapshot, ...] = (
+    Snapshot.BASE_PROTECTION,
+    Snapshot.INSTALLER_UPDATED,
+)
 
 
 HELP = "Reset 'base' environment to essential packages only."
@@ -60,12 +107,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     add_output_and_prompt_options(parser)
     parser.add_argument(
         "--snapshot",
-        choices=(
-            "current",
-            "installer-exact",
-            "installer-updated",
-            "base-protection",
-        ),
+        type=Snapshot,
+        choices=list(Snapshot),
         help=SNAPSHOT_HELP,
     )
     parser.set_defaults(func=execute)
@@ -75,71 +118,53 @@ def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
     from conda.reporters import confirm_yn
 
-    from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
     from ..query import permanent_dependencies
     from ..reset import names_from_explicit, reset
 
     if not context.quiet:
         print(WHAT_TO_EXPECT)
 
-    reset_data: dict[str, SnapshotData] = {
-        "installer-exact": {
-            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
-            "snapshot_name": "installer-provided (exact)",
-        },
-        "installer-updated": {
-            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
-            "snapshot_name": "installer-provided (with updates)",
-        },
-        "base-protection": {
-            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION),
-            "snapshot_name": "base-protection",
-        },
-    }
-
+    snapshot: Snapshot | None = args.snapshot
     reset_file: Path | None = None
-    snapshot_name = ""
-    snapshot_choice = args.snapshot
 
-    if not snapshot_choice:
-        for fallback in ("base-protection", "installer-updated"):
-            snapshot_data = reset_data[fallback]
-            if snapshot_data["file_path"].exists():
-                reset_file = snapshot_data["file_path"]
-                snapshot_name = snapshot_data["snapshot_name"]
-                snapshot_choice = fallback
+    if snapshot is not None:
+        reset_file = snapshot.file_path
+    else:
+        for fallback in FALLBACK_ORDER:
+            candidate = fallback.file_path
+            if candidate is not None and candidate.exists():
+                snapshot = fallback
+                reset_file = candidate
                 break
-    elif snapshot_choice in reset_data:
-        reset_file = reset_data[snapshot_choice]["file_path"]
-        snapshot_name = reset_data[snapshot_choice]["snapshot_name"]
 
-    if reset_file and not reset_file.exists():
+    if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{snapshot_choice}`.\n"
+            f"Failed to reset to `{snapshot}`.\n"
             f"Required file {reset_file} not found."
         )
 
     prompt = "Proceed with resetting your 'base' environment"
-    if snapshot_name:
-        prompt += f" to the {snapshot_name} snapshot"
+    if snapshot is not None:
+        prompt += f" to the {snapshot.display_name} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.quiet:
         print("Resetting 'base' environment...")
 
-    if snapshot_choice == "installer-updated" and reset_file is not None:
-        keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
-            reset_file
-        )
-        reset(uninstallable_packages=keep)
-    elif snapshot_choice in ("installer-exact", "base-protection"):
-        reset(snapshot=reset_file)
-    else:
-        reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
+    match snapshot:
+        case Snapshot.INSTALLER_UPDATED if reset_file is not None:
+            keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
+                reset_file
+            )
+            reset(uninstallable_packages=keep)
+        case Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
+            reset(snapshot=reset_file)
+        case _:
+            reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
 
     if not context.quiet:
-        if snapshot_name:
-            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot_name))
+        if snapshot is not None:
+            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
             print(SUCCESS)
 
