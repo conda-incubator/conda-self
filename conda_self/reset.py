@@ -4,15 +4,30 @@ import sys
 from typing import TYPE_CHECKING
 
 from boltons.setutils import IndexedSet
+from conda.base.constants import EXPLICIT_MARKER
 from conda.base.context import context
 from conda.core.link import PrefixSetup, UnlinkLinkTransaction
 from conda.core.prefix_data import PrefixData
 from conda.core.solve import diff_for_unlink_link_precs
 from conda.gateways.disk.read import yield_lines
 from conda.misc import get_package_records_from_explicit
+from conda.models.match_spec import MatchSpec
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+def names_from_explicit(path: Path) -> set[str]:
+    """Extract package names from a CEP-23 ``@EXPLICIT`` file without fetching.
+
+    Parses each URL line with :class:`~conda.models.match_spec.MatchSpec`,
+    which reads ``name``/``version``/``build`` from the tarball filename and
+    strips any ``#md5=…``/``#sha256=…`` checksum fragment as a comment.  No
+    network access, unlike :func:`conda.misc.get_package_records_from_explicit`.
+    """
+    return {
+        MatchSpec(line).name for line in yield_lines(path) if line != EXPLICIT_MARKER
+    }
 
 
 def reset(

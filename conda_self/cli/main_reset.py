@@ -1,17 +1,64 @@
 from __future__ import annotations
 
 import sys
+from enum import Enum
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
+from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
+
 if TYPE_CHECKING:
     import argparse
-    from typing import TypedDict
 
-    class SnapshotData(TypedDict):
-        file_path: Path
-        snapshot_name: str
+
+class Snapshot(Enum):
+    """Snapshot modes accepted by ``conda self reset --snapshot``.
+
+    Plain :class:`enum.Enum` for Python 3.10 compatibility; the string values
+    double as argparse choices and user-facing mode names. Switch to
+    :class:`enum.StrEnum` when 3.11 becomes the minimum supported version
+    (mirrors the TODO on conda's ``EnvironmentFormat``).
+    """
+
+    CURRENT = "current"
+    INSTALLER_EXACT = "installer-exact"
+    INSTALLER_UPDATED = "installer-updated"
+    BASE_PROTECTION = "base-protection"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @property
+    def display_name(self) -> str:
+        match self:
+            case Snapshot.CURRENT:
+                return "current"
+            case Snapshot.INSTALLER_EXACT:
+                return "installer-provided (exact)"
+            case Snapshot.INSTALLER_UPDATED:
+                return "installer-provided (with updates)"
+            case Snapshot.BASE_PROTECTION:
+                return "base-protection"
+
+    @property
+    def file_path(self) -> Path | None:
+        """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
+        match self:
+            case Snapshot.INSTALLER_EXACT | Snapshot.INSTALLER_UPDATED:
+                return Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER)
+            case Snapshot.BASE_PROTECTION:
+                return Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION)
+            case Snapshot.CURRENT:
+                return None
+
+
+# Tried in order when --snapshot is not provided; the first mode whose file
+# exists on disk wins, otherwise we fall through to CURRENT.
+FALLBACK_ORDER: tuple[Snapshot, ...] = (
+    Snapshot.BASE_PROTECTION,
+    Snapshot.INSTALLER_UPDATED,
+)
 
 
 HELP = "Reset 'base' environment to essential packages only."
@@ -20,13 +67,16 @@ SNAPSHOT_HELP = dedent(
     Snapshot to reset the `base` environment to.
     `current` removes all packages except for `conda`, its plugins,
     and their dependencies.
-    `installer` resets the `base` environment to the snapshot provided
-    by the installer.
-    `base-protection` resets the `base` environment to the snapshot saved
+    `installer-exact` restores the `base` environment to exactly what the
+    installer shipped (may downgrade packages you have updated).
+    `installer-updated` keeps the packages the installer shipped at their
+    currently installed versions (no downgrade).
+    `base-protection` restores the `base` environment to the snapshot saved
     by `conda doctor --fix` before protecting base.
 
     If not set, `conda self` will try to reset to the base-protection snapshot
-    first, then to the installer-provided, and finally to the current snapshot.
+    first, then to the installer-provided (preserving updates), and finally
+    to the current snapshot.
     """
 ).lstrip()
 
@@ -57,7 +107,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     add_output_and_prompt_options(parser)
     parser.add_argument(
         "--snapshot",
-        choices=("current", "installer", "base-protection"),
+        type=Snapshot,
+        choices=list(Snapshot),
         help=SNAPSHOT_HELP,
     )
     parser.set_defaults(func=execute)
@@ -67,59 +118,52 @@ def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
     from conda.reporters import confirm_yn
 
-    from ..constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
     from ..query import permanent_dependencies
-    from ..reset import reset
+    from ..reset import names_from_explicit, reset
 
     if not context.quiet:
         print(WHAT_TO_EXPECT)
 
-    reset_data: dict[str, SnapshotData] = {
-        "installer": {
-            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER),
-            "snapshot_name": "installer-provided",
-        },
-        "base-protection": {
-            "file_path": Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION),
-            "snapshot_name": "base-protection",
-        },
-    }
-
+    snapshot: Snapshot | None = args.snapshot
     reset_file: Path | None = None
-    snapshot_name = ""
-    if not args.snapshot:
-        for snapshot in ("base-protection", "installer"):
-            snapshot_data = reset_data[snapshot]
-            if not snapshot_data["file_path"].exists():
-                continue
-            reset_file = snapshot_data["file_path"]
-            snapshot_name = snapshot_data["snapshot_name"]
-            break
-    elif args.snapshot in reset_data:
-        reset_file = reset_data[args.snapshot]["file_path"]
-        snapshot_name = reset_data[args.snapshot]["snapshot_name"]
 
-    if reset_file and not reset_file.exists():
+    if snapshot is not None:
+        reset_file = snapshot.file_path
+    else:
+        for fallback in FALLBACK_ORDER:
+            candidate = fallback.file_path
+            if candidate is not None and candidate.exists():
+                snapshot = fallback
+                reset_file = candidate
+                break
+
+    if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{args.snapshot}`.\n"
-            f"Required file {reset_file} not found."
+            f"Failed to reset to `{snapshot}`.\nRequired file {reset_file} not found."
         )
 
     prompt = "Proceed with resetting your 'base' environment"
-    if snapshot_name:
-        prompt += f" to the {snapshot_name} snapshot"
+    if snapshot is not None:
+        prompt += f" to the {snapshot.display_name} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.quiet:
         print("Resetting 'base' environment...")
-    uninstallable_packages = (
-        permanent_dependencies(add_plugins=True) if not reset_file else set()
-    )
-    reset(uninstallable_packages=uninstallable_packages, snapshot=reset_file)
+
+    match snapshot:
+        case Snapshot.INSTALLER_UPDATED if reset_file is not None:
+            keep = permanent_dependencies(add_plugins=True) | names_from_explicit(
+                reset_file
+            )
+            reset(uninstallable_packages=keep)
+        case Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
+            reset(snapshot=reset_file)
+        case _:
+            reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
 
     if not context.quiet:
-        if snapshot_name:
-            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot_name))
+        if snapshot is not None:
+            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
             print(SUCCESS)
 
