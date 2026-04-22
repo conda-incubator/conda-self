@@ -1,0 +1,19 @@
+### Enhancements
+
+* Add `--force` flag to `conda self remove` to override permanent package protection (both the hard-coded `conda`/`conda-self` list and packages configured via `self_permanent_packages`). Confirmation is still required unless `--yes` is passed. (#127)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
