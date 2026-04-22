@@ -21,29 +21,29 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     optionxform = staticmethod(str)  # type: ignore
 
 
-def _file_paths_from_extracted_package(pkg_dir: str) -> list[str]:
-    """Read file paths from an extracted package directory.
-
-    Tries info/paths.json first (canonical per CEP), then falls back
-    to info/files (deprecated legacy format).
-    """
-    pkg_path = Path(pkg_dir)
-
-    paths_json = pkg_path / "info/paths.json"
-    if paths_json.is_file():
-        data = json.loads(paths_json.read_text())
-        return [entry["_path"] for entry in data.get("paths", [])]
-
-    try:
-        return (pkg_path / "info/files").read_text().splitlines()
-    except FileNotFoundError:
-        return []
-
-
 class PackageInfo:
     def __init__(self, dist_info_path: Path):
         """Describe the dist-info for a Python package installed as a conda package"""
         self.dist_info_path = dist_info_path
+
+    @classmethod
+    def read_manifest(cls, pkg_dir: str) -> list[str]:
+        """Read file paths from an extracted package directory.
+
+        Tries info/paths.json first (canonical per CEP), then falls back
+        to info/files (deprecated legacy format).
+        """
+        pkg_path = Path(pkg_dir)
+
+        paths_json = pkg_path / "info" / "paths.json"
+        if paths_json.is_file():
+            data = json.loads(paths_json.read_text())
+            return [entry["_path"] for entry in data.get("paths", [])]
+
+        try:
+            return (pkg_path / "info" / "files").read_text().splitlines()
+        except FileNotFoundError:
+            return []
 
     @classmethod
     def from_record(
@@ -51,7 +51,7 @@ class PackageInfo:
     ) -> list[PackageInfo]:
         had_manifest = True
         if not (paths := getattr(record, "files", None)):
-            paths = _file_paths_from_extracted_package(record.extracted_package_dir)
+            paths = cls.read_manifest(record.extracted_package_dir)
             had_manifest = bool(paths)
         dist_infos = set()
         for path in paths:

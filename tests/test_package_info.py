@@ -30,7 +30,7 @@ def cache_record(tmp_path):
 
 
 def test_finds_dist_info_via_record_files(tmp_path, cache_record):
-    dist_info = tmp_path / "site-packages/pkg-1.0.dist-info"
+    dist_info = tmp_path / "site-packages" / "pkg-1.0.dist-info"
     dist_info.mkdir(parents=True)
     (dist_info / "entry_points.txt").write_text("[conda]\nplugin = pkg.plugin\n")
 
@@ -49,7 +49,7 @@ def test_finds_dist_info_via_record_files(tmp_path, cache_record):
 
 @pytest.mark.parametrize("manifest", ["info_files", "paths_json"])
 def test_finds_dist_info_via_manifest(tmp_path, cache_record, manifest):
-    dist_info = tmp_path / "site-packages/pkg-1.0.dist-info"
+    dist_info = tmp_path / "site-packages" / "pkg-1.0.dist-info"
     dist_info.mkdir(parents=True)
     (dist_info / "entry_points.txt").write_text("[conda]\nplugin = pkg.plugin\n")
 
@@ -89,7 +89,7 @@ def test_finds_dist_info_via_manifest(tmp_path, cache_record, manifest):
 
 def test_paths_json_takes_precedence_over_info_files(tmp_path, cache_record):
     """info/paths.json is the canonical source per the conda package CEP."""
-    dist_info = tmp_path / "site-packages/real-1.0.dist-info"
+    dist_info = tmp_path / "site-packages" / "real-1.0.dist-info"
     dist_info.mkdir(parents=True)
     (dist_info / "entry_points.txt").write_text("[conda]\nplugin = real.p\n")
 
