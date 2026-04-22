@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 from contextlib import redirect_stdout
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -17,6 +16,8 @@ from conda_self.constants import (
 from conda_self.testing import conda_cli_subprocess, is_installed
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
     from pytest import MonkeyPatch
 
@@ -124,9 +125,7 @@ def test_help_shows_snapshot_choices(conda_cli: CondaCLIFixture, choice: str):
     ["installer", "totally-bogus", ""],
     ids=["bare-installer", "bogus", "empty"],
 )
-def test_invalid_snapshot_value_rejected(
-    conda_cli: CondaCLIFixture, bad_value: str
-):
+def test_invalid_snapshot_value_rejected(conda_cli: CondaCLIFixture, bad_value: str):
     out, err, exc = conda_cli(
         "self", "reset", "--snapshot", bad_value, raises=SystemExit
     )

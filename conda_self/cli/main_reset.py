@@ -139,8 +139,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{snapshot}`.\n"
-            f"Required file {reset_file} not found."
+            f"Failed to reset to `{snapshot}`.\nRequired file {reset_file} not found."
         )
 
     prompt = "Proceed with resetting your 'base' environment"
