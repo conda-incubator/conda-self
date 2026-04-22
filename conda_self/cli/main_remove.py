@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,6 +14,15 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
     parser.description = HELP
     add_output_and_prompt_options(parser)
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Remove packages even when they are listed as permanent "
+            "(hard-coded or via `self_permanent_packages`). "
+            "Confirmation is still required unless `--yes` is passed."
+        ),
+    )
     parser.add_argument("specs", nargs="+", help="Plugins to remove/uninstall")
     parser.set_defaults(func=execute)
 
@@ -26,13 +36,18 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
 
     uninstallable_packages = permanent_dependencies(add_plugins=False)
-    invalid_specs = []
-    for spec in args.specs:
-        if spec in uninstallable_packages:
-            invalid_specs.append(spec)
+    protected_specs = [spec for spec in args.specs if spec in uninstallable_packages]
 
-    if invalid_specs:
-        raise PluginRemoveError(invalid_specs)
+    if protected_specs and not args.force:
+        raise PluginRemoveError(protected_specs)
+
+    if protected_specs:
+        print(
+            "Warning: the following packages are configured as permanent "
+            "and will be removed because `--force` was passed:",
+            ", ".join(protected_specs),
+            file=sys.stderr,
+        )
 
     print("Removing plugins:", *args.specs)
 
