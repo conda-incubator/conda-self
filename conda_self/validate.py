@@ -47,7 +47,7 @@ class PluginInfo:
             canonical = pm.get_name(loaded)
             if canonical is None or canonical in seen:
                 continue
-            status = "blocked" if pm.is_blocked(canonical) else "active"
+            status = "disabled" if pm.is_blocked(canonical) else "active"
             hooks = cls.hooks_for(pm, canonical)
             seen[canonical] = cls(
                 name=ep.dist.name,
