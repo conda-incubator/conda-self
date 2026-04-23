@@ -137,9 +137,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.quiet:
         if snapshot is not None:
-            print(
-                WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name)
-            )
+            print(WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
             print(WHAT_TO_EXPECT_ESSENTIALS)
 
