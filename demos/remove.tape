@@ -25,11 +25,20 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Essential packages like conda itself cannot be removed"
+Type "# Essential packages like conda itself are protected"
 Enter
 Sleep 500ms
 
 Type@80ms "conda self remove conda"
+Enter
+Wait /\$/
+Sleep 3s
+
+Type "# Override protection with --force (use with care)"
+Enter
+Sleep 500ms
+
+Type@80ms "conda self remove --force --dry-run conda"
 Enter
 Wait /\$/
 Sleep 3s
