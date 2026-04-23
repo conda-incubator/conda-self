@@ -26,7 +26,7 @@ conda doctor base-protection --fix
 This does three things:
 
 1. Clones your current base environment to a new `default` environment
-2. Resets base to only conda, its plugins, and their dependencies
+2. Resets base to conda, its plugins, their dependencies, and any installer-provided packages
 3. Freezes base so regular [conda install](inv:conda:std:doc#commands/install) cannot modify it
 
 :::{tip}

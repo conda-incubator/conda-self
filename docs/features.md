@@ -20,7 +20,8 @@ This:
    all your packages for continued use
 2. **Saves a snapshot** of base in `@EXPLICIT` format to
    `conda-meta/base-protection-state.explicit.txt`
-3. **Resets** base to only conda, its plugins, and their dependencies
+3. **Resets** base to conda, its plugins, their dependencies, and any
+   installer-provided packages (e.g. `mamba` in Miniforge)
 4. **Freezes** base by writing a `PREFIX_FROZEN_FILE`, preventing
    regular [conda install](inv:conda:std:doc#commands/install) from modifying it
 

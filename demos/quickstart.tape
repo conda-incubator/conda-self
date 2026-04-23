@@ -34,7 +34,7 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Reset to essentials"
+Type "# Reset base to the installer-provided snapshot"
 Enter
 Sleep 500ms
 

@@ -16,7 +16,7 @@ Enter
 Wait /\$/
 Show
 
-Type "# Reset base to essential packages only"
+Type "# Reset base to the installer-provided snapshot"
 Enter
 Sleep 500ms
 
