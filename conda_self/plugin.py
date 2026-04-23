@@ -9,6 +9,12 @@ from conda.plugins.hookspec import hookimpl
 from conda.plugins.types import CondaHealthCheck, CondaSetting, CondaSubcommand
 
 from .cli import configure_parser, execute
+from .cli.plugins import (
+    configure_parser as configure_parser_plugins,
+)
+from .cli.plugins import (
+    execute as execute_plugins,
+)
 from .constants import PERMANENT_PACKAGES, SELF_PERMANENT_PACKAGES_SETTING
 
 if TYPE_CHECKING:
@@ -17,12 +23,18 @@ if TYPE_CHECKING:
 
 @hookimpl
 def conda_subcommands() -> Iterable[CondaSubcommand]:
-    """Expose the `self` subcommand."""
+    """Expose the `self` and `plugins` subcommands."""
     yield CondaSubcommand(
         name="self",
         action=execute,
         configure_parser=configure_parser,
         summary="Manage your conda 'base' environment safely.",
+    )
+    yield CondaSubcommand(
+        name="plugins",
+        action=execute_plugins,
+        configure_parser=configure_parser_plugins,
+        summary="Manage conda plugins.",
     )
 
 
