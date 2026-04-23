@@ -42,7 +42,7 @@ def check(prefix: str, _verbose: bool) -> None:
         print(f"{OK_MARK} Base environment is protected (frozen).\n")
     else:
         print(f"{X_MARK} Base environment is not protected.\n")
-        print("  Run `conda doctor --fix` to protect it.\n")
+        print("Run 'conda doctor --fix' to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
@@ -90,12 +90,12 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
 
     if not context.quiet:
         print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
-    if env.external_packages:
-        print(
-            f"  Warning: Base environment contains {len(env.external_packages)} "
-            "non-conda package(s) that will become non-functional after reset.\n"
-            f"  They are preserved in the cloned '{default_env}' environment."
-        )
+        if env.external_packages:
+            print(
+                f"  Warning: Base environment contains {len(env.external_packages)} "
+                "non-conda package(s) that will become non-functional after reset.\n"
+                f"  They are preserved in the cloned '{default_env}' environment."
+            )
     confirm("Proceed?")
 
     # Prefer the installer snapshot for resetting base so that

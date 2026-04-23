@@ -80,24 +80,20 @@ SNAPSHOT_HELP = dedent(
     """
 ).lstrip()
 
-WHAT_TO_EXPECT = dedent(
+WHAT_TO_EXPECT_ESSENTIALS = dedent(
     """
-    This will reset your `base` to ONLY contain `conda`, its plugins,
+    This will reset your 'base' to ONLY contain 'conda', its plugins,
     and their dependencies.
     """
 ).lstrip()
-SUCCESS = dedent(
+WHAT_TO_EXPECT_SNAPSHOT = dedent(
     """
-    SUCCESS!
-    Reset the `base` environment to only the essential packages and plugins.
-    """
-).lstrip()
-SUCCESS_SNAPSHOT = dedent(
-    """
-    SUCCESS!
-    Reset the `base` environment to {snapshot_name} snapshot.
+    This resets your 'base' to the {snapshot_name} snapshot
+    and removes any packages outside of it.
     """
 ).lstrip()
+SUCCESS = "Reset the 'base' environment to only the essential packages and plugins.\n"
+SUCCESS_SNAPSHOT = "Reset the 'base' environment to {snapshot_name} snapshot.\n"
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -121,9 +117,6 @@ def execute(args: argparse.Namespace) -> int:
     from ..query import permanent_dependencies
     from ..reset import names_from_explicit, reset
 
-    if not context.quiet:
-        print(WHAT_TO_EXPECT)
-
     snapshot: Snapshot | None = args.snapshot
     reset_file: Path | None = None
 
@@ -139,8 +132,14 @@ def execute(args: argparse.Namespace) -> int:
 
     if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to `{snapshot}`.\nRequired file {reset_file} not found."
+            f"Failed to reset to '{snapshot}'.\nRequired file {reset_file} not found."
         )
+
+    if not context.quiet:
+        if snapshot is not None:
+            print(WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name))
+        else:
+            print(WHAT_TO_EXPECT_ESSENTIALS)
 
     prompt = "Proceed with resetting your 'base' environment"
     if snapshot is not None:
