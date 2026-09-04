@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - ".pre-commit-config.yaml"
       - ".github/workflows/tests.yml"
       - "conda_self/**"
       - "pixi.lock"
@@ -12,9 +13,8 @@ on:
       - "recipe/**"
       - "tests/**"
   pull_request:
-    branches:
-      - main
     paths:
+      - ".pre-commit-config.yaml"
       - ".github/workflows/tests.yml"
       - "conda_self/**"
       - "pixi.lock"
@@ -32,6 +32,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: prefix-dev/setup-pixi@f00437f565399d418b0acc85936d12c1fb668347 # v0.10.1
+        with:
+          environments: typecheck
+      - run: pixi run --environment typecheck typecheck
+
   tests:
     name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
     runs-on: ${{ matrix.os }}

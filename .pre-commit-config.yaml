@@ -1,6 +1,8 @@
 # disable autofixing PRs, commenting "pre-commit.ci autofix" on a pull request triggers a autofix
 ci:
   autofix_prs: false
+  # GitHub Actions runs ty because pre-commit.ci does not provide Pixi.
+  skip: [ty]
 # generally speaking we ignore all vendored code as well as tests data
 # TODO: Restore index and solver exclude lines before merge
 exclude: |
@@ -41,11 +43,6 @@ repos:
         args: [--fix]
       # compatible replacement for black
       - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v2.3.1'  # Use the sha / tag you want to point at
-    hooks:
-    - id: mypy
-      exclude: ^docs/.*$
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.38.0
     hooks:
@@ -57,6 +54,12 @@ repos:
       - id: check-useless-excludes
   - repo: local
     hooks:
+      - id: ty
+        name: ty
+        entry: pixi run --environment typecheck typecheck
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: git-diff
         name: git diff
         entry: git diff --exit-code

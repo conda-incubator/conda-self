@@ -443,7 +443,10 @@ def test_reset_snapshot_package_error_reports_safe_context(
         RuntimeError("unexpected failure"),
         CondaMultiError(()),
         CondaMultiError((CondaMultiError((CondaExitZero("requested exit"),)),)),
-        CondaMultiError((CondaMultiError((RuntimeError("unexpected failure"),)),)),
+        CondaMultiError(
+            # This intentionally tests an unexpected error inside CondaMultiError.
+            (CondaMultiError((RuntimeError("unexpected failure"),)),)  # ty: ignore[invalid-argument-type]
+        ),
         CondaMultiError((CondaMultiError((CondaSignalInterrupt(signal.SIGINT),)),)),
         CondaMultiError(
             (
