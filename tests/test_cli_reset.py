@@ -245,7 +245,7 @@ def test_reset_snapshot_hides_invalid_explicit_entry(entry: str, tmp_path: Path)
         str(exc_info.value),
         "".join(traceback.format_exception(exc_info.value)),
     )
-    assert outputs[0] == "Could not parse explicit snapshot entry."
+    assert outputs[0] == "Could not parse a package URL in the snapshot."
     for secret in (
         "user:password",
         "tk-secret",
@@ -340,7 +340,7 @@ def test_reset_snapshot_fetches_only_missing_records_and_preserves_order(
 
 
 @pytest.mark.parametrize("mismatch", ["checksum", "url"])
-def test_reset_snapshot_reinstalls_same_package_for_artifact_mismatch(
+def test_reset_snapshot_reinstalls_same_package_for_url_or_checksum_mismatch(
     mismatch: str,
     snapshot_reset: dict,
     tmp_path: Path,
@@ -372,7 +372,7 @@ def test_reset_snapshot_reinstalls_same_package_for_artifact_mismatch(
     assert snapshot_reset["diff"]["final_precs"] == (target,)
 
 
-def test_reset_snapshot_fetch_failure_reports_safe_context(
+def test_reset_snapshot_download_error_reports_safe_context(
     snapshot_reset: dict,
     tmp_path: Path,
 ):
@@ -407,8 +407,18 @@ def test_reset_snapshot_fetch_failure_reports_safe_context(
         repr(exc_info.value.dump_map()),
         "".join(traceback.format_exception(exc_info.value)),
     )
+    assert outputs[0] == (
+        "Could not download or extract all packages required by the selected "
+        "snapshot.\n"
+        "Required packages:\n"
+        "  - unavailable-1.0-0.conda\n"
+        "The target environment was not changed, but the package cache may "
+        "contain packages downloaded and extracted before the failure. Ensure "
+        "the required package files are available from the URLs recorded in the "
+        "snapshot and match any recorded checksums, or place matching package "
+        "files in a configured package cache, then retry."
+    )
     assert all("unavailable-1.0-0.conda" in output for output in outputs)
-    assert "target environment was not modified" in outputs[0]
     for secret in (
         "user:password",
         "tk-secret",
@@ -426,7 +436,7 @@ def test_reset_snapshot_fetch_failure_reports_safe_context(
     [RuntimeError("unexpected failure"), CondaSignalInterrupt(signal.SIGINT)],
     ids=["unexpected", "interrupt"],
 )
-def test_reset_snapshot_preserves_non_fetch_error(
+def test_reset_snapshot_preserves_interrupt_or_unexpected_error(
     nested_error: BaseException,
     snapshot_reset: dict,
     tmp_path: Path,
@@ -675,21 +685,6 @@ def test_fallback_ordering(
         assert "snapshot" not in call
     if expected_names is not None:
         assert expected_names <= call["uninstallable_packages"]
-
-
-@pytest.mark.parametrize(
-    "snapshot, display_name",
-    [
-        (Snapshot.CURRENT, "current"),
-        (Snapshot.INSTALLER, "installer-provided (exact)"),
-        (Snapshot.INSTALLER_EXACT, "installer-provided (exact)"),
-        (Snapshot.INSTALLER_UPDATED, "installer-provided (with updates)"),
-        (Snapshot.BASE_PROTECTION, "base-protection"),
-    ],
-    ids=[s.value for s in Snapshot],
-)
-def test_snapshot_display_name(snapshot: Snapshot, display_name: str):
-    assert snapshot.display_name == display_name
 
 
 @pytest.mark.parametrize(

@@ -15,7 +15,8 @@ conda-self selects the first available mode in this order:
    [conda doctor base-protection --fix](inv:conda:std:doc#commands/doctor)
 2. `installer-updated` -- retain installed packages whose names appear in
    the installer snapshot
-3. `current` -- strip to essentials without a snapshot
+3. `current` -- retain conda, installed conda plugins, their dependencies,
+   and configured permanent packages
 
 Snapshot availability is based on whether its file exists. A failure while
 applying the selected snapshot is reported instead of switching modes.
@@ -43,14 +44,14 @@ conda self reset --snapshot installer
 ```
 
 This uses `conda-meta/initial-state.explicit.txt` to restore the exact
-package artifacts shipped by the installer and remove packages outside
-that snapshot. `installer-exact` is an equivalent, more explicit name. Both
-may downgrade packages that have since been updated.
+packages recorded by the installer and remove packages outside that
+snapshot. `installer-exact` is an equivalent, more explicit name. Both may
+downgrade packages that have since been updated.
 Use this mode, or a suitable `base-protection` snapshot, when an
 accidentally installed plugin must be removed. Not all installers provide
 this file.
 
-### Updated installer packages
+### Retain installed versions of installer packages
 
 Retain currently installed packages whose names appear in the installer
 snapshot:
@@ -85,20 +86,20 @@ conda self reset --dry-run
 conda self reset --snapshot installer --dry-run
 ```
 
-## Unavailable snapshot artifacts
+## Packages required for an exact reset
 
 For `installer`, `installer-exact`, and `base-protection`, conda-self first
-reuses packages already installed in base when they match the complete
-explicit snapshot entry, including its URL and any supplied checksum. It
-resolves only the remaining entries through the package cache or their
-recorded URLs.
+reuses a package already installed in base when its package URL and optional
+checksum match those recorded in the snapshot. Conda downloads or extracts
+only the remaining packages.
 
-An exact reset still needs package bytes for any artifact that must be
-installed or relinked. This can include `noarch: python` packages after a
-Python major or minor version change. If the required artifact is neither
-in the package cache nor downloadable, conda-self cannot complete the exact
-reset and leaves the target prefix unchanged. Artifacts downloaded before
-the failure may remain in the package cache.
+Each package that must be installed or reinstalled must be present in the
+package cache or downloadable from its URL in the snapshot. This can include
+`noarch: python` packages that must be linked into the environment again
+after a Python major or minor version change. If Conda cannot download or
+extract a required package, the exact reset stops before the target
+environment is changed. Packages downloaded and extracted before the failure
+may remain in the package cache.
 
 ## After a reset
 

@@ -31,18 +31,6 @@ class Snapshot(Enum):
         return self.value
 
     @property
-    def display_name(self) -> str:
-        match self:
-            case Snapshot.CURRENT:
-                return "current"
-            case Snapshot.INSTALLER | Snapshot.INSTALLER_EXACT:
-                return "installer-provided (exact)"
-            case Snapshot.INSTALLER_UPDATED:
-                return "installer-provided (with updates)"
-            case Snapshot.BASE_PROTECTION:
-                return "base-protection"
-
-    @property
     def file_path(self) -> Path | None:
         """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
         match self:
@@ -66,39 +54,40 @@ FALLBACK_ORDER: tuple[Snapshot, ...] = (
 )
 
 
-HELP = "Reset 'base' from a snapshot or to essential packages."
+HELP = "Reset the base environment using a selected reset mode."
 SNAPSHOT_HELP = dedent(
     """
-    Snapshot to reset the `base` environment to.
+    Reset mode for the base environment.
     `current` removes all packages except for `conda`, its plugins,
-    and their dependencies.
-    `installer` and `installer-exact` restore the `base` environment to
-    exactly what the installer shipped (may downgrade updated packages).
-    `installer-updated` keeps the packages the installer shipped at their
-    currently installed versions (no downgrade).
-    `base-protection` restores the `base` environment to the snapshot saved
-    by `conda doctor --fix` before protecting base.
+    their dependencies, and configured permanent packages.
+    `installer` restores the exact packages recorded by the installer and
+    may downgrade updated packages. `installer-exact` is equivalent.
+    `installer-updated` retains currently installed packages whose names
+    appear in the installer snapshot. It does not update packages or install
+    missing packages.
+    `base-protection` restores the exact packages recorded by
+    `conda doctor base-protection --fix` before protecting base.
 
-    If not set, `conda self` will try to reset to the base-protection snapshot
-    first, then to the installer-provided (preserving updates), and finally
-    to the current snapshot.
+    If not set, `conda self` first tries `base-protection`, then
+    `installer-updated`, and finally the `current` mode.
     """
 ).lstrip()
 
 WHAT_TO_EXPECT_ESSENTIALS = dedent(
     """
-    This will reset your 'base' to ONLY contain 'conda', its plugins,
-    and their dependencies.
+    This resets the base environment to keep conda, installed conda plugins,
+    their dependencies, and configured permanent packages.
+    All other packages are removed.
     """
 ).lstrip()
 WHAT_TO_EXPECT_SNAPSHOT = dedent(
     """
-    This resets your 'base' to the {snapshot_name} snapshot
-    and removes any packages outside of it.
+    This resets the base environment using the '{mode_name}' mode
+    and removes packages not retained by that mode.
     """
 ).lstrip()
-SUCCESS = "Reset the 'base' environment to only the essential packages and plugins.\n"
-SUCCESS_SNAPSHOT = "Reset the 'base' environment to {snapshot_name} snapshot.\n"
+SUCCESS = "Reset the base environment using the 'current' mode.\n"
+SUCCESS_SNAPSHOT = "Reset the base environment using the '{mode_name}' mode.\n"
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -143,13 +132,13 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.json and not context.quiet:
         if snapshot is not None:
-            print(WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name))
+            print(WHAT_TO_EXPECT_SNAPSHOT.format(mode_name=snapshot))
         else:
             print(WHAT_TO_EXPECT_ESSENTIALS)
 
-    prompt = "Proceed with resetting your 'base' environment"
+    prompt = "Proceed with resetting the base environment"
     if snapshot is not None:
-        prompt += f" to the {snapshot.display_name} snapshot"
+        prompt += f" using the '{snapshot}' mode"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.json and not context.quiet:
@@ -170,7 +159,7 @@ def execute(args: argparse.Namespace) -> int:
         stdout_json_success()
     elif not context.quiet:
         if snapshot is not None:
-            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot.display_name))
+            print(SUCCESS_SNAPSHOT.format(mode_name=snapshot))
         else:
             print(SUCCESS)
 

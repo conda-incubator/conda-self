@@ -166,12 +166,12 @@ conda self reset --snapshot base-protection
 conda self reset --snapshot current
 ```
 
-Exact snapshot modes reuse packages already installed in base when their
-URL, filename-derived identity, and any supplied checksum match the
-explicit entry. Other artifacts that must be installed or relinked must be
-available in the package cache or downloadable from the recorded URL. If
-an artifact is unavailable from both sources, the exact reset cannot
-proceed.
+Exact snapshot modes reuse a package already installed in base when its
+package URL and optional checksum match those recorded in the snapshot.
+Conda downloads or extracts the remaining packages into the package cache.
+If a required package is not present in the package cache and cannot be
+downloaded from its URL in the snapshot, the exact reset stops before the
+target environment is changed.
 
 `installer-updated` does not remove installed conda plugins. Use `installer`,
 `installer-exact`, or a suitable `base-protection` snapshot when reset must

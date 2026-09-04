@@ -28,12 +28,12 @@ if TYPE_CHECKING:
 def records_from_snapshot(
     prefix: str, snapshot_content: list[str]
 ) -> tuple[IndexedSet, tuple[MatchSpec, ...]]:
-    """Resolve snapshot entries, reusing compatible installed records."""
+    """Return package records and MatchSpecs for the URLs in a snapshot."""
     entries = tuple(line for line in snapshot_content if line != EXPLICIT_MARKER)
     try:
         specs = tuple(_match_specs_from_explicit(entries))
     except (ParseError, ValueError, IndexError, re.error):
-        raise ParseError("Could not parse explicit snapshot entry.") from None
+        raise ParseError("Could not parse a package URL in the snapshot.") from None
     prefix_data = PrefixData(prefix)
     installed_python = prefix_data.get("python", None)
     snapshot_python = next((spec for spec in specs if spec.name == "python"), None)
@@ -94,13 +94,15 @@ def records_from_snapshot(
                 spec.get_exact_value("fn") or spec.name for spec in unresolved_specs
             )
             raise CondaError(
-                "Could not obtain all package media required by the snapshot.\n"
-                "Packages requiring media:%(packages)s\n"
-                "The target environment was not modified. Some of the listed "
-                "packages may have been downloaded into the package cache before "
-                "this failure. Restore unavailable artifacts or place packages "
-                "matching the snapshot URLs and checksums in a configured package "
-                "cache, then retry.",
+                "Could not download or extract all packages required by the "
+                "selected snapshot.\n"
+                "Required packages:%(packages)s\n"
+                "The target environment was not changed, but the package cache "
+                "may contain packages downloaded and extracted before the failure. "
+                "Ensure the required package files are available from the URLs "
+                "recorded in the snapshot and match any recorded checksums, or "
+                "place matching package files in a configured package cache, then "
+                "retry.",
                 packages=packages,
             ) from None
 
@@ -113,10 +115,10 @@ def records_from_snapshot(
 
 
 def names_from_explicit(path: Path) -> set[str]:
-    """Extract package names from a CEP-23 ``@EXPLICIT`` file without fetching.
+    """Extract package names from a CEP-23 ``@EXPLICIT`` file without downloading.
 
     Parses each URL line with :class:`~conda.models.match_spec.MatchSpec`,
-    which reads ``name``/``version``/``build`` from the tarball filename and
+    which reads ``name``/``version``/``build`` from the package filename and
     strips any checksum fragment as a comment. No network access, unlike
     :func:`conda.misc.get_package_records_from_explicit`.
     """
@@ -145,7 +147,7 @@ def reset(
             if not context.json and not context.quiet:
                 print(
                     "Nothing to do. "
-                    "Packages in target environment match the selected snapshot."
+                    "Packages in the target environment match the selected snapshot."
                 )
             return
     else:

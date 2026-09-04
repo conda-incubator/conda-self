@@ -94,9 +94,9 @@ pre-protection state. This snapshot can be used to restore base:
 ```bash
 conda self reset                              # auto-detect the reset mode
 conda self reset --snapshot installer        # restore exact installer state
-conda self reset --snapshot installer-updated  # keep installer packages updated
+conda self reset --snapshot installer-updated  # retain installed versions
 conda self reset --snapshot base-protection  # restore protection snapshot
-conda self reset --snapshot current          # strip to essentials only
+conda self reset --snapshot current          # remove all other packages
 ```
 
 Without `--snapshot`, conda-self selects `base-protection` when that
@@ -106,13 +106,13 @@ exists, and otherwise `current`. Automatic reset does not select the
 packages. Both names select the same exact installer reset.
 
 `installer`, `installer-exact`, and `base-protection` reuse an installed
-package when its URL, filename-derived identity, and any supplied checksum
-match the explicit snapshot entry. Other required artifacts must be present
-in the package cache or available from their recorded URLs. `installer-updated`
-retains currently installed packages whose names appear in the installer
-snapshot. It also retains installed conda plugins and their dependencies,
-so it is not a substitute for an exact reset when removing an accidentally
-installed plugin.
+package when its package URL and optional checksum match those recorded in
+the snapshot. Other required packages must be present in the package cache
+or downloadable from their package URLs. `installer-updated` retains
+currently installed packages whose names appear in the installer snapshot.
+It also retains installed conda plugins and their dependencies, so it is not
+a substitute for an exact reset when removing an accidentally installed
+plugin.
 
 Snapshots are stored as `@EXPLICIT` files in `conda-meta/`:
 

@@ -37,8 +37,8 @@ use conda's `@EXPLICIT` format (a list of exact package URLs).
 
 These files are used by `conda self reset --snapshot <type>` to
 restore base without running the solver. `base-protection`, `installer`,
-and `installer-exact` use their complete explicit entries.
-`installer-updated` uses `initial-state.explicit.txt` only to select which
+and `installer-exact` use the complete package URLs and optional checksums.
+`installer-updated` uses `initial-state.explicit.txt` only to select the
 installed package names to retain.
 
 ## Constants
