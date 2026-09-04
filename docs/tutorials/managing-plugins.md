@@ -43,7 +43,7 @@ Update a specific plugin:
 conda self update --plugin conda-index
 ```
 
-Update conda, plugins, and their dependencies:
+Update all installed packages:
 
 ```bash
 conda self update --all
@@ -63,8 +63,9 @@ conda self update --force-reinstall
 conda self remove conda-index
 ```
 
-Essential packages (conda, its core dependencies) cannot be removed.
-If you try, you will see a `SpecsCanNotBeRemoved` error.
+Conda, conda-self, configured permanent packages, and their dependencies
+cannot be removed without `--force`. If you try, you will see a
+`PluginRemoveError`.
 
 ## Channel configuration
 
@@ -79,9 +80,9 @@ conda config --add channels my-channel -n base
 conda self install my-plugin
 ```
 
-Inline channel specs (`conda-forge::my-plugin`) are not supported
-and will produce an error. This keeps channel configuration
-consistent across all operations.
+Channel-qualified package specs (`conda-forge::my-plugin`) are not supported
+and will produce an error. This keeps channel configuration consistent across
+all operations.
 
 ## Verify installed plugins
 

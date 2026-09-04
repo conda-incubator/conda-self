@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 def records_from_snapshot(
     prefix: str, snapshot_content: list[str]
 ) -> tuple[IndexedSet, tuple[MatchSpec, ...]]:
-    """Return package records and MatchSpecs for the URLs in a snapshot."""
+    """Return package records for the snapshot and MatchSpecs to install or relink."""
     entries = tuple(line for line in snapshot_content if line != EXPLICIT_MARKER)
     try:
         specs = tuple(_match_specs_from_explicit(entries))
@@ -97,12 +97,11 @@ def records_from_snapshot(
                 "Could not download or extract all packages required by the "
                 "selected snapshot.\n"
                 "Required packages:%(packages)s\n"
-                "The target environment was not changed, but the package cache "
-                "may contain packages downloaded and extracted before the failure. "
-                "Ensure the required package files are available from the URLs "
-                "recorded in the snapshot and match any recorded checksums, or "
-                "place matching package files in a configured package cache, then "
-                "retry.",
+                "The target environment was not changed. Some downloaded or "
+                "extracted packages may remain in a package cache. Ensure each "
+                "listed package is available from a package cache or can be "
+                "downloaded from its URL in the snapshot, verified against its "
+                "recorded checksum when present, and extracted, then retry.",
                 packages=packages,
             ) from None
 
@@ -115,7 +114,7 @@ def records_from_snapshot(
 
 
 def names_from_explicit(path: Path) -> set[str]:
-    """Extract package names from a CEP-23 ``@EXPLICIT`` file without downloading.
+    """Extract package names from a CEP 23 explicit spec file without downloading.
 
     Parses each URL line with :class:`~conda.models.match_spec.MatchSpec`,
     which reads ``name``/``version``/``build`` from the package filename and

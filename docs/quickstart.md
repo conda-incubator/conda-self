@@ -27,8 +27,10 @@ conda doctor base-protection --fix
 This does three things:
 
 1. Clones your current base environment to a new `default` environment
-2. Resets base to conda, its plugins, their dependencies, and any installer-provided packages
-3. Freezes base so regular [conda install](inv:conda:std:doc#commands/install) cannot modify it
+2. Resets base to conda, conda-self, configured permanent packages, their
+   dependencies, and installed packages named in an available installer
+   snapshot
+3. Marks base as frozen so regular [conda install](inv:conda:std:doc#commands/install) cannot modify it
 
 :::{tip}
 You only need to run this once. After protection, use `conda self`
@@ -47,14 +49,13 @@ conda-self installs the package via subprocess, validates that it
 registers as a [conda plugin](inv:conda:std:doc#dev-guide/plugins/index) (via entry points), and rolls back if
 it does not.
 
-## Update plugins
+## Update all installed packages
 
 ```bash
-conda self update
+conda self update --all
 ```
 
-This updates conda itself and all installed plugins to their latest
-compatible versions.
+This updates every installed package in the base environment.
 
 ## Remove a plugin
 
@@ -64,14 +65,14 @@ compatible versions.
 conda self remove conda-index
 ```
 
-Essential packages (conda itself, its core dependencies) cannot be
-removed.
+Conda, conda-self, configured permanent packages, and their dependencies
+cannot be removed without `--force`.
 
 ## Reset base
 
 ![Reset demo](../demos/reset.gif)
 
-If something goes wrong, reset base to essentials:
+If something goes wrong, automatically select a reset mode:
 
 ```bash
 conda self reset

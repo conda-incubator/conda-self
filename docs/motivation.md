@@ -49,10 +49,10 @@ and community feedback:
    because the plugin manages the conda installation, not just
    any environment named "base."
 
-5. Reset functionality evolved from a simple "strip to essentials"
-   to supporting multiple snapshot sources: the installer-provided
-   state (e.g. from Miniforge), the pre-protection state saved by
-   `conda doctor --fix`, and the current essential packages.
+5. Reset functionality evolved from removing all packages except conda,
+   conda-self, configured permanent packages, and their dependencies to
+   supporting installer and base-protection snapshots as well as the current
+   mode.
 
 ## Prior art
 
@@ -98,13 +98,14 @@ Plugin validation after install
   future-proof and works with any plugin, including third-party ones.
 
 Snapshot-based recovery
-: Snapshots use conda's `@EXPLICIT` format -- a list of exact
-  package URLs. This is the most reliable way to reproduce an
-  environment state, as it bypasses the solver entirely. Multiple
-  snapshot sources (installer, base-protection, current) give users
-  flexibility in how far back to restore.
+: Snapshots use conda's explicit format, with an `@EXPLICIT` header followed
+  by complete package URLs. This is the most reliable way to reproduce an
+  environment state because it bypasses the solver. Reset modes can restore
+  the installer or base-protection snapshot, retain installed versions named
+  by the installer snapshot, or remove every package outside the `current`
+  mode's retained set.
 
-Channel configuration over inline specs
+Channel configuration over channel-qualified package specs
 : `conda self install conda-forge::pkg` is rejected. Instead,
   channels are configured via [conda config](inv:conda:std:doc#commands/config), keeping channel
   settings consistent across install, update, and dependency

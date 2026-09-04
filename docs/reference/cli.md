@@ -6,18 +6,18 @@ All commands are available as `conda self <cmd>`.
 
 ## self install
 
-Add conda plugins to the base environment.
+Install conda plugins in the base environment.
 
 ```
 conda self install <specs>... [--force-reinstall] [--dry-run] [--yes] [--json] [--quiet]
 ```
 
 `specs`
-: One or more package names to install. Inline channel specs
+: One or more package names to install. Channel-qualified package specs
   (`channel::pkg`) are rejected -- use [conda config](inv:conda:std:doc#commands/config) instead.
 
 `--force-reinstall`
-: Reinstall the plugin even if it is already installed.
+: Reinstall each requested plugin even if it is already installed.
 
 `--dry-run`
 : Show what would be installed without making changes.
@@ -39,9 +39,9 @@ conda self install conda-index
 conda self install --force-reinstall conda-index
 ```
 
-After installation, conda-self validates that the package registers
-a `conda` entry point. If it does not, the package is automatically
-uninstalled and a `SpecsAreNotPlugins` error is raised.
+After installation, conda-self validates that the package registers a `conda`
+entry point. If it does not, the package is automatically uninstalled and a
+`NotAPluginError` is raised.
 
 ---
 
@@ -50,11 +50,15 @@ uninstalled and a `SpecsAreNotPlugins` error is raised.
 Remove conda plugins from the base environment.
 
 ```
-conda self remove <specs>... [--dry-run] [--yes] [--json] [--quiet]
+conda self remove <specs>... [--force] [--dry-run] [--yes] [--json] [--quiet]
 ```
 
 `specs`
 : One or more package names to remove.
+
+`--force`
+: Remove packages even when they are protected from removal because they are
+  permanent or dependencies of permanent packages.
 
 `--dry-run`
 : Show what would be removed without making changes.
@@ -62,9 +66,9 @@ conda self remove <specs>... [--dry-run] [--yes] [--json] [--quiet]
 `--yes`
 : Skip confirmation prompts.
 
-Essential packages (conda, its core dependencies, and anything in
-`plugins.self_permanent_packages`) cannot be removed. Attempting to do so
-raises a `SpecsCanNotBeRemoved` error.
+Conda, conda-self, packages configured in `plugins.self_permanent_packages`,
+and their dependencies cannot be removed without `--force`. Attempting to do
+so raises a `PluginRemoveError`.
 
 ```bash
 conda self remove conda-index
@@ -74,7 +78,7 @@ conda self remove conda-index
 
 ## self update
 
-Update conda and/or its plugins in the base environment.
+Update conda, one conda plugin, or all packages in the base environment.
 
 ```
 conda self update [--plugin NAME | --all] [--force-reinstall] [--dry-run] [--yes] [--json] [--quiet]
@@ -84,11 +88,12 @@ conda self update [--plugin NAME | --all] [--force-reinstall] [--dry-run] [--yes
 : Update a single installed conda plugin.
 
 `--all`
-: Update conda, all plugins, and their dependencies. Passes `--all`
-  to `conda install`.
+: Update all installed packages in the base environment. Passes `--all` to
+  `conda install`.
 
 `--force-reinstall`
-: Force reinstall of packages.
+: Uninstall and reinstall each requested package, even if it is already
+  installed.
 
 `--dry-run`
 : Show what would change without making modifications.
@@ -103,32 +108,31 @@ conda self update
 # Update a plugin
 conda self update --plugin conda-libmamba-solver
 
-# Update conda, plugins, and dependencies
+# Update all installed packages
 conda self update --all
 ```
 
 Bare `conda self update` and `--plugin` use `conda install --update-deps`
 so the requested package's dependency chain can move when needed. `--all`
-uses `conda install --all` so plugins and their dependencies can move
-together.
+uses `conda install --all` so every installed package can move.
 
 ---
 
 ## self reset
 
-Reset the base environment from a snapshot or to essential packages.
+Reset the base environment using a selected reset mode.
 
 ```
 conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
 ```
 
 `--snapshot`
-: Which snapshot to reset to. Options:
+: Reset mode. Options:
 
   `current`
-  : Remove all packages except conda, its plugins, and their
-    dependencies, plus packages configured in
-    `plugins.self_permanent_packages`.
+  : Remove all packages except conda, conda-self, installed conda plugins,
+    packages configured in `plugins.self_permanent_packages`, and their
+    dependencies.
 
   `installer`, `installer-exact`
   : Restore the exact packages saved by the installer in
@@ -137,11 +141,12 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
 
   `installer-updated`
   : Retain currently installed packages whose names appear in the installer
-    snapshot. This does not install missing packages. It also retains
-    installed conda plugins and their dependencies.
+    snapshot. This does not install missing packages. It also retains conda,
+    conda-self, installed conda plugins, configured permanent packages, and
+    their dependencies.
 
   `base-protection`
-  : Reset to the snapshot saved by `conda doctor --fix`
+  : Reset to the snapshot saved by `conda doctor base-protection --fix`
     (`conda-meta/base-protection-state.explicit.txt`).
 
   If not specified, conda-self selects `base-protection` when that snapshot
@@ -150,7 +155,7 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
   `installer-exact` automatically.
 
 ```bash
-# Auto-detect best snapshot
+# Automatically select a reset mode
 conda self reset
 
 # Restore the exact installer state
@@ -162,16 +167,16 @@ conda self reset --snapshot installer-updated
 # Reset to base-protection snapshot
 conda self reset --snapshot base-protection
 
-# Strip to current essentials
+# Remove all other packages
 conda self reset --snapshot current
 ```
 
 Exact snapshot modes reuse a package already installed in base when its
-package URL and optional checksum match those recorded in the snapshot.
-Conda downloads or extracts the remaining packages into the package cache.
-If a required package is not present in the package cache and cannot be
-downloaded from its URL in the snapshot, the exact reset stops before the
-target environment is changed.
+package URL and any checksum match the corresponding values in the snapshot.
+For each remaining package, Conda uses the package from a package cache or
+downloads and extracts it from its URL. If a required package cannot be made
+available in a package cache, the exact reset stops before the target
+environment is changed.
 
 `installer-updated` does not remove installed conda plugins. Use `installer`,
 `installer-exact`, or a suitable `base-protection` snapshot when reset must
@@ -194,8 +199,8 @@ conda doctor base-protection [--fix] [--dry-run]
 : Enable base protection. This:
   1. Clones the current base environment to `default`
   2. Saves a snapshot to `conda-meta/base-protection-state.explicit.txt`
-  3. Resets base to essential packages
-  4. Freezes base via `PREFIX_FROZEN_FILE`
+  3. Removes packages not retained by base protection
+  4. Marks base as frozen with the `conda-meta/frozen` environment marker file
 
 Without `--fix`, reports whether base is currently protected.
 

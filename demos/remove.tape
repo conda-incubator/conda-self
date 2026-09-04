@@ -25,7 +25,7 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Essential packages like conda itself are protected"
+Type "# Packages required by conda cannot be removed"
 Enter
 Sleep 500ms
 

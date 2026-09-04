@@ -26,7 +26,7 @@ class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
         names = ", ".join(specs)
         noun = _plural("package", len(specs))
-        super().__init__(f"{noun.capitalize()} can not be removed: {names}")
+        super().__init__(f"{noun.capitalize()} cannot be removed: {names}")
 
 
 class NoDistInfoDirFound(CondaError):

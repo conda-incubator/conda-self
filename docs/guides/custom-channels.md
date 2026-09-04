@@ -17,12 +17,12 @@ Then install normally:
 conda self install my-plugin
 ```
 
-## Why inline specs are rejected
+## Why channel-qualified package specs are rejected
 
 `conda self install conda-forge::my-plugin` is not supported.
-Inline channel specs would cause inconsistencies between install
-and update operations -- the channel would apply to the install
-but not to future updates, leading to unexpected solver behavior.
+Channel-qualified package specs would cause inconsistencies between install
+and update operations -- the channel would apply to the install but not to
+future updates, leading to unexpected solver behavior.
 
 Instead, configure channels once and let all operations use the
 same configuration.

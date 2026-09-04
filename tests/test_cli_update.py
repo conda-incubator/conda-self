@@ -142,10 +142,10 @@ def test_install_specs_update_flags(
             "conda-libmamba-solver (installed:",
             id="plugin",
         ),
-        pytest.param(("--all",), "conda (installed:", id="all"),
+        pytest.param(("--all",), "all installed packages", id="all"),
         pytest.param(
             ("--all", "--force-reinstall"),
-            "conda (installed:",
+            "all installed packages",
             id="all+force-reinstall",
         ),
     ),

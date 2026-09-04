@@ -25,7 +25,7 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Inline channel specs are rejected"
+Type "# Channel-qualified package specs are rejected"
 Enter
 Sleep 500ms
 

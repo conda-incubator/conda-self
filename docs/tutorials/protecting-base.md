@@ -47,21 +47,22 @@ conda activate default
 
 ### Step 2: Save a snapshot
 
-A snapshot of base is saved in `@EXPLICIT` format to
-`conda-meta/base-protection-state.explicit.txt`. This file lists
-every package URL in the environment before the reset, enabling
-exact restoration later.
+A snapshot of base is saved in conda's explicit format to
+`conda-meta/base-protection-state.explicit.txt`. The file begins with an
+`@EXPLICIT` header followed by the complete URL for each package in the
+environment before the reset, enabling exact restoration later.
 
 ### Step 3: Reset base
 
-Base is stripped down to conda, its registered [plugins](inv:conda:std:doc#dev-guide/plugins/index), and their
-dependencies. Everything else is removed.
+Every package is removed except conda, conda-self, configured permanent
+packages, their dependencies, and installed packages named in the installer
+snapshot when that file exists.
 
-### Step 4: Freeze base
+### Step 4: Mark base as frozen
 
-A freeze file is written to base, preventing regular [conda install](inv:conda:std:doc#commands/install)
-from modifying it. Only `conda self` commands (which pass
-`--override-frozen`) can make changes.
+The `conda-meta/frozen` environment marker file is written, marking base as
+frozen. Regular conda commands refuse to modify it unless `--override-frozen`
+is passed. `conda self` passes that option when it modifies base.
 
 ## Verify protection
 

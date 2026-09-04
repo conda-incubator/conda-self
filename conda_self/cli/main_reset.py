@@ -54,29 +54,30 @@ FALLBACK_ORDER: tuple[Snapshot, ...] = (
 )
 
 
-HELP = "Reset the base environment using a selected reset mode."
+HELP = "Reset the base environment."
 SNAPSHOT_HELP = dedent(
     """
     Reset mode for the base environment.
-    `current` removes all packages except for `conda`, its plugins,
-    their dependencies, and configured permanent packages.
+    `current` removes all packages except for `conda`, `conda-self`, installed
+    conda plugins, configured permanent packages, and their dependencies.
     `installer` restores the exact packages recorded by the installer and
     may downgrade updated packages. `installer-exact` is equivalent.
-    `installer-updated` retains currently installed packages whose names
-    appear in the installer snapshot. It does not update packages or install
-    missing packages.
+    `installer-updated` retains the packages kept by `current` and currently
+    installed packages whose names appear in the installer snapshot. It does
+    not update packages or install missing packages.
     `base-protection` restores the exact packages recorded by
     `conda doctor base-protection --fix` before protecting base.
 
-    If not set, `conda self` first tries `base-protection`, then
-    `installer-updated`, and finally the `current` mode.
+    If not set, `conda self` selects `base-protection` when its snapshot file
+    exists, otherwise `installer-updated` when the installer snapshot file
+    exists, and otherwise `current`.
     """
 ).lstrip()
 
-WHAT_TO_EXPECT_ESSENTIALS = dedent(
+WHAT_TO_EXPECT_CURRENT = dedent(
     """
-    This resets the base environment to keep conda, installed conda plugins,
-    their dependencies, and configured permanent packages.
+    This resets the base environment to keep conda, conda-self, installed conda
+    plugins, configured permanent packages, and their dependencies.
     All other packages are removed.
     """
 ).lstrip()
@@ -134,7 +135,7 @@ def execute(args: argparse.Namespace) -> int:
         if snapshot is not None:
             print(WHAT_TO_EXPECT_SNAPSHOT.format(mode_name=snapshot))
         else:
-            print(WHAT_TO_EXPECT_ESSENTIALS)
+            print(WHAT_TO_EXPECT_CURRENT)
 
     prompt = "Proceed with resetting the base environment"
     if snapshot is not None:
@@ -142,7 +143,7 @@ def execute(args: argparse.Namespace) -> int:
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.json and not context.quiet:
-        print("Resetting 'base' environment...")
+        print("Resetting the base environment...")
 
     match snapshot:
         case Snapshot.INSTALLER_UPDATED if reset_file is not None:

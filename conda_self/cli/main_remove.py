@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import argparse
 
-HELP = "Remove conda plugins from the 'base' environment."
+HELP = "Remove conda plugins from the base environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -18,12 +18,13 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         "--force",
         action="store_true",
         help=(
-            "Remove packages even when they are listed as permanent "
-            "(hard-coded or via `self_permanent_packages`). "
+            "Remove packages protected from removal because they are permanent "
+            "or dependencies of permanent packages. Permanent packages are "
+            "hard-coded or configured via `plugins.self_permanent_packages`. "
             "Confirmation is still required unless `--yes` is passed."
         ),
     )
-    parser.add_argument("specs", nargs="+", help="Plugins to remove/uninstall")
+    parser.add_argument("specs", nargs="+", help="Conda plugins to remove")
     parser.set_defaults(func=execute)
 
 
@@ -43,7 +44,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if protected_specs:
         print(
-            "Warning: the following packages are configured as permanent "
+            "Warning: the following packages are protected from removal "
             "and will be removed because `--force` was passed:",
             ", ".join(protected_specs),
             file=sys.stderr,

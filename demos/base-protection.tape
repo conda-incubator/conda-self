@@ -21,7 +21,7 @@ Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Enable protection: clone base, reset, freeze"
+Type "# Enable protection: clone base, reset, mark as frozen"
 Enter
 Sleep 500ms
 

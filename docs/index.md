@@ -7,8 +7,9 @@ conda-self provides commands to install, update, and remove
 in a protected base environment. It integrates with
 [conda doctor](inv:conda:std:doc#commands/doctor) to set up base
 protection -- cloning your current base to a `default` environment,
-resetting base to essentials, and freezing it so only `conda self`
-commands can modify it.
+removing packages not retained by base protection, and marking it as frozen so
+regular conda commands refuse to modify it unless `--override-frozen` is
+passed.
 
 ## Quick example
 
@@ -21,8 +22,8 @@ $ conda doctor base-protection --fix
 # Install a plugin safely
 $ conda self install conda-index
 
-# Update conda and all plugins
-$ conda self update
+# Update all installed packages
+$ conda self update --all
 
 # Remove a plugin
 $ conda self remove conda-index
@@ -35,13 +36,14 @@ $ conda self reset
 
 `conda self` keeps your base environment minimal and stable:
 
-1. **Base protection** -- `conda doctor base-protection --fix` clones
-   base to `default`, resets it to essentials, and freezes it
+1. **Base protection** -- `conda doctor base-protection --fix` clones base to
+   `default`, removes packages not retained by base protection, and marks it as
+   frozen
 2. **Plugin management** -- `conda self install`, `update`, and `remove`
-   bypass the freeze to manage plugins through subprocess calls that
+   use `--override-frozen` to manage plugins through subprocess calls that
    respect all of conda's safety checks
-3. **Reset** -- `conda self reset` restores base from a snapshot
-   (installer-provided, base-protection, or current state)
+3. **Reset** -- `conda self reset` restores base from an installer or
+   base-protection snapshot, or removes packages not retained by `current`
 
 ## Navigation
 

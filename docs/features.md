@@ -18,14 +18,17 @@ This:
 
 1. **Clones** the current base to a `default` environment, preserving
    all your packages for continued use
-2. **Saves a snapshot** of base in `@EXPLICIT` format to
-   `conda-meta/base-protection-state.explicit.txt`
-3. **Resets** base to conda, its plugins, their dependencies, and any
-   installer-provided packages (e.g. `mamba` in Miniforge)
-4. **Freezes** base by writing a `PREFIX_FROZEN_FILE`, preventing
-   regular [conda install](inv:conda:std:doc#commands/install) from modifying it
+2. **Saves a snapshot** of base in conda's explicit format, with an
+   `@EXPLICIT` header, to `conda-meta/base-protection-state.explicit.txt`
+3. **Resets** base to conda, conda-self, configured permanent packages, their
+   dependencies, and installed packages named in an available installer
+   snapshot
+4. **Marks** base as frozen by writing the `conda-meta/frozen` environment
+   marker file
 
-After protection, only `conda self` commands can modify base.
+Regular conda commands refuse to modify the frozen base environment unless
+`--override-frozen` is passed. `conda self` passes that option when it modifies
+base.
 
 ### Checking protection status
 
@@ -66,14 +69,13 @@ This prevents non-plugin packages from accumulating in base.
 ```bash
 conda self update                    # update conda
 conda self update --plugin conda-index
-conda self update --all              # conda, plugins, and dependencies
+conda self update --all              # all installed packages
 conda self update --force-reinstall
 ```
 
 Bare `conda self update` and `--plugin` pass their requested package to
 `conda install --update-deps` so its dependency chain can move when
-needed. `--all` passes `--all` so plugins and their dependencies can
-move together.
+needed. `--all` passes `--all` so every installed package can move.
 
 ### Remove
 
@@ -83,8 +85,8 @@ move together.
 conda self remove conda-index
 ```
 
-Essential packages (conda itself, its core dependencies, and packages
-listed in `plugins.self_permanent_packages`) cannot be removed.
+Conda, conda-self, packages listed in `plugins.self_permanent_packages`, and
+their dependencies cannot be removed without `--force`.
 
 ## Snapshots and reset
 
@@ -106,17 +108,19 @@ exists, and otherwise `current`. Automatic reset does not select the
 packages. Both names select the same exact installer reset.
 
 `installer`, `installer-exact`, and `base-protection` reuse an installed
-package when its package URL and optional checksum match those recorded in
-the snapshot. Other required packages must be present in the package cache
-or downloadable from their package URLs. `installer-updated` retains
-currently installed packages whose names appear in the installer snapshot.
-It also retains installed conda plugins and their dependencies, so it is not
-a substitute for an exact reset when removing an accidentally installed
-plugin.
+package when its package URL and any checksum match the corresponding values
+in the snapshot. For each remaining package, Conda uses the package from a
+package cache or downloads and extracts it from its URL. `installer-updated`
+retains currently installed packages whose names appear in the installer snapshot.
+It also retains conda, conda-self, installed conda plugins, configured
+permanent packages, and their dependencies, so it is not a substitute for an
+exact reset when removing an accidentally installed plugin.
 
-Snapshots are stored as `@EXPLICIT` files in `conda-meta/`:
+Snapshots are stored in conda's explicit format in `conda-meta/`. Each file
+begins with an `@EXPLICIT` header:
 
-- `base-protection-state.explicit.txt` -- saved by `conda doctor --fix`
+- `base-protection-state.explicit.txt` -- saved by
+  `conda doctor base-protection --fix`
 - `initial-state.explicit.txt` -- saved by the installer (if available)
 
 ## Health check integration
@@ -141,15 +145,15 @@ Package names are normalized (hyphens vs underscores) to handle
 differences between conda naming conventions and Python packaging
 metadata.
 
-If a package is not a plugin, it is automatically uninstalled and
-a `SpecsAreNotPlugins` error is raised.
+If a package is not a plugin, it is automatically uninstalled and a
+`NotAPluginError` is raised.
 
 ## Permanent packages
 
-The `plugins.self_permanent_packages` setting configures packages retained
-by `conda self remove` and the `current` and `installer-updated` reset modes.
-Exact snapshot modes may remove them when they are absent from the selected
-snapshot.
+The `plugins.self_permanent_packages` setting configures packages protected
+from `conda self remove` and retained by the `current` and `installer-updated`
+reset modes. Exact snapshot modes may remove them when they are absent from the
+selected snapshot.
 
 Configure it in the [`.condarc` configuration file](inv:conda:std:doc#configuration):
 

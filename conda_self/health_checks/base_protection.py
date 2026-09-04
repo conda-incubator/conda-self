@@ -42,21 +42,21 @@ def check(prefix: str, _verbose: bool) -> None:
     Only runs when checking the base environment.
     """
     if not is_base_environment(prefix):
-        print("Skipping base protection: not running on base environment.\n")
+        print("Skipping base protection: not running on the base environment.\n")
         return
 
     if is_base_protected():
         print(f"{OK_MARK} Base environment is protected (frozen).\n")
     else:
         print(f"{X_MARK} Base environment is not protected.\n")
-        print("Run 'conda doctor --fix' to protect it.\n")
+        print("Run 'conda doctor base-protection --fix' to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     """Fix: Protect the base environment.
 
     This clones the base environment to a new 'default' environment,
-    resets base to essentials, and freezes it.
+    removes packages not retained by base protection, and marks it as frozen.
     """
     from pathlib import Path
 
@@ -65,7 +65,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     from ..constants import DEFAULT_ENV_NAME
 
     if not is_base_environment(prefix):
-        print("Skipping: not running on base environment.")
+        print("Skipping: not running on the base environment.")
         return 0
 
     if is_base_protected():
@@ -96,7 +96,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     )
 
     if not context.quiet:
-        print(f"This will clone 'base' to '{default_env}', reset base, and freeze it.")
+        print(
+            f"This will clone the base environment to '{default_env}', reset it, "
+            "and mark it as frozen."
+        )
         if env.external_packages:
             print(
                 f"  Warning: Base environment contains {len(env.external_packages)} "
@@ -133,8 +136,8 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             print("  Skipping snapshot (non-conda packages present).")
 
     if not context.quiet:
-        print(f"Cloning 'base' to '{default_env}'...")
-        print("Resetting 'base' environment...")
+        print(f"Cloning the base environment to '{default_env}'...")
+        print("Resetting the base environment...")
 
     # Suppress conda's transaction spinner output when --quiet
     stdout_ctx = redirect_stdout(io.StringIO()) if context.quiet else nullcontext()

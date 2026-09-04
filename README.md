@@ -4,13 +4,13 @@ Commands to manage your `base` environment safely.
 
 ## `conda self`
 
-Manage your conda 'base' environment safely.
+Manage conda and its plugins in the base environment.
 
 ```
 $ conda self
 usage: conda self [-V] [-h] {install,remove,reset,update} ...
 
-Manage your conda 'base' environment safely.
+Manage conda and its plugins in the base environment.
 
 options:
   -V, --version         Show the 'conda-self' version number and exit.
@@ -18,10 +18,11 @@ options:
 
 subcommands:
   {install,remove,reset,update}
-    install             Add conda plugins to the 'base' environment.
-    remove              Remove conda plugins from the 'base' environment.
-    reset               Reset 'base' environment to essential packages only.
-    update              Update 'conda' and/or its plugins in the 'base' environment.
+    install             Install conda plugins in the base environment.
+    remove              Remove conda plugins from the base environment.
+    reset               Reset the base environment.
+    update              Update conda, one conda plugin, or all packages in the
+                        base environment.
 ```
 
 ### Custom channels
@@ -38,8 +39,8 @@ conda self install my-plugin
 This keeps channel configuration consistent across install, update, and
 dependency resolution.
 
-Inline channel specs (e.g. `conda-forge::my-plugin`) are not supported and
-will result in an error.
+Channel-qualified package specs (e.g. `conda-forge::my-plugin`) are not
+supported and will result in an error.
 
 ## Base Environment Protection
 
@@ -57,8 +58,10 @@ conda doctor base-protection --fix
 
 This will:
 1. Clone your current base environment to a new "default" environment
-2. Reset base to essential packages only
-3. Freeze the base environment to prevent modifications
+2. Reset base to conda, conda-self, configured permanent packages, their
+   dependencies, and installed packages named in an available installer
+   snapshot
+3. Mark the base environment as frozen to prevent modifications
 
 To see all available health checks, run:
 
@@ -68,7 +71,8 @@ conda doctor --list
 
 ### Unprotecting base
 
-To remove protection entirely, delete the frozen file:
+To remove protection entirely, delete the `conda-meta/frozen` environment
+marker file:
 
 ```
 rm $CONDA_PREFIX/conda-meta/frozen
@@ -82,10 +86,10 @@ to your `.condarc`.
 
 ### Permanent packages
 
-By default, `conda self reset` keeps only `conda`, `conda-self`, and their
-plugins installed. To keep additional packages (and their dependencies) in
-the base environment, add them to the `self_permanent_packages` setting in
-your `.condarc`:
+The `current` and `installer-updated` reset modes retain `conda`, `conda-self`,
+installed conda plugins, configured permanent packages, and their dependencies.
+To configure additional permanent packages, add them to the
+`plugins.self_permanent_packages` setting in your `.condarc`:
 
 ```yaml
 plugins:
