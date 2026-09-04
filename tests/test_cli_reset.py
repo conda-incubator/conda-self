@@ -562,8 +562,8 @@ def test_help_shows_snapshot_choices(conda_cli: CondaCLIFixture, choice: str):
 
 @pytest.mark.parametrize(
     "bad_value",
-    ["installer", "totally-bogus", ""],
-    ids=["bare-installer", "bogus", "empty"],
+    ["totally-bogus", ""],
+    ids=["bogus", "empty"],
 )
 def test_invalid_snapshot_value_rejected(conda_cli: CondaCLIFixture, bad_value: str):
     out, err, exc = conda_cli(
@@ -575,11 +575,12 @@ def test_invalid_snapshot_value_rejected(conda_cli: CondaCLIFixture, bad_value: 
 @pytest.mark.parametrize(
     "snapshot_arg, expected_snapshot_file, expected_names",
     [
+        ("installer", RESET_FILE_INSTALLER, None),
         ("installer-exact", RESET_FILE_INSTALLER, None),
         ("installer-updated", None, {"mamba", "pip", "conda", "conda-self"}),
         ("current", None, {"conda", "conda-self"}),
     ],
-    ids=["installer-exact", "installer-updated", "current"],
+    ids=["installer", "installer-exact", "installer-updated", "current"],
 )
 def test_snapshot_dispatch(
     conda_cli: CondaCLIFixture,
@@ -606,15 +607,18 @@ def test_snapshot_dispatch(
         assert expected_names <= call["uninstallable_packages"]
 
 
-def test_installer_exact_missing_file_raises(
-    conda_cli: CondaCLIFixture, fake_reset_env: Path
+@pytest.mark.parametrize("snapshot", ["installer", "installer-exact"])
+def test_installer_snapshot_missing_file_raises(
+    snapshot: str,
+    conda_cli: CondaCLIFixture,
+    fake_reset_env: Path,
 ):
     conda_cli(
         "self",
         "reset",
         "--yes",
         "--snapshot",
-        "installer-exact",
+        snapshot,
         raises=FileNotFoundError,
     )
 
@@ -677,6 +681,7 @@ def test_fallback_ordering(
     "snapshot, display_name",
     [
         (Snapshot.CURRENT, "current"),
+        (Snapshot.INSTALLER, "installer-provided (exact)"),
         (Snapshot.INSTALLER_EXACT, "installer-provided (exact)"),
         (Snapshot.INSTALLER_UPDATED, "installer-provided (with updates)"),
         (Snapshot.BASE_PROTECTION, "base-protection"),
@@ -691,6 +696,7 @@ def test_snapshot_display_name(snapshot: Snapshot, display_name: str):
     "snapshot, expected_filename",
     [
         (Snapshot.CURRENT, None),
+        (Snapshot.INSTALLER, RESET_FILE_INSTALLER),
         (Snapshot.INSTALLER_EXACT, RESET_FILE_INSTALLER),
         (Snapshot.INSTALLER_UPDATED, RESET_FILE_INSTALLER),
         (Snapshot.BASE_PROTECTION, RESET_FILE_BASE_PROTECTION),

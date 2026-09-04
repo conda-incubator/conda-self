@@ -36,10 +36,10 @@ use conda's `@EXPLICIT` format (a list of exact package URLs).
 | `initial-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
 
 These files are used by `conda self reset --snapshot <type>` to
-restore base without running the solver. `base-protection` and
-`installer-exact` use their complete explicit entries. `installer-updated`
-uses `initial-state.explicit.txt` only to select which installed package
-names to retain.
+restore base without running the solver. `base-protection`, `installer`,
+and `installer-exact` use their complete explicit entries.
+`installer-updated` uses `initial-state.explicit.txt` only to select which
+installed package names to retain.
 
 ## Constants
 

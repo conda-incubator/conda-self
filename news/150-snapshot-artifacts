@@ -9,6 +9,8 @@
   when its package is already installed. (#150)
 * Respect `--json` and `--quiet` when reporting reset progress and completion.
   (#150)
+* Restore `--snapshot installer` as a compatibility name for the exact
+  installer reset. (#150)
 
 ### Deprecations
 

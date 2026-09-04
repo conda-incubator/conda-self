@@ -19,8 +19,8 @@ conda-self selects the first available mode in this order:
 
 Snapshot availability is based on whether its file exists. A failure while
 applying the selected snapshot is reported instead of switching modes.
-Automatic reset does not select `installer-exact`, which may downgrade
-packages to the versions shipped by the installer.
+Automatic reset does not select `installer` or `installer-exact`, which may
+downgrade packages to the versions shipped by the installer.
 
 ## Reset to a specific snapshot
 
@@ -39,12 +39,13 @@ This uses `conda-meta/base-protection-state.explicit.txt`.
 Restore to the original state from the installer (e.g. Miniforge):
 
 ```bash
-conda self reset --snapshot installer-exact
+conda self reset --snapshot installer
 ```
 
 This uses `conda-meta/initial-state.explicit.txt` to restore the exact
 package artifacts shipped by the installer and remove packages outside
-that snapshot. It may downgrade packages that have since been updated.
+that snapshot. `installer-exact` is an equivalent, more explicit name. Both
+may downgrade packages that have since been updated.
 Use this mode, or a suitable `base-protection` snapshot, when an
 accidentally installed plugin must be removed. Not all installers provide
 this file.
@@ -81,16 +82,16 @@ Preview what a reset would do:
 
 ```bash
 conda self reset --dry-run
-conda self reset --snapshot installer-exact --dry-run
+conda self reset --snapshot installer --dry-run
 ```
 
 ## Unavailable snapshot artifacts
 
-For `installer-exact` and `base-protection`, conda-self first reuses
-packages already installed in base when they match the complete explicit
-snapshot entry, including its URL and any supplied checksum. It resolves
-only the remaining entries through the package cache or their recorded
-URLs.
+For `installer`, `installer-exact`, and `base-protection`, conda-self first
+reuses packages already installed in base when they match the complete
+explicit snapshot entry, including its URL and any supplied checksum. It
+resolves only the remaining entries through the package cache or their
+recorded URLs.
 
 An exact reset still needs package bytes for any artifact that must be
 installed or relinked. This can include `noarch: python` packages after a

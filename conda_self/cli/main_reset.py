@@ -22,6 +22,7 @@ class Snapshot(Enum):
     """
 
     CURRENT = "current"
+    INSTALLER = "installer"
     INSTALLER_EXACT = "installer-exact"
     INSTALLER_UPDATED = "installer-updated"
     BASE_PROTECTION = "base-protection"
@@ -34,7 +35,7 @@ class Snapshot(Enum):
         match self:
             case Snapshot.CURRENT:
                 return "current"
-            case Snapshot.INSTALLER_EXACT:
+            case Snapshot.INSTALLER | Snapshot.INSTALLER_EXACT:
                 return "installer-provided (exact)"
             case Snapshot.INSTALLER_UPDATED:
                 return "installer-provided (with updates)"
@@ -45,7 +46,11 @@ class Snapshot(Enum):
     def file_path(self) -> Path | None:
         """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
         match self:
-            case Snapshot.INSTALLER_EXACT | Snapshot.INSTALLER_UPDATED:
+            case (
+                Snapshot.INSTALLER
+                | Snapshot.INSTALLER_EXACT
+                | Snapshot.INSTALLER_UPDATED
+            ):
                 return Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER)
             case Snapshot.BASE_PROTECTION:
                 return Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION)
@@ -67,8 +72,8 @@ SNAPSHOT_HELP = dedent(
     Snapshot to reset the `base` environment to.
     `current` removes all packages except for `conda`, its plugins,
     and their dependencies.
-    `installer-exact` restores the `base` environment to exactly what the
-    installer shipped (may downgrade packages you have updated).
+    `installer` and `installer-exact` restore the `base` environment to
+    exactly what the installer shipped (may downgrade updated packages).
     `installer-updated` keeps the packages the installer shipped at their
     currently installed versions (no downgrade).
     `base-protection` restores the `base` environment to the snapshot saved
@@ -156,7 +161,7 @@ def execute(args: argparse.Namespace) -> int:
                 reset_file
             )
             reset(uninstallable_packages=keep)
-        case Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
+        case Snapshot.INSTALLER | Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
             reset(snapshot=reset_file)
         case _:
             reset(uninstallable_packages=permanent_dependencies(add_plugins=True))

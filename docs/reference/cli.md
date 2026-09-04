@@ -130,9 +130,10 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
     dependencies, plus packages configured in
     `plugins.self_permanent_packages`.
 
-  `installer-exact`
+  `installer`, `installer-exact`
   : Restore the exact packages saved by the installer in
-    `conda-meta/initial-state.explicit.txt`. This may downgrade packages.
+    `conda-meta/initial-state.explicit.txt`. Both names select the same mode,
+    which may downgrade packages.
 
   `installer-updated`
   : Retain currently installed packages whose names appear in the installer
@@ -145,15 +146,15 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
 
   If not specified, conda-self selects `base-protection` when that snapshot
   exists, otherwise `installer-updated` when the installer snapshot exists,
-  and otherwise `current`. It does not select `installer-exact`
-  automatically.
+  and otherwise `current`. It does not select `installer` or
+  `installer-exact` automatically.
 
 ```bash
 # Auto-detect best snapshot
 conda self reset
 
 # Restore the exact installer state
-conda self reset --snapshot installer-exact
+conda self reset --snapshot installer
 
 # Keep installer-provided packages at installed versions
 conda self reset --snapshot installer-updated
@@ -172,8 +173,8 @@ available in the package cache or downloadable from the recorded URL. If
 an artifact is unavailable from both sources, the exact reset cannot
 proceed.
 
-`installer-updated` does not remove installed conda plugins. Use
-`installer-exact` or a suitable `base-protection` snapshot when reset must
+`installer-updated` does not remove installed conda plugins. Use `installer`,
+`installer-exact`, or a suitable `base-protection` snapshot when reset must
 remove a plugin that is not part of the selected snapshot.
 
 ---
