@@ -84,7 +84,7 @@ conda self remove conda-index
 ```
 
 Essential packages (conda itself, its core dependencies, and packages
-listed in `self_permanent_packages`) cannot be removed.
+listed in `plugins.self_permanent_packages`) cannot be removed.
 
 ## Snapshots and reset
 
@@ -92,16 +92,31 @@ When base protection is enabled, conda-self saves a snapshot of the
 pre-protection state. This snapshot can be used to restore base:
 
 ```bash
-conda self reset                         # auto-detect best snapshot
-conda self reset --snapshot installer    # reset to installer state
-conda self reset --snapshot base-protection  # reset to protection snapshot
-conda self reset --snapshot current      # strip to essentials only
+conda self reset                              # auto-detect the reset mode
+conda self reset --snapshot installer-exact  # restore exact installer state
+conda self reset --snapshot installer-updated  # keep installer packages updated
+conda self reset --snapshot base-protection  # restore protection snapshot
+conda self reset --snapshot current          # strip to essentials only
 ```
+
+Without `--snapshot`, conda-self selects `base-protection` when that
+snapshot exists, otherwise `installer-updated` when the installer snapshot
+exists, and otherwise `current`. Automatic reset does not select
+`installer-exact` because that mode may downgrade packages.
+
+`installer-exact` and `base-protection` reuse an installed package when
+its URL, filename-derived identity, and any supplied checksum match the
+explicit snapshot entry. Other required artifacts must be present in the
+package cache or available from their recorded URLs. `installer-updated`
+retains currently installed packages whose names appear in the installer
+snapshot. It also retains installed conda plugins and their dependencies,
+so it is not a substitute for an exact reset when removing an accidentally
+installed plugin.
 
 Snapshots are stored as `@EXPLICIT` files in `conda-meta/`:
 
 - `base-protection-state.explicit.txt` -- saved by `conda doctor --fix`
-- `installer-state.explicit.txt` -- saved by the installer (if available)
+- `initial-state.explicit.txt` -- saved by the installer (if available)
 
 ## Health check integration
 
@@ -130,15 +145,16 @@ a `SpecsAreNotPlugins` error is raised.
 
 ## Permanent packages
 
-The `self_permanent_packages` setting allows configuring a list of
-packages that should never be removed by `conda self remove` or
-stripped during `conda self reset`. This is useful for packages that
-are essential to your workflow but are not conda plugins.
+The `plugins.self_permanent_packages` setting configures packages retained
+by `conda self remove` and the `current` and `installer-updated` reset modes.
+Exact snapshot modes may remove them when they are absent from the selected
+snapshot.
 
 Configure it in the [`.condarc` configuration file](inv:conda:std:doc#configuration):
 
 ```yaml
-self_permanent_packages:
-  - pip
-  - setuptools
+plugins:
+  self_permanent_packages:
+    - pip
+    - setuptools
 ```

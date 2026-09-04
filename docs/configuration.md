@@ -5,17 +5,20 @@
 conda-self registers one custom setting via conda's `conda_settings`
 [plugin hook](inv:conda:std:doc#dev-guide/plugins/index).
 
-### self_permanent_packages
+### plugins.self_permanent_packages
 
-A list of package names that should never be removed by
-`conda self remove` or stripped during `conda self reset`.
+A list of package names retained by `conda self remove` and the `current`
+and `installer-updated` reset modes. Exact snapshot modes restore the
+snapshot as recorded and may remove configured permanent packages that
+are absent from it.
 
 Configure in [`.condarc`](inv:conda:std:doc#configuration):
 
 ```yaml
-self_permanent_packages:
-  - pip
-  - setuptools
+plugins:
+  self_permanent_packages:
+    - pip
+    - setuptools
 ```
 
 These packages are added to the set of "permanent" dependencies
@@ -30,18 +33,21 @@ use conda's `@EXPLICIT` format (a list of exact package URLs).
 | File | Created by | Purpose |
 |------|-----------|---------|
 | `base-protection-state.explicit.txt` | `conda doctor base-protection --fix` | Pre-protection state of base |
-| `installer-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
+| `initial-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
 
 These files are used by `conda self reset --snapshot <type>` to
-restore base to a known state without running the solver.
+restore base without running the solver. `base-protection` and
+`installer-exact` use their complete explicit entries. `installer-updated`
+uses `initial-state.explicit.txt` only to select which installed package
+names to retain.
 
 ## Constants
 
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `DEFAULT_ENV_NAME` | `"default"` | Name of the environment created when cloning base |
-| `SNAPSHOT_FILE_BASE_PROTECTION` | `"base-protection-state.explicit.txt"` | Snapshot filename for base protection |
-| `RESET_FILE_INSTALLER` | `"installer-state.explicit.txt"` | Snapshot filename from installer |
+| `RESET_FILE_BASE_PROTECTION` | `"base-protection-state.explicit.txt"` | Snapshot filename for base protection |
+| `RESET_FILE_INSTALLER` | `"initial-state.explicit.txt"` | Snapshot filename from installer |
 | `SELF_PERMANENT_PACKAGES_SETTING` | `"self_permanent_packages"` | Name of the condarc setting |
 
 ## Environment variables

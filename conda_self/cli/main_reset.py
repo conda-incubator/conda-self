@@ -61,7 +61,7 @@ FALLBACK_ORDER: tuple[Snapshot, ...] = (
 )
 
 
-HELP = "Reset 'base' environment to essential packages only."
+HELP = "Reset 'base' from a snapshot or to essential packages."
 SNAPSHOT_HELP = dedent(
     """
     Snapshot to reset the `base` environment to.
@@ -112,6 +112,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 
 def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
+    from conda.cli.common import stdout_json_success
     from conda.reporters import confirm_yn
 
     from ..query import permanent_dependencies
@@ -135,7 +136,7 @@ def execute(args: argparse.Namespace) -> int:
             f"Failed to reset to '{snapshot}'.\nRequired file {reset_file} not found."
         )
 
-    if not context.quiet:
+    if not context.json and not context.quiet:
         if snapshot is not None:
             print(WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
@@ -146,7 +147,7 @@ def execute(args: argparse.Namespace) -> int:
         prompt += f" to the {snapshot.display_name} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
-    if not context.quiet:
+    if not context.json and not context.quiet:
         print("Resetting 'base' environment...")
 
     match snapshot:
@@ -160,7 +161,9 @@ def execute(args: argparse.Namespace) -> int:
         case _:
             reset(uninstallable_packages=permanent_dependencies(add_plugins=True))
 
-    if not context.quiet:
+    if context.json:
+        stdout_json_success()
+    elif not context.quiet:
         if snapshot is not None:
             print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:

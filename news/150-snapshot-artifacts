@@ -1,0 +1,24 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Reuse installed packages that match complete explicit snapshot entries
+  before downloading, so an unavailable URL does not block an exact reset
+  when its package is already installed. (#150)
+* Respect `--json` and `--quiet` when reporting reset progress and completion.
+  (#150)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Correct the documented reset modes, automatic fallback order, installer
+  snapshot filename, and exact-reset limitations. (#150)
+
+### Other
+
+* <news item>

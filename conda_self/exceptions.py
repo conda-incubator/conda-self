@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from conda.exceptions import CondaError
+from conda import CondaError
 
 if TYPE_CHECKING:
     from pathlib import Path

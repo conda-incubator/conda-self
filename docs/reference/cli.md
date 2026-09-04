@@ -63,7 +63,7 @@ conda self remove <specs>... [--dry-run] [--yes] [--json] [--quiet]
 : Skip confirmation prompts.
 
 Essential packages (conda, its core dependencies, and anything in
-`self_permanent_packages`) cannot be removed. Attempting to do so
+`plugins.self_permanent_packages`) cannot be removed. Attempting to do so
 raises a `SpecsCanNotBeRemoved` error.
 
 ```bash
@@ -116,7 +116,7 @@ together.
 
 ## self reset
 
-Reset the base environment to essential packages only.
+Reset the base environment from a snapshot or to essential packages.
 
 ```
 conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
@@ -127,25 +127,36 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
 
   `current`
   : Remove all packages except conda, its plugins, and their
-    dependencies.
+    dependencies, plus packages configured in
+    `plugins.self_permanent_packages`.
 
-  `installer`
-  : Reset to the snapshot saved by the installer
-    (`conda-meta/installer-state.explicit.txt`).
+  `installer-exact`
+  : Restore the exact packages saved by the installer in
+    `conda-meta/initial-state.explicit.txt`. This may downgrade packages.
+
+  `installer-updated`
+  : Retain currently installed packages whose names appear in the installer
+    snapshot. This does not install missing packages. It also retains
+    installed conda plugins and their dependencies.
 
   `base-protection`
   : Reset to the snapshot saved by `conda doctor --fix`
     (`conda-meta/base-protection-state.explicit.txt`).
 
-  If not specified, conda-self tries `base-protection` first, then
-  `installer`, and falls back to `current`.
+  If not specified, conda-self selects `base-protection` when that snapshot
+  exists, otherwise `installer-updated` when the installer snapshot exists,
+  and otherwise `current`. It does not select `installer-exact`
+  automatically.
 
 ```bash
 # Auto-detect best snapshot
 conda self reset
 
-# Reset to installer state
-conda self reset --snapshot installer
+# Restore the exact installer state
+conda self reset --snapshot installer-exact
+
+# Keep installer-provided packages at installed versions
+conda self reset --snapshot installer-updated
 
 # Reset to base-protection snapshot
 conda self reset --snapshot base-protection
@@ -153,6 +164,17 @@ conda self reset --snapshot base-protection
 # Strip to current essentials
 conda self reset --snapshot current
 ```
+
+Exact snapshot modes reuse packages already installed in base when their
+URL, filename-derived identity, and any supplied checksum match the
+explicit entry. Other artifacts that must be installed or relinked must be
+available in the package cache or downloadable from the recorded URL. If
+an artifact is unavailable from both sources, the exact reset cannot
+proceed.
+
+`installer-updated` does not remove installed conda plugins. Use
+`installer-exact` or a suitable `base-protection` snapshot when reset must
+remove a plugin that is not part of the selected snapshot.
 
 ---
 

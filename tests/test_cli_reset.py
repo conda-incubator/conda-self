@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+import json
+import signal
 import sys
+import traceback
 from contextlib import redirect_stdout
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
+from conda import CondaError, CondaMultiError
 from conda.base.constants import PREFIX_FROZEN_FILE
+from conda.base.context import context as conda_context
 from conda.cli.main_list import print_explicit
+from conda.exceptions import CondaHTTPError, CondaSignalInterrupt, ParseError
+from conda.models.channel import Channel
+from conda.models.enums import NoarchType
+from conda.models.records import PackageRecord
 
 from conda_self.cli.main_reset import Snapshot
 from conda_self.constants import (
@@ -22,19 +32,56 @@ if TYPE_CHECKING:
     from pytest import MonkeyPatch
 
 
+MD5 = "0" * 32
+SHA256 = "a" * 64
 INSTALLER_SNAPSHOT_CONTENT = (
     "# platform: linux-64\n"
     "@EXPLICIT\n"
     "https://conda.anaconda.org/conda-forge/linux-64/"
-    "mamba-1.5.3-py311h3072747_1.conda#abc\n"
+    f"mamba-1.5.3-py311h3072747_1.conda#{MD5}\n"
     "https://conda.anaconda.org/conda-forge/linux-64/"
-    "pip-24.0-pyhd8ed1ab_0.conda#def\n"
+    f"pip-24.0-pyhd8ed1ab_0.conda#{MD5}\n"
 )
 
 
 class FakeRecord:
     def __init__(self, name: str):
         self.name = name
+
+
+def make_package_record(
+    name: str,
+    *,
+    version: str = "1.0",
+    build: str = "0",
+    channel: str = "https://packages.example.test/conda-forge",
+    url: str | None = None,
+    subdir: str = "linux-64",
+    md5: str = MD5,
+    sha256: str = SHA256,
+    noarch: NoarchType | None = None,
+) -> PackageRecord:
+    filename = f"{name}-{version}-{build}.conda"
+    return PackageRecord(
+        name=name,
+        version=version,
+        build=build,
+        build_number=0,
+        channel=Channel(channel),
+        subdir=subdir,
+        fn=filename,
+        url=url or f"{channel}/{subdir}/{filename}",
+        md5=md5,
+        sha256=sha256,
+        depends=(),
+        noarch=noarch,
+    )
+
+
+def explicit_entry(record: PackageRecord, checksum: str = "sha256") -> str:
+    digest = getattr(record, checksum)
+    prefix = "sha256:" if checksum == "sha256" else ""
+    return f"{record.url}#{prefix}{digest}"
 
 
 @pytest.fixture
@@ -68,6 +115,23 @@ def fake_reset_env(
     monkeypatch.setattr("conda.base.context.context.quiet", True, raising=False)
     monkeypatch.setattr("conda_self.reset.reset", fake_reset)
     monkeypatch.setattr("conda_self.query.permanent_dependencies", fake_perm_deps)
+    return tmp_path
+
+
+@pytest.fixture
+def fake_reset_output_env(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+):
+    conda_meta = tmp_path / "conda-meta"
+    conda_meta.mkdir()
+    monkeypatch.setattr(sys, "prefix", str(tmp_path))
+    monkeypatch.setattr("conda_self.reset.reset", lambda **kwargs: None)
+    monkeypatch.setattr(
+        "conda_self.query.permanent_dependencies", lambda **kwargs: {"conda"}
+    )
+    (conda_meta / RESET_FILE_INSTALLER).write_text(INSTALLER_SNAPSHOT_CONTENT)
+    (conda_meta / RESET_FILE_BASE_PROTECTION).write_text(INSTALLER_SNAPSHOT_CONTENT)
     return tmp_path
 
 
@@ -109,9 +173,385 @@ def stub_transaction(monkeypatch: MonkeyPatch):
     return captured
 
 
+@pytest.fixture
+def snapshot_reset(monkeypatch: MonkeyPatch):
+    captured: dict = {"installed": [], "fetched": []}
+
+    class StubPrefixData:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def get(self, name, default=None):
+            return next(
+                (record for record in captured["installed"] if record.name == name),
+                default,
+            )
+
+        def query(self, spec):
+            return (record for record in captured["installed"] if spec.match(record))
+
+    def stub_fetch(entries):
+        captured["fetch_entries"] = tuple(entries)
+        if error := captured.get("fetch_error"):
+            raise error
+        return captured["fetched"]
+
+    def stub_diff(
+        prefix,
+        final_precs,
+        specs_to_add=(),
+        force_reinstall=False,
+    ):
+        captured["diff"] = {
+            "prefix": prefix,
+            "final_precs": tuple(final_precs),
+            "specs_to_add": tuple(specs_to_add),
+            "force_reinstall": force_reinstall,
+        }
+        return (), ()
+
+    monkeypatch.setattr("conda_self.reset.PrefixData", StubPrefixData)
+    monkeypatch.setattr(
+        "conda_self.reset.get_package_records_from_explicit", stub_fetch
+    )
+    monkeypatch.setattr("conda_self.reset.diff_for_unlink_link_precs", stub_diff)
+    return captured
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        (
+            "https://user:password@packages.example.test/t/tk-secret/linux-64/"
+            "demo-1.0-0.conda?X-Amz-Credential=signed-secret#invalid"
+        ),
+        (
+            "https://user:password@packages.example.test/t/tk-secret/linux-64/"
+            f"demo-^signedsecret-0.conda#{SHA256}"
+        ),
+    ],
+    ids=["checksum", "filename"],
+)
+def test_reset_snapshot_hides_invalid_explicit_entry(entry: str, tmp_path: Path):
+    from conda_self.reset import reset
+
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{entry}\n")
+
+    with pytest.raises(ParseError) as exc_info:
+        reset(prefix="/target", snapshot=snapshot)
+
+    outputs = (
+        str(exc_info.value),
+        "".join(traceback.format_exception(exc_info.value)),
+    )
+    assert outputs[0] == "Could not parse explicit snapshot entry."
+    for secret in (
+        "user:password",
+        "tk-secret",
+        "X-Amz-Credential",
+        "signed-secret",
+        "signedsecret",
+        SHA256,
+    ):
+        assert all(secret not in output for output in outputs)
+
+
+def test_reset_snapshot_reuses_installed_record_without_fetching(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    prefix = tmp_path / "prefix"
+    conda_meta = prefix / "conda-meta"
+    conda_meta.mkdir(parents=True)
+    installed = make_package_record(
+        "removed-upstream",
+        channel="https://dead.example.test/conda-forge",
+    )
+    extra = make_package_record("extra")
+    for record in (installed, extra):
+        record_path = conda_meta / f"{record.name}-{record.version}-0.json"
+        record_path.write_text(json.dumps(record.dump()))
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{explicit_entry(installed)}\n")
+    captured = {}
+
+    def fail_fetch(entries):
+        pytest.fail(f"unexpected fetch: {entries}")
+
+    monkeypatch.setattr(
+        "conda_self.reset.get_package_records_from_explicit", fail_fetch
+    )
+
+    def stub_prefix_setup(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    class StubTxn:
+        def __init__(self, stp):
+            pass
+
+        def print_transaction_summary(self):
+            pass
+
+        def execute(self):
+            pass
+
+    monkeypatch.setattr("conda_self.reset.PrefixSetup", stub_prefix_setup)
+    monkeypatch.setattr("conda_self.reset.UnlinkLinkTransaction", StubTxn)
+
+    reset(prefix=str(prefix), snapshot=snapshot)
+
+    assert tuple(record.name for record in captured["unlink_precs"]) == ("extra",)
+    assert captured["link_precs"] == ()
+
+
+def test_reset_snapshot_fetches_only_missing_records_and_preserves_order(
+    snapshot_reset: dict,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    missing_first = make_package_record("missing-first")
+    installed = make_package_record("already-installed")
+    missing_last = make_package_record("missing-last")
+    entries = tuple(
+        explicit_entry(record) for record in (missing_first, installed, missing_last)
+    )
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text("@EXPLICIT\n" + "\n".join(entries) + "\n")
+    snapshot_reset["installed"] = [installed]
+    snapshot_reset["fetched"] = [missing_first, missing_last]
+
+    reset(prefix="/target", snapshot=snapshot)
+
+    assert snapshot_reset["fetch_entries"] == (entries[0], entries[2])
+    assert snapshot_reset["diff"]["final_precs"] == (
+        missing_first,
+        installed,
+        missing_last,
+    )
+    assert tuple(spec.name for spec in snapshot_reset["diff"]["specs_to_add"]) == (
+        "missing-first",
+        "missing-last",
+    )
+
+
+@pytest.mark.parametrize("mismatch", ["checksum", "url"])
+def test_reset_snapshot_reinstalls_same_package_for_artifact_mismatch(
+    mismatch: str,
+    snapshot_reset: dict,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    target = make_package_record("demo")
+    if mismatch == "checksum":
+        installed = make_package_record("demo", sha256="b" * 64)
+    else:
+        installed = make_package_record(
+            "demo",
+            url="https://mirror.example.test/linux-64/demo-1.0-0.conda",
+        )
+    assert installed == target
+
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{explicit_entry(target)}\n")
+    snapshot_reset["installed"] = [installed]
+    snapshot_reset["fetched"] = [target]
+
+    reset(prefix="/target", snapshot=snapshot)
+
+    force_specs = snapshot_reset["diff"]["specs_to_add"]
+    assert len(force_specs) == 1
+    assert force_specs[0].match(target)
+    assert not force_specs[0].match(installed)
+    assert snapshot_reset["diff"]["force_reinstall"] is True
+    assert snapshot_reset["diff"]["final_precs"] == (target,)
+
+
+def test_reset_snapshot_fetch_failure_reports_safe_context(
+    snapshot_reset: dict,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    unavailable = make_package_record(
+        "unavailable",
+        url=(
+            "https://user:password@bad%q.invalid/t/tk-secret/linux-64/"
+            "unavailable-1.0-0.conda"
+        ),
+    )
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{explicit_entry(unavailable)}\n")
+    snapshot_reset["fetch_error"] = CondaMultiError(
+        (
+            CondaHTTPError(
+                "server%body-secret",
+                f"{unavailable.url}?X-Amz-Credential=signed-secret",
+                404,
+                "reason%secret",
+                "-",
+            ),
+        )
+    )
+
+    with pytest.raises(CondaError) as exc_info:
+        reset(prefix="/target", snapshot=snapshot)
+
+    outputs = (
+        str(exc_info.value),
+        repr(exc_info.value.dump_map()),
+        "".join(traceback.format_exception(exc_info.value)),
+    )
+    assert all("unavailable-1.0-0.conda" in output for output in outputs)
+    assert "target environment was not modified" in outputs[0]
+    for secret in (
+        "user:password",
+        "tk-secret",
+        "X-Amz-Credential",
+        "signed-secret",
+        "server%body-secret",
+        "reason%secret",
+    ):
+        assert all(secret not in output for output in outputs)
+    assert "diff" not in snapshot_reset
+
+
+@pytest.mark.parametrize(
+    "nested_error",
+    [RuntimeError("unexpected failure"), CondaSignalInterrupt(signal.SIGINT)],
+    ids=["unexpected", "interrupt"],
+)
+def test_reset_snapshot_preserves_non_fetch_error(
+    nested_error: BaseException,
+    snapshot_reset: dict,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    package = make_package_record("missing")
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{explicit_entry(package)}\n")
+    error = CondaMultiError((CondaMultiError((nested_error,)),))
+    snapshot_reset["fetch_error"] = error
+
+    with pytest.raises(CondaMultiError) as exc_info:
+        reset(prefix="/target", snapshot=snapshot)
+
+    assert exc_info.value is error
+    assert "diff" not in snapshot_reset
+
+
+@pytest.mark.parametrize(
+    "json_output, quiet",
+    [(True, False), (False, True)],
+    ids=["json", "quiet"],
+)
+def test_reset_snapshot_noop_suppresses_human_output(
+    json_output: bool,
+    quiet: bool,
+    snapshot_reset: dict,
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from conda_self.reset import reset
+
+    package = make_package_record("installed")
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text(f"@EXPLICIT\n{explicit_entry(package)}\n")
+    snapshot_reset["installed"] = [package]
+    monkeypatch.setattr(
+        "conda_self.reset.context",
+        SimpleNamespace(
+            json=json_output,
+            quiet=quiet,
+            plugin_manager=conda_context.plugin_manager,
+        ),
+    )
+
+    reset(prefix="/target", snapshot=snapshot)
+
+    assert capsys.readouterr().out == ""
+
+
+def test_reset_snapshot_fetches_noarch_python_package_for_python_relink(
+    snapshot_reset: dict,
+    tmp_path: Path,
+):
+    from conda_self.reset import reset
+
+    installed_python = make_package_record("python", version="3.12.9")
+    target_python = make_package_record("python", version="3.13.2")
+    installed_noarch = make_package_record(
+        "pip",
+        version="25.0",
+        subdir="noarch",
+        noarch=NoarchType.python,
+    )
+    fetched_noarch = make_package_record(
+        "pip",
+        version="25.0",
+        subdir="noarch",
+        noarch=NoarchType.python,
+    )
+    installed_native = make_package_record("zlib")
+    records = (installed_noarch, installed_native, target_python)
+    entries = tuple(explicit_entry(record) for record in records)
+    snapshot = tmp_path / "snapshot.explicit.txt"
+    snapshot.write_text("@EXPLICIT\n" + "\n".join(entries) + "\n")
+    snapshot_reset["installed"] = [
+        installed_python,
+        installed_noarch,
+        installed_native,
+    ]
+    snapshot_reset["fetched"] = [fetched_noarch, target_python]
+
+    reset(prefix="/target", snapshot=snapshot)
+
+    assert snapshot_reset["fetch_entries"] == (entries[0], entries[2])
+    assert snapshot_reset["diff"]["final_precs"] == (
+        fetched_noarch,
+        installed_native,
+        target_python,
+    )
+    assert tuple(spec.name for spec in snapshot_reset["diff"]["specs_to_add"]) == (
+        "pip",
+        "python",
+    )
+
+
 def test_help(conda_cli: CondaCLIFixture):
     out, err, exc = conda_cli("self", "reset", "--help", raises=SystemExit)
     assert exc.value.code == 0
+
+
+@pytest.mark.parametrize("snapshot", [snapshot.value for snapshot in Snapshot])
+def test_reset_json_output(
+    snapshot: str,
+    conda_cli: CondaCLIFixture,
+    fake_reset_output_env: Path,
+):
+    out, _err, _exc = conda_cli(
+        "self", "reset", "--yes", "--json", "--snapshot", snapshot
+    )
+
+    assert json.loads(out) == {"success": True}
+
+
+def test_reset_quiet_output(
+    conda_cli: CondaCLIFixture,
+    fake_reset_output_env: Path,
+):
+    out, _err, _exc = conda_cli(
+        "self", "reset", "--yes", "--quiet", "--snapshot", "current"
+    )
+
+    assert out == ""
 
 
 @pytest.mark.parametrize("choice", [s.value for s in Snapshot])
