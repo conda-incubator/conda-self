@@ -29,11 +29,14 @@ same configuration.
 
 ## Channel priority
 
-Channels are searched in the order they appear in your configuration.
-The first channel with a matching package wins (in strict mode) or
-packages from all channels are considered (in flexible mode).
+Channels are searched in the order they appear in your configuration. With
+strict channel priority, packages from lower-priority channels are not
+considered when a package with the same name exists in a higher-priority
+channel. With flexible priority, the solver may use lower-priority channels to
+satisfy dependencies.
 
-You can inspect channels with [conda info](inv:conda:std:doc#commands/info) or by showing config values:
+You can inspect channels with [conda info](inv:conda:std:doc#commands/info) or
+by showing configuration values:
 
 ```bash
 conda config --show channels
@@ -42,20 +45,22 @@ conda config --show channel_priority
 
 ## Private channels
 
-For private channels that require authentication (e.g. on
-anaconda.org or prefix.dev), configure tokens via:
+For private channels that require authentication, install an authentication
+handler such as `conda-auth`, then log in:
 
 ```bash
-conda token set <token> -c https://my-channel.example.com
+conda self install conda-auth
+conda auth login https://my-channel.example.com --token
 ```
 
-Or use conda's standard authentication mechanisms. conda-self
-inherits all authentication settings from your [conda configuration](inv:conda:std:doc#configuration).
+The login command prompts for the token and stores the credentials for conda.
+conda-self invokes conda for package operations, so it uses the same stored
+credentials.
 
 ## Multiple channels
 
-If a plugin is available on multiple channels, conda will use the
-one with highest priority:
+With strict channel priority, if a plugin is available on multiple channels,
+conda will use the one with highest priority:
 
 ```bash
 conda config --add channels conda-forge -n base

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Snapshot(Enum):
     """Snapshot modes accepted by ``conda self reset --snapshot``.
 
-    Plain :class:`enum.Enum` for Python 3.10 compatibility; the string values
+    Plain :class:`enum.Enum` for Python 3.10 compatibility. The string values
     double as argparse choices and user-facing mode names. Switch to
     :class:`enum.StrEnum` when 3.11 becomes the minimum supported version
     (mirrors the TODO on conda's ``EnvironmentFormat``).
@@ -46,7 +46,7 @@ class Snapshot(Enum):
                 return None
 
 
-# Tried in order when --snapshot is not provided; the first mode whose file
+# Tried in order when --snapshot is not provided. The first mode whose file
 # exists on disk wins, otherwise we fall through to CURRENT.
 FALLBACK_ORDER: tuple[Snapshot, ...] = (
     Snapshot.BASE_PROTECTION,
@@ -58,15 +58,16 @@ HELP = "Reset the base environment."
 SNAPSHOT_HELP = dedent(
     """
     Reset mode for the base environment.
-    `current` removes all packages except for `conda`, `conda-self`, installed
-    conda plugins, configured permanent packages, and their dependencies.
-    `installer` restores the exact packages recorded by the installer and
-    may downgrade updated packages. `installer-exact` is equivalent.
+    `current` removes all conda packages except for `conda`, `conda-self`,
+    installed conda plugins, configured permanent packages, and their
+    dependencies.
+    `installer` restores exactly the conda packages recorded by the installer
+    and may downgrade updated packages. `installer-exact` is equivalent.
     `installer-updated` retains the packages kept by `current` and currently
-    installed packages whose names appear in the installer snapshot. It does
-    not update packages or install missing packages.
-    `base-protection` restores the exact packages recorded by
-    `conda doctor base-protection --fix` before protecting base.
+    installed conda packages whose names appear in the installer snapshot. It
+    does not update packages or install missing packages.
+    `base-protection` restores exactly the conda packages recorded by
+    `conda doctor -n base base-protection --fix` before protecting base.
 
     If not set, `conda self` selects `base-protection` when its snapshot file
     exists, otherwise `installer-updated` when the installer snapshot file
@@ -78,13 +79,13 @@ WHAT_TO_EXPECT_CURRENT = dedent(
     """
     This resets the base environment to keep conda, conda-self, installed conda
     plugins, configured permanent packages, and their dependencies.
-    All other packages are removed.
+    All other conda packages are removed.
     """
 ).lstrip()
 WHAT_TO_EXPECT_SNAPSHOT = dedent(
     """
     This resets the base environment using the '{mode_name}' mode
-    and removes packages not retained by that mode.
+    and removes conda packages not retained by that mode.
     """
 ).lstrip()
 SUCCESS = "Reset the base environment using the 'current' mode.\n"
@@ -128,7 +129,7 @@ def execute(args: argparse.Namespace) -> int:
 
     if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Failed to reset to '{snapshot}'.\nRequired file {reset_file} not found."
+            f"Snapshot file for the '{snapshot}' reset mode not found: {reset_file}"
         )
 
     if not context.json and not context.quiet:

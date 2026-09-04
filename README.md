@@ -47,21 +47,24 @@ supported and will result in an error.
 To check if your base environment is protected, run:
 
 ```
-conda doctor base-protection
+conda doctor -n base base-protection
 ```
 
 To protect your base environment, run:
 
 ```
-conda doctor base-protection --fix
+conda doctor -n base base-protection --fix
 ```
 
 This will:
-1. Clone your current base environment to a new "default" environment
-2. Reset base to conda, conda-self, configured permanent packages, their
-   dependencies, and installed packages named in an available installer
-   snapshot
-3. Mark the base environment as frozen to prevent modifications
+
+1. Try to save a snapshot of base in conda's explicit format
+2. Clone your current base environment to a new "default" environment
+3. Remove conda packages other than conda, conda-self, configured permanent
+   packages, their dependencies, and installed conda packages named in an
+   available installer snapshot
+4. Mark the base environment as frozen so conda refuses modifications by
+   default
 
 To see all available health checks, run:
 
@@ -75,12 +78,13 @@ To remove protection entirely, delete the `conda-meta/frozen` environment
 marker file:
 
 ```
-rm $CONDA_PREFIX/conda-meta/frozen
+rm "$(conda info --base)/conda-meta/frozen"
 ```
 
-To bypass protection for a single command, pass `--override-frozen` or set
-`CONDA_OVERRIDE_FROZEN=1`. To disable it permanently, add `override_frozen: true`
-to your `.condarc`.
+To bypass protection for a single command, pass `--override-frozen`. To disable
+frozen-environment checks through configuration, set
+`CONDA_PROTECT_FROZEN_ENVS=false` or add `protect_frozen_envs: false` to your
+`.condarc`.
 
 ## Configuration
 

@@ -94,14 +94,14 @@ def records_from_snapshot(
                 spec.get_exact_value("fn") or spec.name for spec in unresolved_specs
             )
             raise CondaError(
-                "Could not download or extract all packages required by the "
-                "selected snapshot.\n"
-                "Required packages:%(packages)s\n"
-                "The target environment was not changed. Some downloaded or "
-                "extracted packages may remain in a package cache. Ensure each "
-                "listed package is available from a package cache or can be "
-                "downloaded from its URL in the snapshot, verified against its "
-                "recorded checksum when present, and extracted, then retry.",
+                "Could not make all conda packages required by the selected "
+                "snapshot available in a package cache.\n"
+                "Required conda packages:%(packages)s\n"
+                "The target environment was not changed. Some conda packages "
+                "may have been downloaded and extracted into a package cache. "
+                "Ensure each listed package is available in a package cache or "
+                "can be downloaded from the URL in the snapshot, verified using "
+                "its recorded checksum when present, and extracted, then retry.",
                 packages=packages,
             ) from None
 
@@ -146,7 +146,8 @@ def reset(
             if not context.json and not context.quiet:
                 print(
                     "Nothing to do. "
-                    "Packages in the target environment match the selected snapshot."
+                    "The conda packages in the target environment match the "
+                    "selected snapshot."
                 )
             return
     else:

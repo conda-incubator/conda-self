@@ -16,9 +16,9 @@ class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
         names = ", ".join(specs)
         if len(specs) == 1:
-            msg = f"The requested package is not a plugin: {names}"
+            msg = f"The requested package is not a conda plugin: {names}"
         else:
-            msg = f"The requested packages are not plugins: {names}"
+            msg = f"The requested packages are not conda plugins: {names}"
         super().__init__(msg)
 
 
@@ -26,7 +26,11 @@ class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
         names = ", ".join(specs)
         noun = _plural("package", len(specs))
-        super().__init__(f"{noun.capitalize()} cannot be removed: {names}")
+        super().__init__(
+            f"conda-self protects the requested {noun} from removal: {names}\n"
+            "Pass --force to bypass this check. Conda's own transaction checks "
+            "still apply."
+        )
 
 
 class NoDistInfoDirFound(CondaError):

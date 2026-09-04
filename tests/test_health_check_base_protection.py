@@ -152,8 +152,8 @@ def test_is_base_protected(fake_base_env: Path, frozen: bool, expected: bool):
     "env_fixture, expected_output, unexpected_output",
     [
         ("tmp_path", "skipping", None),
-        ("protected_base_env", "protected", "not protected"),
-        ("fake_base_env", "not protected", None),
+        ("protected_base_env", "marked as frozen", "not marked as frozen"),
+        ("fake_base_env", "not marked as frozen", None),
     ],
     ids=["non-base", "protected", "unprotected"],
 )

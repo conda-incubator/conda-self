@@ -1,7 +1,8 @@
 # Managing plugins
 
-This tutorial covers the complete lifecycle of [conda plugins](inv:conda:std:doc#dev-guide/plugins/index) in a
-protected base environment: installing, updating, and removing them.
+This tutorial covers the complete lifecycle of
+[conda plugins](inv:conda:std:doc#dev-guide/plugins/index) in a protected base
+environment: installing, updating, and removing them.
 
 ## Prerequisites
 
@@ -63,14 +64,16 @@ conda self update --force-reinstall
 conda self remove conda-index
 ```
 
-Conda, conda-self, configured permanent packages, and their dependencies
-cannot be removed without `--force`. If you try, you will see a
-`PluginRemoveError`.
+Conda-self protects conda, conda-self, configured permanent packages, and their
+dependencies from direct removal requests unless `--force` is passed. If you
+try without `--force`, you will see a `PluginRemoveError`. Conda's own
+transaction checks still apply with `--force`.
 
 ## Channel configuration
 
-conda-self uses your configured channels. Use [conda config](inv:conda:std:doc#commands/config) to add or change channels before installing. To install plugins from
-a custom channel:
+conda-self uses your configured channels. Use
+[conda config](inv:conda:std:doc#commands/config) to add or change channels
+before installing. To install plugins from a custom channel:
 
 ```bash
 # Add the channel first
@@ -83,18 +86,6 @@ conda self install my-plugin
 Channel-qualified package specs (`conda-forge::my-plugin`) are not supported
 and will produce an error. This keeps channel configuration consistent across
 all operations.
-
-## Verify installed plugins
-
-After installing, you can verify which plugins are registered with
-[conda info](inv:conda:std:doc#commands/info):
-
-```bash
-conda info
-```
-
-The output includes a "plugins" section listing all discovered
-conda plugins and their versions.
 
 ## Next steps
 

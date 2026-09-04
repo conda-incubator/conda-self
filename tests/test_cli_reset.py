@@ -408,15 +408,15 @@ def test_reset_snapshot_download_error_reports_safe_context(
         "".join(traceback.format_exception(exc_info.value)),
     )
     assert outputs[0] == (
-        "Could not download or extract all packages required by the selected "
-        "snapshot.\n"
-        "Required packages:\n"
+        "Could not make all conda packages required by the selected snapshot "
+        "available in a package cache.\n"
+        "Required conda packages:\n"
         "  - unavailable-1.0-0.conda\n"
-        "The target environment was not changed. Some downloaded or extracted "
-        "packages may remain in a package cache. Ensure each listed package is "
-        "available from a package cache or can be downloaded from its URL in the "
-        "snapshot, verified against its recorded checksum when present, and "
-        "extracted, then retry."
+        "The target environment was not changed. Some conda packages may have "
+        "been downloaded and extracted into a package cache. Ensure each listed "
+        "package is available in a package cache or can be downloaded from the "
+        "URL in the snapshot, verified using its recorded checksum when present, "
+        "and extracted, then retry."
     )
     assert all("unavailable-1.0-0.conda" in output for output in outputs)
     for secret in (

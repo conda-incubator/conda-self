@@ -1,7 +1,7 @@
 ### Enhancements
 
-* Bare and `--plugin` updates now use `conda install --update-deps` so
-  the requested package's dependency chain can move when needed. (#152 via #171)
+* Bare and `--plugin` updates now use `conda install --update-deps` so conda can
+  update dependencies of the requested package. (#152 via #171)
 
 ### Bug fixes
 

@@ -1,15 +1,15 @@
 # conda-self
 
-Manage your conda `base` environment safely.
+Manage conda and its plugins in the `base` environment.
 
 conda-self provides commands to install, update, and remove
 [conda plugins](inv:conda:std:doc#dev-guide/plugins/index)
 in a protected base environment. It integrates with
 [conda doctor](inv:conda:std:doc#commands/doctor) to set up base
 protection -- cloning your current base to a `default` environment,
-removing packages not retained by base protection, and marking it as frozen so
-regular conda commands refuse to modify it unless `--override-frozen` is
-passed.
+removing conda packages not retained by base protection, and marking it as
+frozen so regular conda commands refuse to modify it unless
+`--override-frozen` is passed.
 
 ## Quick example
 
@@ -17,7 +17,7 @@ passed.
 
 ```bash
 # Protect your base environment
-$ conda doctor base-protection --fix
+$ conda doctor -n base base-protection --fix
 
 # Install a plugin safely
 $ conda self install conda-index
@@ -36,14 +36,14 @@ $ conda self reset
 
 `conda self` keeps your base environment minimal and stable:
 
-1. **Base protection** -- `conda doctor base-protection --fix` clones base to
-   `default`, removes packages not retained by base protection, and marks it as
-   frozen
+1. **Base protection** -- `conda doctor -n base base-protection --fix` clones
+   base to `default`, removes conda packages not retained by base protection,
+   and marks it as frozen
 2. **Plugin management** -- `conda self install`, `update`, and `remove`
    use `--override-frozen` to manage plugins through subprocess calls that
    respect all of conda's safety checks
 3. **Reset** -- `conda self reset` restores base from an installer or
-   base-protection snapshot, or removes packages not retained by `current`
+   base-protection snapshot, or removes conda packages not retained by `current`
 
 ## Navigation
 

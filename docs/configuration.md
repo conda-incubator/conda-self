@@ -21,28 +21,29 @@ plugins:
     - setuptools
 ```
 
-The reset modes retain these packages and their dependencies alongside conda,
-conda-self, installed [conda plugins](inv:conda:std:doc#dev-guide/plugins/index),
-and their dependencies. `conda self remove` refuses to remove a configured
-permanent package or one of its dependencies unless `--force` is passed.
+The `current` and `installer-updated` reset modes retain these packages and
+their dependencies alongside conda, conda-self, installed
+[conda plugins](inv:conda:std:doc#dev-guide/plugins/index), and their
+dependencies. `conda self remove` refuses to remove a configured permanent
+package or one of its dependencies unless `--force` is passed.
 
 ## Snapshot files
 
-Snapshots are stored in `conda-meta/` inside the base prefix and use conda's
-explicit format. Each file begins with an `@EXPLICIT` header followed by
+Snapshots are stored in the base environment's `conda-meta/` directory and use
+conda's explicit format. Each file contains an `@EXPLICIT` marker followed by
 complete package URLs.
 
 | File | Created by | Purpose |
 |------|-----------|---------|
-| `base-protection-state.explicit.txt` | `conda doctor base-protection --fix` | Pre-protection state of base |
+| `base-protection-state.explicit.txt` | `conda doctor -n base base-protection --fix` | Pre-protection state when export succeeds |
 | `initial-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
 
 These files are used by `conda self reset --snapshot <type>` to
 restore base without running the solver. `base-protection`, `installer`, and
 `installer-exact` reuse an installed package only when its package URL and any
 checksum match the corresponding values in the snapshot. `installer-updated`
-uses `initial-state.explicit.txt` only to select the installed package names
-to retain.
+uses `initial-state.explicit.txt` only to select the installed conda package
+names to retain.
 
 ## Constants
 

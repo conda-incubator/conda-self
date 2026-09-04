@@ -1,7 +1,7 @@
 # Resetting the base environment
 
-How to restore your base environment from a snapshot or remove packages not
-retained by the current mode.
+How to restore your base environment from a snapshot or remove conda packages
+not retained by the current mode.
 
 ## Automatically select a reset mode
 
@@ -12,9 +12,9 @@ conda self reset
 conda-self selects the first available mode in this order:
 
 1. `base-protection` -- restore the exact snapshot saved by
-   [conda doctor base-protection --fix](inv:conda:std:doc#commands/doctor)
-2. `installer-updated` -- retain installed packages whose names appear in
-   the installer snapshot
+   [conda doctor -n base base-protection --fix](inv:conda:std:doc#commands/doctor)
+2. `installer-updated` -- retain installed conda packages whose names appear
+   in the installer snapshot
 3. `current` -- retain conda, conda-self, installed conda plugins, configured
    permanent packages, and their dependencies
 
@@ -27,7 +27,8 @@ downgrade packages to the versions shipped by the installer.
 
 ### Base-protection snapshot
 
-Restore to the state captured when you first protected base:
+Restore to the state captured by
+`conda doctor -n base base-protection --fix`:
 
 ```bash
 conda self reset --snapshot base-protection
@@ -43,8 +44,8 @@ Restore to the original state from the installer (e.g. Miniforge):
 conda self reset --snapshot installer
 ```
 
-This uses `conda-meta/initial-state.explicit.txt` to restore the exact
-packages recorded by the installer and remove packages outside that
+This uses `conda-meta/initial-state.explicit.txt` to restore exactly the conda
+packages recorded by the installer and remove conda packages outside that
 snapshot. `installer-exact` is an equivalent, more explicit name. Both may
 downgrade packages that have since been updated.
 
@@ -54,7 +55,7 @@ this file.
 
 ### Retain installed versions of installer packages
 
-Retain currently installed packages whose names appear in the installer
+Retain currently installed conda packages whose names appear in the installer
 snapshot:
 
 ```bash
@@ -69,7 +70,7 @@ environment.
 
 ### Current mode
 
-Remove all packages except conda, conda-self, installed
+Remove all conda packages except conda, conda-self, installed
 [conda plugins](inv:conda:std:doc#dev-guide/plugins/index), packages configured
 in `plugins.self_permanent_packages`, and their dependencies, without using a
 snapshot file:
@@ -90,24 +91,23 @@ conda self reset --snapshot installer --dry-run
 ## Packages required for an exact reset
 
 For `installer`, `installer-exact`, and `base-protection`, conda-self first
-reuses a package already installed in base when its package URL and any
-checksum match the corresponding values in the snapshot. For each remaining
-package, Conda uses the package from a package cache or downloads and extracts
-it from its URL.
+reuses a conda package already installed in base when its package URL and any
+checksum match the corresponding values in the snapshot. For every other conda
+package, conda makes it available in a package cache, downloading, verifying,
+and extracting it as needed.
 
-Each package that must be installed or reinstalled must be present in the
+Each conda package that must be installed or reinstalled must be present in a
 package cache or downloadable from its URL in the snapshot. This can include
-`noarch: python` packages that must be linked into the environment again
-after a Python major or minor version change. If Conda cannot download or
-extract a required package, the exact reset stops before the target
-environment is changed. Packages downloaded and extracted before the failure
-may remain in the package cache.
+noarch Python packages that must be relinked after a Python major or minor
+version change. If conda cannot make a required package available in a package
+cache, the exact reset stops before the target environment is changed. Packages
+downloaded and extracted before the failure may remain in a package cache.
 
 ## After a reset
 
-After resetting, your base environment contains the packages selected by
-the reset mode. [conda list](inv:conda:std:doc#commands/list) shows what is
-left in base. You may need to reinstall plugins:
+After resetting, your base environment contains the conda packages selected by
+the reset mode. [conda list](inv:conda:std:doc#commands/list) shows what is left
+in base. You may need to reinstall plugins:
 
 ```bash
 conda self install conda-index

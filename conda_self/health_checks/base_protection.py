@@ -46,17 +46,18 @@ def check(prefix: str, _verbose: bool) -> None:
         return
 
     if is_base_protected():
-        print(f"{OK_MARK} Base environment is protected (frozen).\n")
+        print(f"{OK_MARK} Base environment is marked as frozen.\n")
     else:
-        print(f"{X_MARK} Base environment is not protected.\n")
-        print("Run 'conda doctor base-protection --fix' to protect it.\n")
+        print(f"{X_MARK} Base environment is not marked as frozen.\n")
+        print("Run 'conda doctor -n base base-protection --fix' to protect it.\n")
 
 
 def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
     """Fix: Protect the base environment.
 
     This clones the base environment to a new 'default' environment,
-    removes packages not retained by base protection, and marks it as frozen.
+    removes conda packages not retained by base protection, and marks it as
+    frozen.
     """
     from pathlib import Path
 
@@ -101,15 +102,21 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
             "and mark it as frozen."
         )
         if env.external_packages:
+            external_package_count = len(env.external_packages)
+            external_package_noun = (
+                "package" if external_package_count == 1 else "packages"
+            )
             print(
-                f"  Warning: Base environment contains {len(env.external_packages)} "
-                "non-conda package(s) that will become non-functional after reset.\n"
+                f"  Warning: Base environment contains {external_package_count} "
+                f"external {external_package_noun} that may no longer work in "
+                "the reset base environment.\n"
                 f"  They are preserved in the cloned '{default_env}' environment."
             )
     confirm("Proceed?")
 
     # Prefer the installer snapshot for resetting base so that
-    # installer-provided packages (e.g. mamba in Miniforge) are preserved.
+    # packages recorded in the installer snapshot (e.g. mamba in Miniforge)
+    # are preserved.
     installer_snapshot = base_prefix / "conda-meta" / RESET_FILE_INSTALLER
     use_snapshot = installer_snapshot.exists()
 
@@ -133,7 +140,10 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         snapshot_file.write_text(explicit_exporter.export(env))
     except CondaValueError:
         if not context.quiet:
-            print("  Skipping snapshot (non-conda packages present).")
+            print(
+                "  Skipping snapshot because the base environment cannot be "
+                "exported in conda's explicit format."
+            )
 
     if not context.quiet:
         print(f"Cloning the base environment to '{default_env}'...")
@@ -159,7 +169,7 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         frozen_path = base_prefix / PREFIX_FROZEN_FILE
         frozen_path.write_text(json.dumps({"message": message}) if message else "")
     except OSError as e:
-        raise CondaOSError(f"Could not protect environment: {e}") from e
+        raise CondaOSError(f"Could not protect the base environment: {e}") from e
 
     # Update default activation environment
     if not context.quiet:

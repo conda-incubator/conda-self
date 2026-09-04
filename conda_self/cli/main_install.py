@@ -16,7 +16,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--force-reinstall",
         action="store_true",
-        help="Reinstall each requested plugin even if it is already installed.",
+        help="Reinstall each requested package even if it is already installed.",
     )
     parser.add_argument("specs", nargs="+", help="Conda plugins to install")
     parser.set_defaults(func=execute)
@@ -44,7 +44,7 @@ def execute(args: argparse.Namespace) -> int:
             "Configure channels via `conda config --add channels <channel>` instead."
         )
 
-    print("Installing plugins:", *args.specs)
+    print("Installing packages:", *args.specs)
 
     returncode = install_specs_in_protected_env(
         args.specs,
