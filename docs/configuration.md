@@ -39,11 +39,11 @@ complete package URLs.
 | `initial-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
 
 These files are used by `conda self reset --snapshot <type>` to
-restore base without running the solver. `base-protection`, `installer`, and
+restore base without running the solver. `base-protection` and
 `installer-exact` reuse an installed package only when its package URL and any
 checksum match the corresponding values in the snapshot. `installer-updated`
 uses `initial-state.explicit.txt` only to select the installed conda package
-names to retain.
+names to retain. It does not update packages or install missing packages.
 
 ## Constants
 

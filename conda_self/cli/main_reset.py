@@ -22,7 +22,7 @@ class Snapshot(Enum):
     """
 
     CURRENT = "current"
-    INSTALLER = "installer"
+    INSTALLER = "installer"  # Accepted only to explain how to migrate.
     INSTALLER_EXACT = "installer-exact"
     INSTALLER_UPDATED = "installer-updated"
     BASE_PROTECTION = "base-protection"
@@ -34,15 +34,11 @@ class Snapshot(Enum):
     def file_path(self) -> Path | None:
         """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
         match self:
-            case (
-                Snapshot.INSTALLER
-                | Snapshot.INSTALLER_EXACT
-                | Snapshot.INSTALLER_UPDATED
-            ):
+            case Snapshot.INSTALLER_EXACT | Snapshot.INSTALLER_UPDATED:
                 return Path(sys.prefix, "conda-meta", RESET_FILE_INSTALLER)
             case Snapshot.BASE_PROTECTION:
                 return Path(sys.prefix, "conda-meta", RESET_FILE_BASE_PROTECTION)
-            case Snapshot.CURRENT:
+            case Snapshot.CURRENT | Snapshot.INSTALLER:
                 return None
 
 
@@ -61,13 +57,15 @@ SNAPSHOT_HELP = dedent(
     `current` removes all conda packages except for `conda`, `conda-self`,
     installed conda plugins, configured permanent packages, and their
     dependencies.
-    `installer` restores exactly the conda packages recorded by the installer
-    and may downgrade updated packages. `installer-exact` is equivalent.
+    `installer-exact` restores exactly the conda packages recorded by the
+    installer and may downgrade updated packages.
     `installer-updated` retains the packages kept by `current` and currently
     installed conda packages whose names appear in the installer snapshot. It
     does not update packages or install missing packages.
     `base-protection` restores exactly the conda packages recorded by
     `conda doctor -n base base-protection --fix` before protecting base.
+    The old `installer` spelling is rejected with migration guidance. Choose
+    `installer-exact` or `installer-updated` explicitly.
 
     If not set, `conda self` selects `base-protection` when its snapshot file
     exists, otherwise `installer-updated` when the installer snapshot file
@@ -109,12 +107,22 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
 def execute(args: argparse.Namespace) -> int:
     from conda.base.context import context
     from conda.cli.common import stdout_json_success
+    from conda.exceptions import CondaValueError
     from conda.reporters import confirm_yn
 
     from ..query import permanent_dependencies
     from ..reset import names_from_explicit, reset
 
     snapshot: Snapshot | None = args.snapshot
+    if snapshot is Snapshot.INSTALLER:
+        raise CondaValueError(
+            "The '--snapshot installer' mode is no longer supported. "
+            "Use '--snapshot installer-exact' to restore the exact conda packages "
+            "recorded by the installer, or '--snapshot installer-updated' to keep "
+            "currently installed installer packages, conda plugins, and permanent "
+            "packages with their dependencies. 'installer-updated' does not update "
+            "packages or install missing packages. No reset was performed."
+        )
     reset_file: Path | None = None
 
     if snapshot is not None:
@@ -152,7 +160,7 @@ def execute(args: argparse.Namespace) -> int:
                 reset_file
             )
             reset(uninstallable_packages=keep)
-        case Snapshot.INSTALLER | Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
+        case Snapshot.INSTALLER_EXACT | Snapshot.BASE_PROTECTION:
             reset(snapshot=reset_file)
         case _:
             reset(uninstallable_packages=permanent_dependencies(add_plugins=True))

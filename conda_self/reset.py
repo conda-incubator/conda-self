@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+from os.path import dirname, isfile
 from typing import TYPE_CHECKING
 
 from boltons.setutils import IndexedSet
@@ -11,13 +12,15 @@ from conda.base.context import context
 from conda.common.io import dashlist
 from conda.common.path import get_major_minor_version
 from conda.core.link import PrefixSetup, UnlinkLinkTransaction
+from conda.core.package_cache_data import PackageCacheData
 from conda.core.prefix_data import PrefixData
 from conda.core.solve import diff_for_unlink_link_precs
-from conda.exceptions import CondaSignalInterrupt, ParseError
-from conda.gateways.disk.read import yield_lines
+from conda.exceptions import ChecksumMismatchError, CondaSignalInterrupt, ParseError
+from conda.gateways.disk.read import compute_sum, yield_lines
 from conda.misc import _match_specs_from_explicit, get_package_records_from_explicit
 from conda.models.enums import NoarchType
 from conda.models.match_spec import MatchSpec
+from conda_package_handling.exceptions import InvalidArchiveError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -74,16 +77,45 @@ def records_from_snapshot(
             fetched_records = tuple(
                 get_package_records_from_explicit(unresolved_entries)
             )
-        except CondaMultiError as error:
-            pending_errors = list(error.errors)
+            checksum_errors = []
+            for spec, record in zip(unresolved_specs, fetched_records, strict=True):
+                url = spec.get_exact_value("url")
+                if not url or not url.startswith("file:"):
+                    continue
+                archive = record.package_tarball_full_path
+                if not isfile(archive):
+                    continue
+                # Conda trusts the requested checksum when copying a local package.
+                for checksum_type in ("md5", "sha256"):
+                    expected_checksum = spec.get_exact_value(checksum_type)
+                    if expected_checksum is None:
+                        continue
+                    actual_checksum = compute_sum(archive, checksum_type)
+                    if actual_checksum != expected_checksum:
+                        # Keep the extracted cache usable only for its actual bytes.
+                        setattr(record, checksum_type, actual_checksum)
+                        PackageCacheData(dirname(archive)).insert(record)
+                        checksum_errors.append(
+                            ChecksumMismatchError(
+                                url,
+                                archive,
+                                checksum_type,
+                                expected_checksum,
+                                actual_checksum,
+                            )
+                        )
+            if checksum_errors:
+                raise CondaMultiError(checksum_errors)
+        except (CondaError, InvalidArchiveError) as error:
+            pending_errors = [error]
             found_error = False
             while pending_errors:
                 nested_error = pending_errors.pop()
                 if isinstance(nested_error, CondaMultiError):
                     pending_errors.extend(nested_error.errors)
-                elif not isinstance(nested_error, CondaError) or isinstance(
-                    nested_error, (CondaExitZero, CondaSignalInterrupt)
-                ):
+                elif not isinstance(
+                    nested_error, (CondaError, InvalidArchiveError)
+                ) or isinstance(nested_error, (CondaExitZero, CondaSignalInterrupt)):
                     raise
                 else:
                     found_error = True

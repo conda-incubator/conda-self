@@ -38,7 +38,7 @@ Type "# Reset base to the exact installer snapshot"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self reset --yes --snapshot installer"
+Type@80ms "conda self reset --yes --snapshot installer-exact"
 Enter
 Wait /\$/
 Sleep 3s

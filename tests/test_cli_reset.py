@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
-from conda import CondaError, CondaMultiError
+from conda import CondaError, CondaExitZero, CondaMultiError
 from conda.base.constants import PREFIX_FROZEN_FILE
 from conda.base.context import context as conda_context
 from conda.cli.main_list import print_explicit
@@ -112,7 +112,6 @@ def fake_reset_env(
         perm_deps_calls.append(kwargs)
         return {"conda", "conda-self"}
 
-    monkeypatch.setattr("conda.base.context.context.quiet", True, raising=False)
     monkeypatch.setattr("conda_self.reset.reset", fake_reset)
     monkeypatch.setattr("conda_self.query.permanent_dependencies", fake_perm_deps)
     return tmp_path
@@ -432,12 +431,28 @@ def test_reset_snapshot_download_error_reports_safe_context(
 
 
 @pytest.mark.parametrize(
-    "nested_error",
-    [RuntimeError("unexpected failure"), CondaSignalInterrupt(signal.SIGINT)],
-    ids=["unexpected", "interrupt"],
+    "error",
+    [
+        CondaExitZero("requested exit"),
+        CondaSignalInterrupt(signal.SIGINT),
+        RuntimeError("unexpected failure"),
+        CondaMultiError(()),
+        CondaMultiError((CondaMultiError((CondaExitZero("requested exit"),)),)),
+        CondaMultiError((CondaMultiError((RuntimeError("unexpected failure"),)),)),
+        CondaMultiError((CondaMultiError((CondaSignalInterrupt(signal.SIGINT),)),)),
+    ],
+    ids=[
+        "exit",
+        "interrupt",
+        "unexpected",
+        "empty",
+        "nested-exit",
+        "nested-unexpected",
+        "nested-interrupt",
+    ],
 )
 def test_reset_snapshot_preserves_interrupt_or_unexpected_error(
-    nested_error: BaseException,
+    error: Exception,
     snapshot_reset: dict,
     tmp_path: Path,
 ):
@@ -446,10 +461,9 @@ def test_reset_snapshot_preserves_interrupt_or_unexpected_error(
     package = make_package_record("missing")
     snapshot = tmp_path / "snapshot.explicit.txt"
     snapshot.write_text(f"@EXPLICIT\n{explicit_entry(package)}\n")
-    error = CondaMultiError((CondaMultiError((nested_error,)),))
     snapshot_reset["fetch_error"] = error
 
-    with pytest.raises(CondaMultiError) as exc_info:
+    with pytest.raises(type(error)) as exc_info:
         reset(prefix="/target", snapshot=snapshot)
 
     assert exc_info.value is error
@@ -540,7 +554,66 @@ def test_help(conda_cli: CondaCLIFixture):
     assert exc.value.code == 0
 
 
-@pytest.mark.parametrize("snapshot", [snapshot.value for snapshot in Snapshot])
+@pytest.mark.parametrize("snapshot_present", [False, True])
+@pytest.mark.parametrize("yes", [False, True])
+@pytest.mark.parametrize("output_option", [None, "--json", "--quiet"])
+def test_installer_requires_explicit_migration_before_reset(
+    snapshot_present: bool,
+    yes: bool,
+    output_option: str | None,
+    fake_reset_env: Path,
+    reset_calls: list,
+    perm_deps_calls: list,
+    monkeypatch: MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    from conda.base.context import reset_context
+    from conda.cli.main import main
+
+    snapshot = fake_reset_env / "conda-meta" / RESET_FILE_INSTALLER
+    if snapshot_present:
+        snapshot.write_text(INSTALLER_SNAPSHOT_CONTENT)
+
+    def fail_confirmation(*args, **kwargs):
+        pytest.fail("migration must be explained before confirmation")
+
+    monkeypatch.setattr("conda.reporters.confirm_yn", fail_confirmation)
+    args = ["self", "reset", "--snapshot", "installer"]
+    if yes:
+        args.append("--yes")
+    if output_option:
+        args.append(output_option)
+
+    try:
+        code = main(*args)
+    finally:
+        reset_context()
+    assert code == 1
+
+    out, err = capsys.readouterr()
+    if output_option == "--json":
+        result = json.loads(out)
+        assert result["exception_name"] == "CondaValueError"
+        assert result.get("success") is not True
+        message = result["message"]
+        assert err == ""
+    else:
+        assert out == ""
+        message = err
+    assert "--snapshot installer-exact" in message
+    assert "--snapshot installer-updated" in message
+    assert "does not update packages or install missing packages" in message
+    assert "No reset was performed." in message
+    assert reset_calls == []
+    assert perm_deps_calls == []
+    assert snapshot.exists() is snapshot_present
+    if snapshot_present:
+        assert snapshot.read_text() == INSTALLER_SNAPSHOT_CONTENT
+
+
+@pytest.mark.parametrize(
+    "snapshot", [s.value for s in Snapshot if s is not Snapshot.INSTALLER]
+)
 def test_reset_json_output(
     snapshot: str,
     conda_cli: CondaCLIFixture,
@@ -585,12 +658,11 @@ def test_invalid_snapshot_value_rejected(conda_cli: CondaCLIFixture, bad_value: 
 @pytest.mark.parametrize(
     "snapshot_arg, expected_snapshot_file, expected_names",
     [
-        ("installer", RESET_FILE_INSTALLER, None),
         ("installer-exact", RESET_FILE_INSTALLER, None),
         ("installer-updated", None, {"mamba", "pip", "conda", "conda-self"}),
         ("current", None, {"conda", "conda-self"}),
     ],
-    ids=["installer", "installer-exact", "installer-updated", "current"],
+    ids=["installer-exact", "installer-updated", "current"],
 )
 def test_snapshot_dispatch(
     conda_cli: CondaCLIFixture,
@@ -617,7 +689,7 @@ def test_snapshot_dispatch(
         assert expected_names <= call["uninstallable_packages"]
 
 
-@pytest.mark.parametrize("snapshot", ["installer", "installer-exact"])
+@pytest.mark.parametrize("snapshot", ["installer-exact", "installer-updated"])
 def test_installer_snapshot_missing_file_raises(
     snapshot: str,
     conda_cli: CondaCLIFixture,
@@ -691,7 +763,7 @@ def test_fallback_ordering(
     "snapshot, expected_filename",
     [
         (Snapshot.CURRENT, None),
-        (Snapshot.INSTALLER, RESET_FILE_INSTALLER),
+        (Snapshot.INSTALLER, None),
         (Snapshot.INSTALLER_EXACT, RESET_FILE_INSTALLER),
         (Snapshot.INSTALLER_UPDATED, RESET_FILE_INSTALLER),
         (Snapshot.BASE_PROTECTION, RESET_FILE_BASE_PROTECTION),

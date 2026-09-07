@@ -20,8 +20,8 @@ conda-self selects the first available mode in this order:
 
 Snapshot availability is based on whether its file exists. A failure while
 applying the selected snapshot is reported instead of switching modes.
-Automatic reset does not select `installer` or `installer-exact`, which may
-downgrade packages to the versions shipped by the installer.
+Automatic reset does not select `installer-exact`, which may downgrade
+packages to the versions shipped by the installer.
 
 ## Select a reset mode
 
@@ -41,13 +41,12 @@ This uses `conda-meta/base-protection-state.explicit.txt`.
 Restore to the original state from the installer (e.g. Miniforge):
 
 ```bash
-conda self reset --snapshot installer
+conda self reset --snapshot installer-exact
 ```
 
 This uses `conda-meta/initial-state.explicit.txt` to restore exactly the conda
 packages recorded by the installer and remove conda packages outside that
-snapshot. `installer-exact` is an equivalent, more explicit name. Both may
-downgrade packages that have since been updated.
+snapshot. This may downgrade packages that have since been updated.
 
 Use this mode, or a suitable `base-protection` snapshot, when an
 accidentally installed plugin must be removed. Not all installers provide
@@ -62,11 +61,11 @@ snapshot:
 conda self reset --snapshot installer-updated
 ```
 
-This mode does not install packages that are missing from base. It also
-keeps conda, conda-self, installed conda plugins, packages configured in
-`plugins.self_permanent_packages`, and their dependencies. It does not remove
-an accidentally installed plugin and does not recreate the exact installer
-environment.
+This mode does not update packages or install packages that are missing from
+base. It also keeps conda, conda-self, installed conda plugins, packages
+configured in `plugins.self_permanent_packages`, and their dependencies. It
+does not remove an accidentally installed plugin and does not recreate the
+exact installer environment.
 
 ### Current mode
 
@@ -79,22 +78,38 @@ snapshot file:
 conda self reset --snapshot current
 ```
 
+## Migrate commands that use `installer`
+
+`conda self reset --snapshot installer` reports a migration error before
+asking for confirmation or changing the environment. Replace `installer` in
+your commands and scripts with the mode that matches your intent:
+
+- `installer-exact` restores the exact conda packages recorded in the installer
+  snapshot and removes conda packages outside it. This may downgrade packages.
+- `installer-updated` retains the currently installed versions of conda
+  packages named in the installer snapshot, together with conda, conda-self,
+  installed conda plugins, configured permanent packages, and their
+  dependencies. It does not update packages or install missing packages.
+
 ## Dry run
 
 Preview what a reset would do:
 
 ```bash
 conda self reset --dry-run
-conda self reset --snapshot installer --dry-run
+conda self reset --snapshot installer-exact --dry-run
 ```
 
 ## Packages required for an exact reset
 
-For `installer`, `installer-exact`, and `base-protection`, conda-self first
-reuses a conda package already installed in base when its package URL and any
+For `installer-exact` and `base-protection`, conda-self first reuses a conda
+package already installed in base when its package URL and any recorded
 checksum match the corresponding values in the snapshot. For every other conda
 package, conda makes it available in a package cache, downloading, verifying,
 and extracting it as needed.
+
+An unavailable snapshot URL does not prevent an exact reset when the matching
+package is already installed and does not need to be reinstalled.
 
 Each conda package that must be installed or reinstalled must be present in a
 package cache or downloadable from its URL in the snapshot. This can include
