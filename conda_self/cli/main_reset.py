@@ -31,6 +31,20 @@ class Snapshot(Enum):
         return self.value
 
     @property
+    def display_name(self) -> str:
+        match self:
+            case Snapshot.CURRENT:
+                return "current"
+            case Snapshot.INSTALLER:
+                return "installer"
+            case Snapshot.INSTALLER_EXACT:
+                return "installer-provided (exact)"
+            case Snapshot.INSTALLER_UPDATED:
+                return "installer-provided (with updates)"
+            case Snapshot.BASE_PROTECTION:
+                return "base-protection"
+
+    @property
     def file_path(self) -> Path | None:
         """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
         match self:
@@ -142,13 +156,13 @@ def execute(args: argparse.Namespace) -> int:
 
     if not context.json and not context.quiet:
         if snapshot is not None:
-            print(WHAT_TO_EXPECT_SNAPSHOT.format(mode_name=snapshot))
+            print(WHAT_TO_EXPECT_SNAPSHOT.format(mode_name=snapshot.display_name))
         else:
             print(WHAT_TO_EXPECT_CURRENT)
 
     prompt = "Proceed with resetting the base environment"
     if snapshot is not None:
-        prompt += f" using the '{snapshot}' mode"
+        prompt += f" using the '{snapshot.display_name}' mode"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.json and not context.quiet:
@@ -169,7 +183,7 @@ def execute(args: argparse.Namespace) -> int:
         stdout_json_success()
     elif not context.quiet:
         if snapshot is not None:
-            print(SUCCESS_SNAPSHOT.format(mode_name=snapshot))
+            print(SUCCESS_SNAPSHOT.format(mode_name=snapshot.display_name))
         else:
             print(SUCCESS)
 
