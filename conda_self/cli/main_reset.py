@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Snapshot(Enum):
     """Snapshot modes accepted by ``conda self reset --snapshot``.
 
-    Plain :class:`enum.Enum` for Python 3.10 compatibility. The string values
+    Plain :class:`enum.Enum` for Python 3.10 compatibility; the string values
     double as argparse choices and user-facing mode names. Switch to
     :class:`enum.StrEnum` when 3.11 becomes the minimum supported version
     (mirrors the TODO on conda's ``EnvironmentFormat``).
@@ -31,6 +31,20 @@ class Snapshot(Enum):
         return self.value
 
     @property
+    def display_name(self) -> str:
+        match self:
+            case Snapshot.CURRENT:
+                return "current"
+            case Snapshot.INSTALLER:
+                return "installer"
+            case Snapshot.INSTALLER_EXACT:
+                return "installer-provided (exact)"
+            case Snapshot.INSTALLER_UPDATED:
+                return "installer-provided (with updates)"
+            case Snapshot.BASE_PROTECTION:
+                return "base-protection"
+
+    @property
     def file_path(self) -> Path | None:
         """The ``conda-meta/*.txt`` file this snapshot mode reads, if any."""
         match self:
@@ -42,7 +56,7 @@ class Snapshot(Enum):
                 return None
 
 
-# Tried in order when --snapshot is not provided. The first mode whose file
+# Tried in order when --snapshot is not provided; the first mode whose file
 # exists on disk wins, otherwise we fall through to CURRENT.
 FALLBACK_ORDER: tuple[Snapshot, ...] = (
     Snapshot.BASE_PROTECTION,
@@ -50,44 +64,41 @@ FALLBACK_ORDER: tuple[Snapshot, ...] = (
 )
 
 
-HELP = "Reset the base environment."
+HELP = "Reset 'base' environment to essential packages only."
 SNAPSHOT_HELP = dedent(
     """
-    Reset mode for the base environment.
-    `current` removes all conda packages except for `conda`, `conda-self`,
-    installed conda plugins, configured permanent packages, and their
-    dependencies.
-    `installer-exact` restores exactly the conda packages recorded by the
-    installer and may downgrade updated packages.
-    `installer-updated` retains the packages kept by `current` and currently
-    installed conda packages whose names appear in the installer snapshot. It
-    does not update packages or install missing packages.
-    `base-protection` restores exactly the conda packages recorded by
-    `conda doctor -n base base-protection --fix` before protecting base.
+    Snapshot to reset the `base` environment to.
+    `current` removes all packages except for `conda`, its plugins,
+    and their dependencies.
+    `installer-exact` restores the `base` environment to exactly what the
+    installer shipped (may downgrade packages you have updated).
+    `installer-updated` keeps the packages the installer shipped at their
+    currently installed versions (no downgrade).
+    `base-protection` restores the `base` environment to the snapshot saved
+    by `conda doctor --fix` before protecting base.
     The old `installer` spelling is rejected with migration guidance. Choose
     `installer-exact` or `installer-updated` explicitly.
 
-    If not set, `conda self` selects `base-protection` when its snapshot file
-    exists, otherwise `installer-updated` when the installer snapshot file
-    exists, and otherwise `current`.
+    If not set, `conda self` will try to reset to the base-protection snapshot
+    first, then to the installer-provided (preserving updates), and finally
+    to the current snapshot.
     """
 ).lstrip()
 
-WHAT_TO_EXPECT_CURRENT = dedent(
+WHAT_TO_EXPECT_ESSENTIALS = dedent(
     """
-    This resets the base environment to keep conda, conda-self, installed conda
-    plugins, configured permanent packages, and their dependencies.
-    All other conda packages are removed.
+    This will reset your 'base' to ONLY contain 'conda', its plugins,
+    and their dependencies.
     """
 ).lstrip()
 WHAT_TO_EXPECT_SNAPSHOT = dedent(
     """
-    This resets the base environment using the '{mode_name}' mode
-    and removes conda packages not retained by that mode.
+    This resets your 'base' to the {snapshot_name} snapshot
+    and removes any packages outside of it.
     """
 ).lstrip()
-SUCCESS = "Reset the base environment using the 'current' mode.\n"
-SUCCESS_SNAPSHOT = "Reset the base environment using the '{mode_name}' mode.\n"
+SUCCESS = "Reset the 'base' environment to only the essential packages and plugins.\n"
+SUCCESS_SNAPSHOT = "Reset the 'base' environment to {snapshot_name} snapshot.\n"
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -137,22 +148,22 @@ def execute(args: argparse.Namespace) -> int:
 
     if reset_file is not None and not reset_file.exists():
         raise FileNotFoundError(
-            f"Snapshot file for the '{snapshot}' reset mode not found: {reset_file}"
+            f"Failed to reset to '{snapshot}'.\nRequired file {reset_file} not found."
         )
 
     if not context.json and not context.quiet:
         if snapshot is not None:
-            print(WHAT_TO_EXPECT_SNAPSHOT.format(mode_name=snapshot))
+            print(WHAT_TO_EXPECT_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
-            print(WHAT_TO_EXPECT_CURRENT)
+            print(WHAT_TO_EXPECT_ESSENTIALS)
 
-    prompt = "Proceed with resetting the base environment"
+    prompt = "Proceed with resetting your 'base' environment"
     if snapshot is not None:
-        prompt += f" using the '{snapshot}' mode"
+        prompt += f" to the {snapshot.display_name} snapshot"
     confirm_yn(f"{prompt}?[y/n]:\n", default="no", dry_run=context.dry_run)
 
     if not context.json and not context.quiet:
-        print("Resetting the base environment...")
+        print("Resetting 'base' environment...")
 
     match snapshot:
         case Snapshot.INSTALLER_UPDATED if reset_file is not None:
@@ -169,7 +180,7 @@ def execute(args: argparse.Namespace) -> int:
         stdout_json_success()
     elif not context.quiet:
         if snapshot is not None:
-            print(SUCCESS_SNAPSHOT.format(mode_name=snapshot))
+            print(SUCCESS_SNAPSHOT.format(snapshot_name=snapshot.display_name))
         else:
             print(SUCCESS)
 

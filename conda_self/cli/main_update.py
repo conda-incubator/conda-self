@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import argparse
 
-HELP = "Update conda, one conda plugin, or all packages in the base environment."
+HELP = "Update 'conda' and/or its plugins in the 'base' environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -16,10 +16,8 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--force-reinstall",
         action="store_true",
-        help=(
-            "Uninstall and reinstall each requested package, even if it is "
-            "already installed."
-        ),
+        help="Install latest conda available even "
+        "if currently installed is more recent.",
     )
     update_group = parser.add_mutually_exclusive_group()
     update_group.add_argument(
@@ -29,7 +27,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     update_group.add_argument(
         "--all",
         action="store_true",
-        help="Update all installed packages in the base environment.",
+        help="Update conda, all plugins, and dependencies.",
     )
     parser.set_defaults(func=execute)
 
@@ -61,10 +59,7 @@ def execute(args: argparse.Namespace) -> int:
 
     quiet = context.quiet or bool(args.quiet)
     if not context.json and not quiet:
-        if args.all:
-            print("Updating all installed packages...")
-        else:
-            print(f"Updating {', '.join(info_parts)}...")
+        print(f"Updating {', '.join(info_parts)}...")
 
     return install_specs_in_protected_env(
         specs=package_names,

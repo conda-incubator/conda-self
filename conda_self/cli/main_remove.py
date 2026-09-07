@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import argparse
 
-HELP = "Remove conda plugins from the base environment."
+HELP = "Remove conda plugins from the 'base' environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -18,12 +18,12 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
         "--force",
         action="store_true",
         help=(
-            "Bypass conda-self's check for permanent packages and their "
-            "dependencies. Conda still applies its own transaction checks. "
-            "Confirmation is still required unless --yes is passed."
+            "Remove packages even when they are listed as permanent "
+            "(hard-coded or via `self_permanent_packages`). "
+            "Confirmation is still required unless `--yes` is passed."
         ),
     )
-    parser.add_argument("specs", nargs="+", help="Conda plugins to remove")
+    parser.add_argument("specs", nargs="+", help="Plugins to remove/uninstall")
     parser.set_defaults(func=execute)
 
 
@@ -43,15 +43,16 @@ def execute(args: argparse.Namespace) -> int:
 
     if protected_specs:
         print(
-            "Warning: --force bypassed conda-self's check for the following packages:",
+            "Warning: the following packages are configured as permanent "
+            "and will be removed because `--force` was passed:",
             ", ".join(protected_specs),
             file=sys.stderr,
         )
 
-    print("Removing packages:", *args.specs)
+    print("Removing plugins:", *args.specs)
 
     confirm_yn(
-        "Proceed with removing packages?[y/n]:\n",
+        "Proceed with removing plugins?[y/n]:\n",
         default="no",
         dry_run=context.dry_run,
     )

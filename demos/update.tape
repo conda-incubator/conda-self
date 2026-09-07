@@ -17,7 +17,7 @@ Enter
 Wait /\$/
 Show
 
-Type "# Update all installed packages"
+Type "# Update conda and all plugins"
 Enter
 Sleep 500ms
 

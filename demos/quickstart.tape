@@ -7,7 +7,7 @@ Hide
 Type `source demos/_setup.sh`
 Enter
 Wait /\$/
-# Pre-update conda before installing the plugin
+# Pre-update conda so the install step only shows the plugin
 Type `conda update --yes --quiet --override-frozen conda 2>&1 | tail -1`
 Enter
 Wait /\$/
@@ -20,7 +20,7 @@ Type "# Check base environment protection"
 Enter
 Sleep 500ms
 
-Type@80ms "conda doctor -n base base-protection"
+Type@80ms "conda doctor base-protection"
 Enter
 Wait /\$/
 Sleep 2s
@@ -29,16 +29,16 @@ Type "# Install a plugin"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self install --yes conda-spawn"
+Type@80ms "conda self install --yes conda-index"
 Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Reset base to the exact installer snapshot"
+Type "# Reset base to the installer-provided snapshot"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self reset --yes --snapshot installer-exact"
+Type@80ms "conda self reset --yes"
 Enter
 Wait /\$/
 Sleep 3s

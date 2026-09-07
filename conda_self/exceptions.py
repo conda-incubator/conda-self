@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from conda import CondaError
+from conda.exceptions import CondaError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -16,9 +16,9 @@ class NotAPluginError(CondaError):
     def __init__(self, specs: list[str]):
         names = ", ".join(specs)
         if len(specs) == 1:
-            msg = f"The requested package is not a conda plugin: {names}"
+            msg = f"The requested package is not a plugin: {names}"
         else:
-            msg = f"The requested packages are not conda plugins: {names}"
+            msg = f"The requested packages are not plugins: {names}"
         super().__init__(msg)
 
 
@@ -26,11 +26,7 @@ class PluginRemoveError(CondaError):
     def __init__(self, specs: list[str]):
         names = ", ".join(specs)
         noun = _plural("package", len(specs))
-        super().__init__(
-            f"conda-self protects the requested {noun} from removal: {names}\n"
-            "Pass --force to bypass this check. Conda's own transaction checks "
-            "still apply."
-        )
+        super().__init__(f"{noun.capitalize()} can not be removed: {names}")
 
 
 class NoDistInfoDirFound(CondaError):
