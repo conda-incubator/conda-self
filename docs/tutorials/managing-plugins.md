@@ -25,7 +25,7 @@ fails, the package is automatically uninstalled.
 ### Multiple plugins at once
 
 ```bash
-conda self install conda-index conda-auth
+conda self install conda-index conda-spawn
 ```
 
 ## Update plugins

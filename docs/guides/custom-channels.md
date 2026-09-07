@@ -45,17 +45,10 @@ conda config --show channel_priority
 
 ## Private channels
 
-For private channels that require authentication, install an authentication
-handler such as `conda-auth`, then log in:
-
-```bash
-conda self install conda-auth
-conda auth login https://my-channel.example.com --token
-```
-
-The login command prompts for the token and stores the credentials for conda.
-conda-self invokes conda for package operations, so it uses the same stored
-credentials.
+For private channels that require authentication, follow your channel
+provider's instructions to configure authentication for conda.
+conda-self invokes conda for package operations, so the same authentication
+configuration applies.
 
 ## Multiple channels
 

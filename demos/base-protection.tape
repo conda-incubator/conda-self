@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/base-protection.gif
-Output demos/base-protection.mp4
 
 Hide
 Type `source demos/_setup.sh`

@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/install-plugin.gif
-Output demos/install-plugin.mp4
 
 Hide
 Type `source demos/_setup.sh`

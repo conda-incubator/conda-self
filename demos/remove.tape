@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/remove.gif
-Output demos/remove.mp4
 
 Hide
 Type `source demos/_setup.sh`

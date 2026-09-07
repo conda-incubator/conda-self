@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/reset.gif
-Output demos/reset.mp4
 
 Hide
 Type `source demos/_setup.sh`
