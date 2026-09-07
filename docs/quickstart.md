@@ -12,23 +12,28 @@ managing plugins with conda-self.
 
 ![Base protection demo](../demos/base-protection.gif)
 
-Using [conda doctor](inv:conda:std:doc#commands/doctor), check whether base is currently protected:
+Using [conda doctor](inv:conda:std:doc#commands/doctor), check whether base is
+currently protected:
 
 ```bash
-conda doctor base-protection
+conda doctor -n base base-protection
 ```
 
 If it is not, enable protection:
 
 ```bash
-conda doctor base-protection --fix
+conda doctor -n base base-protection --fix
 ```
 
-This does three things:
+This does four things:
 
-1. Clones your current base environment to a new `default` environment
-2. Resets base to conda, its plugins, their dependencies, and any installer-provided packages
-3. Freezes base so regular [conda install](inv:conda:std:doc#commands/install) cannot modify it
+1. Tries to save a snapshot of base in conda's explicit format
+2. Clones your current base environment to a new `default` environment
+3. Removes conda packages other than conda, conda-self, configured permanent
+   packages, their dependencies, and installed conda packages named in an
+   available installer snapshot
+4. Marks base as frozen so regular conda commands refuse to modify it unless
+   `--override-frozen` is passed
 
 :::{tip}
 You only need to run this once. After protection, use `conda self`
@@ -43,18 +48,18 @@ commands to manage plugins in base.
 conda self install conda-index
 ```
 
-conda-self installs the package via subprocess, validates that it
-registers as a [conda plugin](inv:conda:std:doc#dev-guide/plugins/index) (via entry points), and rolls back if
-it does not.
+conda-self installs the package via a subprocess and checks whether it registers
+as a [conda plugin](inv:conda:std:doc#dev-guide/plugins/index). If validation
+fails, conda-self uninstalls the requested package. Packages installed as its
+dependencies may remain.
 
-## Update plugins
+## Update all installed packages
 
 ```bash
-conda self update
+conda self update --all
 ```
 
-This updates conda itself and all installed plugins to their latest
-compatible versions.
+This updates every installed package in the base environment.
 
 ## Remove a plugin
 
@@ -64,14 +69,15 @@ compatible versions.
 conda self remove conda-index
 ```
 
-Essential packages (conda itself, its core dependencies) cannot be
-removed.
+Conda-self protects conda, conda-self, configured permanent packages, and their
+dependencies from direct removal requests unless `--force` is passed. Conda's
+own transaction checks still apply.
 
 ## Reset base
 
 ![Reset demo](../demos/reset.gif)
 
-If something goes wrong, reset base to essentials:
+If something goes wrong, automatically select a reset mode:
 
 ```bash
 conda self reset

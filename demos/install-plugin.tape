@@ -7,7 +7,7 @@ Hide
 Type `source demos/_setup.sh`
 Enter
 Wait /\$/
-# Pre-update conda so the install step only shows the plugin
+# Pre-update conda before installing the plugin
 Type `conda update --yes --quiet --override-frozen conda 2>&1 | tail -1`
 Enter
 Wait /\$/
@@ -20,12 +20,12 @@ Type "# Install a conda plugin into the base environment"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self install --yes conda-index"
+Type@80ms "conda self install --yes conda-spawn"
 Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Inline channel specs are rejected"
+Type "# Channel-qualified package specs are rejected"
 Enter
 Sleep 500ms
 

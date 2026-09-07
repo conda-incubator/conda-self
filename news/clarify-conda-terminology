@@ -1,0 +1,5 @@
+### Docs
+
+* Align CLI help, errors, documentation, and recorded demos with Conda
+  terminology and the existing behavior of package operations and base
+  protection. Use the exact CLI reset mode names in prompts and completion messages.

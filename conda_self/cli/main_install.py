@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import argparse
 
-HELP = "Add conda plugins to the 'base' environment."
+HELP = "Install conda plugins in the base environment."
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -16,9 +16,9 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--force-reinstall",
         action="store_true",
-        help="Reinstall plugin even if it's already installed.",
+        help="Reinstall each requested package even if it is already installed.",
     )
-    parser.add_argument("specs", nargs="+", help="Plugins to install")
+    parser.add_argument("specs", nargs="+", help="Conda plugins to install")
     parser.set_defaults(func=execute)
 
 
@@ -40,11 +40,11 @@ def execute(args: argparse.Namespace) -> int:
     if specs_with_channels:
         joined = ", ".join(specs_with_channels)
         raise CondaValueError(
-            f"Channel specifications are not supported: {joined}\n"
+            f"Channel-qualified package specs are not supported: {joined}\n"
             "Configure channels via `conda config --add channels <channel>` instead."
         )
 
-    print("Installing plugins:", *args.specs)
+    print("Installing packages:", *args.specs)
 
     returncode = install_specs_in_protected_env(
         args.specs,

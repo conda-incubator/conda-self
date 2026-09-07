@@ -22,7 +22,7 @@ def conda_subcommands() -> Iterable[CondaSubcommand]:
         name="self",
         action=execute,
         configure_parser=configure_parser,
-        summary="Manage your conda 'base' environment safely.",
+        summary="Manage conda and its plugins in the base environment.",
     )
 
 
@@ -35,8 +35,10 @@ def conda_health_checks() -> Iterable[CondaHealthCheck]:
         name="base-protection",
         action=base_protection.check,
         fixer=base_protection.fix,
-        summary="Check if base is frozen to prevent accidental modifications",
-        fix="Clone base to 'default' environment, reset base, and freeze it",
+        summary="Check whether the base environment is marked as frozen",
+        fix=(
+            "Clone the base environment to 'default', reset it, and mark it as frozen"
+        ),
     )
 
 
@@ -46,9 +48,10 @@ def conda_settings() -> Iterable[CondaSetting]:
     yield CondaSetting(
         name=SELF_PERMANENT_PACKAGES_SETTING,
         description=(
-            f"Additional packages (besides {', '.join(PERMANENT_PACKAGES)})"
-            " to always keep in the 'base' environment. "
-            "These packages and their dependencies will not be removed."
+            f"Additional packages, besides {', '.join(PERMANENT_PACKAGES)}, to "
+            "retain with their dependencies in the current and installer-updated "
+            "reset modes and protect from conda self remove. Exact snapshot modes "
+            "and conda self remove --force may remove them."
         ),
         parameter=SequenceParameter(PrimitiveParameter("", element_type=str)),
     )
