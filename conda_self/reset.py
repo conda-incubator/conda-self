@@ -113,6 +113,15 @@ def records_from_snapshot(
                 nested_error = pending_errors.pop()
                 if isinstance(nested_error, CondaMultiError):
                     pending_errors.extend(nested_error.errors)
+                elif type(nested_error) is RuntimeError and str(
+                    nested_error
+                ).startswith(
+                    f"{InvalidArchiveError.__module__}."
+                    f"{InvalidArchiveError.__qualname__}: "
+                ):
+                    # Conda 26.7 extraction workers wrap unpicklable errors in
+                    # RuntimeError, retaining only the qualified type and message.
+                    found_error = True
                 elif not isinstance(
                     nested_error, (CondaError, InvalidArchiveError)
                 ) or isinstance(nested_error, (CondaExitZero, CondaSignalInterrupt)):

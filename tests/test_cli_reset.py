@@ -371,7 +371,9 @@ def test_reset_snapshot_reinstalls_same_package_for_url_or_checksum_mismatch(
     assert snapshot_reset["diff"]["final_precs"] == (target,)
 
 
-def test_reset_snapshot_download_error_reports_safe_context(
+@pytest.mark.parametrize("worker_error", [False, True], ids=["download", "worker"])
+def test_reset_snapshot_package_error_reports_safe_context(
+    worker_error: bool,
     snapshot_reset: dict,
     tmp_path: Path,
 ):
@@ -386,17 +388,20 @@ def test_reset_snapshot_download_error_reports_safe_context(
     )
     snapshot = tmp_path / "snapshot.explicit.txt"
     snapshot.write_text(f"@EXPLICIT\n{explicit_entry(unavailable)}\n")
-    snapshot_reset["fetch_error"] = CondaMultiError(
-        (
-            CondaHTTPError(
-                "server%body-secret",
-                f"{unavailable.url}?X-Amz-Credential=signed-secret",
-                404,
-                "reason%secret",
-                "-",
-            ),
-        )
+    error: Exception = CondaHTTPError(
+        "server%body-secret",
+        f"{unavailable.url}?X-Amz-Credential=signed-secret",
+        404,
+        "reason%secret",
+        "-",
     )
+    if worker_error:
+        error = RuntimeError(
+            "conda_package_handling.exceptions.InvalidArchiveError: "
+            f"archive from {unavailable.url}?X-Amz-Credential=signed-secret "
+            "server%body-secret reason%secret"
+        )
+    snapshot_reset["fetch_error"] = CondaMultiError((error,))
 
     with pytest.raises(CondaError) as exc_info:
         reset(prefix="/target", snapshot=snapshot)
@@ -440,6 +445,15 @@ def test_reset_snapshot_download_error_reports_safe_context(
         CondaMultiError((CondaMultiError((CondaExitZero("requested exit"),)),)),
         CondaMultiError((CondaMultiError((RuntimeError("unexpected failure"),)),)),
         CondaMultiError((CondaMultiError((CondaSignalInterrupt(signal.SIGINT),)),)),
+        CondaMultiError(
+            (
+                RuntimeError("unexpected failure"),
+                RuntimeError(
+                    "conda_package_handling.exceptions.InvalidArchiveError: "
+                    "corrupt archive"
+                ),
+            )
+        ),
     ],
     ids=[
         "exit",
@@ -449,6 +463,7 @@ def test_reset_snapshot_download_error_reports_safe_context(
         "nested-exit",
         "nested-unexpected",
         "nested-interrupt",
+        "mixed-worker-and-unexpected",
     ],
 )
 def test_reset_snapshot_preserves_interrupt_or_unexpected_error(
