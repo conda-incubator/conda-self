@@ -48,8 +48,8 @@ pip install -e .
 
 ### Test coverage
 
-Tests collect line and branch coverage for `conda_self` and write `coverage.xml`
-for Codecov.
+Tests collect line and branch coverage for `conda_self`, including Python
+subprocesses, and write `coverage.xml` for Codecov.
 To run the tests and generate an HTML report in `htmlcov/`:
 
 ```bash

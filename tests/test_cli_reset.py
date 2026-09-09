@@ -912,6 +912,7 @@ def test_reset_base_protection(
         f"conda={conda_version}",
         f"python={python_version}",
         "conda-self",
+        "coverage >=7.13",
         "conda-index",
         # Pin libmambapy <2.6 to work around a broken pybind11-abi==11
         # variant on Windows. See conda-forge/mamba-feedstock#384.

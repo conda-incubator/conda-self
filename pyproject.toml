@@ -40,6 +40,7 @@ version-file = "conda_self/_version.py"
 
 [tool.coverage.run]
 branch = true
+patch = ["subprocess"]
 source = ["conda_self"]
 relative_files = true
 
@@ -122,11 +123,12 @@ lint = 'pre-commit'
 [tool.pixi.feature.test]
 [tool.pixi.feature.test.dependencies]
 conda-pypi = "*"
+coverage = ">=7.13"
 editables = "*"
 hatch-vcs = ">=0.2.0"
 hatchling = ">=1.12.2"
 pytest = "*"
-pytest-cov = "*"
+pytest-cov = ">=7"
 pytest-mock = "*"
 pre-commit = "*"
 
