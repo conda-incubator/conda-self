@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - ".github/codecov.yml"
       - ".github/workflows/tests.yml"
       - "conda_self/**"
       - "pixi.lock"
@@ -15,6 +16,7 @@ on:
     branches:
       - main
     paths:
+      - ".github/codecov.yml"
       - ".github/workflows/tests.yml"
       - "conda_self/**"
       - "pixi.lock"
@@ -35,6 +37,9 @@ jobs:
   tests:
     name: ${{ matrix.os }}, py${{ matrix.python-version }}, ${{ matrix.channel }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      id-token: write
     env:
       TEST_CONDA_CHANNEL: ${{ matrix.channel }}
     strategy:
@@ -69,3 +74,10 @@ jobs:
           test
           -vv
           --basetemp=${{ runner.os == 'Windows' && 'D:\temp' || runner.temp }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: coverage.xml
+          disable_search: true
+          use_oidc: true
+          name: ${{ matrix.os }}-py${{ matrix.python-version }}-${{ matrix.channel }}

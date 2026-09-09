@@ -46,6 +46,30 @@ pip install -e .
 2. `pixi run lint` to run the pre-commit linters and formatters.
 3. `pixi run docs` to build the docs and `pixi run serve` to serve them in your browser.
 
+### Test coverage
+
+Tests collect line and branch coverage for `conda_self` and write `coverage.xml`
+for Codecov.
+To run the tests and generate an HTML report in `htmlcov/`:
+
+```bash
+pixi run -e test-py310 coverage
+```
+
+To generate the report and serve it locally:
+
+```bash
+pixi run -e test-py310 coverage-serve
+```
+
+Open the URL printed by the server and press `Ctrl+C` to stop it. The server
+listens on `127.0.0.1` and chooses an available port. Replace `test-py310` with
+another test environment to use a different Python version.
+
+The test workflow uploads coverage from each matrix job to Codecov. As in
+conda, project and patch coverage checks are informational, and Codecov bot
+comments are disabled.
+
 ## With `conda` only
 
 1. Fork and clone this repository.

@@ -1,0 +1,20 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Document how to generate and serve local HTML coverage reports. (#183)
+
+### Other
+
+* Add `pytest-cov`, Pixi tasks for line and branch coverage, and Codecov
+  uploads to the test workflow. (#183)

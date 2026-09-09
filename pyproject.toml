@@ -38,6 +38,11 @@ version-file = "conda_self/_version.py"
 [project.entry-points.conda]
 "conda-self" = "conda_self.plugin"
 
+[tool.coverage.run]
+branch = true
+source = ["conda_self"]
+relative_files = true
+
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 omit = ["conda_self/_version.py"]
@@ -108,7 +113,9 @@ sphinx-design = "*"
 
 [tool.pixi.feature.test.tasks]
 install-self = { cmd = "python -m conda pypi install -e .", env = { CONDA_SOLVER = "libmamba" } }
-test = { cmd = "python -m pytest", depends-on = ["install-self"], env = { CONDA_SOLVER = "libmamba" } }
+test = { cmd = "python -m pytest --cov --cov-report=term-missing --cov-report=xml", depends-on = ["install-self"], env = { CONDA_SOLVER = "libmamba" } }
+coverage = { cmd = "python -m coverage html", depends-on = ["test"], description = "Run tests and generate an HTML coverage report" }
+coverage-serve = { cmd = "python -m http.server 0 --bind 127.0.0.1 --directory htmlcov", depends-on = ["coverage"], description = "Run tests and serve the HTML coverage report locally" }
 pre-commit = 'pre-commit'
 lint = 'pre-commit'
 
@@ -119,6 +126,7 @@ editables = "*"
 hatch-vcs = ">=0.2.0"
 hatchling = ">=1.12.2"
 pytest = "*"
+pytest-cov = "*"
 pytest-mock = "*"
 pre-commit = "*"
 
