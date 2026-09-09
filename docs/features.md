@@ -93,15 +93,22 @@ pre-protection state. This snapshot can be used to restore base:
 
 ```bash
 conda self reset                         # auto-detect best snapshot
-conda self reset --snapshot installer    # reset to installer state
+conda self reset --snapshot installer-exact    # reset to installer state
 conda self reset --snapshot base-protection  # reset to protection snapshot
 conda self reset --snapshot current      # strip to essentials only
 ```
 
+The old `--snapshot installer` option reports a migration error. Use
+`installer-exact` to restore the exact snapshot, or `installer-updated` to
+retain installed versions of installer packages alongside conda, conda-self,
+installed conda plugins, configured permanent packages, and their dependencies.
+See {doc}`guides/resetting-base` for migration guidance and exact-reset
+requirements.
+
 Snapshots are stored as `@EXPLICIT` files in `conda-meta/`:
 
 - `base-protection-state.explicit.txt` -- saved by `conda doctor --fix`
-- `installer-state.explicit.txt` -- saved by the installer (if available)
+- `initial-state.explicit.txt` -- saved by the installer (if available)
 
 ## Health check integration
 

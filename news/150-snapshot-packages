@@ -1,0 +1,31 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Reuse an installed conda package when its package URL and any recorded
+  checksum match the snapshot and the package does not need to be reinstalled,
+  so an unavailable URL does not block the exact reset. (#150)
+* Validate recorded checksums for local snapshot archives and report download,
+  extraction, and package-cache lookup failures before changing the target
+  environment. (#150)
+* Respect `--json` and `--quiet` when reporting reset progress and completion.
+  (#150)
+* Reject the ambiguous `--snapshot installer` option before confirmation or
+  environment changes. Explain how to migrate to `installer-exact` to restore
+  the recorded conda packages or `installer-updated` to retain their currently
+  installed versions without updating or installing missing packages. (#150)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Correct the documented reset modes, automatic fallback order, installer
+  snapshot filename, and exact-reset limitations. (#150)
+
+### Other
+
+* <news item>

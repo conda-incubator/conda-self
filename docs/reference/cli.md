@@ -129,23 +129,37 @@ conda self reset [--snapshot <type>] [--dry-run] [--yes] [--json] [--quiet]
   : Remove all packages except conda, its plugins, and their
     dependencies.
 
-  `installer`
-  : Reset to the snapshot saved by the installer
-    (`conda-meta/installer-state.explicit.txt`).
+  `installer-exact`
+  : Reset to the exact snapshot saved by the installer
+    (`conda-meta/initial-state.explicit.txt`). This may downgrade packages.
+
+  `installer-updated`
+  : Retain currently installed packages whose names appear in the installer
+    snapshot, alongside conda, conda-self, installed conda plugins, configured
+    permanent packages, and their dependencies. This does not update packages
+    or install missing packages.
 
   `base-protection`
   : Reset to the snapshot saved by `conda doctor --fix`
     (`conda-meta/base-protection-state.explicit.txt`).
 
   If not specified, conda-self tries `base-protection` first, then
-  `installer`, and falls back to `current`.
+  `installer-updated`, and falls back to `current`.
+
+  `--snapshot installer` reports a migration error before confirmation or
+  environment changes. Replace it with `installer-exact` to restore the exact
+  recorded packages, or `installer-updated` to retain their currently installed
+  versions alongside the packages described above.
 
 ```bash
 # Auto-detect best snapshot
 conda self reset
 
 # Reset to installer state
-conda self reset --snapshot installer
+conda self reset --snapshot installer-exact
+
+# Retain installed versions of installer packages
+conda self reset --snapshot installer-updated
 
 # Reset to base-protection snapshot
 conda self reset --snapshot base-protection
@@ -153,6 +167,13 @@ conda self reset --snapshot base-protection
 # Strip to current essentials
 conda self reset --snapshot current
 ```
+
+Exact resets reuse an installed package when its package URL and any recorded
+checksum match the snapshot and it does not need to be reinstalled. Conda
+prepares any remaining packages in a package cache before changing the target
+environment. This includes noarch Python packages that must be relinked after
+a Python major or minor version change. If preparation fails, the target
+environment is unchanged. See {doc}`../guides/resetting-base` for details.
 
 ---
 

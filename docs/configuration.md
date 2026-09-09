@@ -30,7 +30,7 @@ use conda's `@EXPLICIT` format (a list of exact package URLs).
 | File | Created by | Purpose |
 |------|-----------|---------|
 | `base-protection-state.explicit.txt` | `conda doctor base-protection --fix` | Pre-protection state of base |
-| `installer-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
+| `initial-state.explicit.txt` | Installer (e.g. Miniforge) | Original installer state |
 
 These files are used by `conda self reset --snapshot <type>` to
 restore base to a known state without running the solver.
@@ -41,7 +41,7 @@ restore base to a known state without running the solver.
 |----------|-------|-------------|
 | `DEFAULT_ENV_NAME` | `"default"` | Name of the environment created when cloning base |
 | `SNAPSHOT_FILE_BASE_PROTECTION` | `"base-protection-state.explicit.txt"` | Snapshot filename for base protection |
-| `RESET_FILE_INSTALLER` | `"installer-state.explicit.txt"` | Snapshot filename from installer |
+| `RESET_FILE_INSTALLER` | `"initial-state.explicit.txt"` | Snapshot filename from installer |
 | `SELF_PERMANENT_PACKAGES_SETTING` | `"self_permanent_packages"` | Name of the condarc setting |
 
 ## Environment variables
