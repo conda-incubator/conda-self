@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 # This is required for reading entry point info from an extracted package
 # ref: https://packaging.python.org/en/latest/specifications/entry-points/#file-format
 class CaseSensitiveConfigParser(configparser.ConfigParser):
-    optionxform = staticmethod(str)  # type: ignore
+    optionxform = staticmethod(str)
 
 
 class PackageInfo:

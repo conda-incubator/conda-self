@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/base-protection.gif
-Output demos/base-protection.mp4
 
 Hide
 Type `source demos/_setup.sh`
@@ -16,16 +15,16 @@ Type "# Check if your base environment is protected"
 Enter
 Sleep 500ms
 
-Type@80ms "conda doctor base-protection"
+Type@80ms "conda doctor -n base base-protection"
 Enter
 Wait /\$/
 Sleep 3s
 
-Type "# Enable protection: clone base, reset, freeze"
+Type "# Enable protection: clone base, reset, mark as frozen"
 Enter
 Sleep 500ms
 
-Type@80ms "conda doctor base-protection --fix --yes"
+Type@80ms "conda doctor -n base base-protection --fix --yes"
 Enter
 Wait /\$/
 Sleep 3s
@@ -34,7 +33,7 @@ Type "# Verify protection status"
 Enter
 Sleep 500ms
 
-Type@80ms "conda doctor base-protection"
+Type@80ms "conda doctor -n base base-protection"
 Enter
 Wait /\$/
 Sleep 3s

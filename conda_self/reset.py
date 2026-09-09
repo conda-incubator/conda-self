@@ -5,7 +5,6 @@ import sys
 from os.path import dirname, isfile
 from typing import TYPE_CHECKING
 
-from boltons.setutils import IndexedSet
 from conda import CondaError, CondaExitZero, CondaMultiError
 from conda.base.constants import EXPLICIT_MARKER
 from conda.base.context import context
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
 
 def records_from_snapshot(
     prefix: str, snapshot_content: list[str]
-) -> tuple[IndexedSet, tuple[MatchSpec, ...]]:
+) -> tuple[tuple[PackageRecord, ...], tuple[MatchSpec, ...]]:
     """Return package records for the snapshot and MatchSpecs to install or relink."""
     entries = tuple(line for line in snapshot_content if line != EXPLICIT_MARKER)
     try:
@@ -149,9 +148,9 @@ def records_from_snapshot(
         for index, record in zip(unresolved_indices, fetched_records, strict=True):
             records[index] = record
 
-    return IndexedSet(record for record in records if record is not None), tuple(
-        unresolved_specs
-    )
+    return tuple(
+        dict.fromkeys(record for record in records if record is not None)
+    ), tuple(unresolved_specs)
 
 
 def names_from_explicit(path: Path) -> set[str]:

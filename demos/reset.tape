@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/reset.gif
-Output demos/reset.mp4
 
 Hide
 Type `source demos/_setup.sh`
@@ -16,11 +15,11 @@ Enter
 Wait /\$/
 Show
 
-Type "# Reset base to the installer-provided snapshot"
+Type "# Reset base to the exact installer snapshot"
 Enter
 Sleep 500ms
 
-Type@80ms "conda self reset --yes"
+Type@80ms "conda self reset --yes --snapshot installer-exact"
 Enter
 Wait /\$/
 Sleep 3s

@@ -9,7 +9,7 @@ from conda.base.context import context
 from conda.core.prefix_data import PrefixData
 from conda.models.prefix_graph import PrefixGraph
 
-from .constants import PERMANENT_PACKAGES
+from .constants import PERMANENT_PACKAGES, SELF_PERMANENT_PACKAGES_SETTING
 from .exceptions import NoDistInfoDirFound
 from .package_info import PackageInfo
 
@@ -22,7 +22,10 @@ def permanent_dependencies(add_plugins: bool = False) -> set[str]:
     installed = list(PrefixData(sys.prefix, interoperability=True).iter_records())
     prefix_graph = PrefixGraph(installed)
 
-    protect = [*PERMANENT_PACKAGES, *context.plugins.self_permanent_packages]
+    protect = [
+        *PERMANENT_PACKAGES,
+        *getattr(context.plugins, SELF_PERMANENT_PACKAGES_SETTING),
+    ]
 
     if add_plugins:
         for record in installed:

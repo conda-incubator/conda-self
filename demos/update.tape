@@ -1,7 +1,6 @@
 Source demos/_settings.tape
 
 Output demos/update.gif
-Output demos/update.mp4
 
 Hide
 Type `source demos/_setup.sh`
@@ -17,7 +16,7 @@ Enter
 Wait /\$/
 Show
 
-Type "# Update conda and all plugins"
+Type "# Update all installed packages"
 Enter
 Sleep 500ms
 
