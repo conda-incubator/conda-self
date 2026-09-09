@@ -16,7 +16,7 @@ conda self --version
 First, see if base is already protected with [conda doctor](inv:conda:std:doc#commands/doctor):
 
 ```bash
-conda doctor base-protection
+conda doctor -n base base-protection
 ```
 
 If base is not protected, you will see a message indicating that the
@@ -29,12 +29,20 @@ health check found an issue.
 Run the fix:
 
 ```bash
-conda doctor base-protection --fix
+conda doctor -n base base-protection --fix
 ```
 
 You will be prompted to confirm. Here is what happens:
 
-### Step 1: Clone base to default
+### Step 1: Save a snapshot
+
+conda-self tries to save a snapshot of base in conda's explicit format to
+`conda-meta/base-protection-state.explicit.txt`. The file contains an
+`@EXPLICIT` marker followed by the complete URL for each conda package in the
+environment before the reset, enabling exact restoration later. Protection
+continues without the snapshot when base cannot be exported in this format.
+
+### Step 2: Clone base to default
 
 Your current base environment is cloned to a new environment called
 `default`. All packages, including pip-installed ones, are preserved
@@ -45,30 +53,25 @@ and continue working as before.
 conda activate default
 ```
 
-### Step 2: Save a snapshot
-
-A snapshot of base is saved in `@EXPLICIT` format to
-`conda-meta/base-protection-state.explicit.txt`. This file lists
-every package URL in the environment before the reset, enabling
-exact restoration later.
-
 ### Step 3: Reset base
 
-Base is stripped down to conda, its registered [plugins](inv:conda:std:doc#dev-guide/plugins/index), and their
-dependencies. Everything else is removed.
+Every conda package is removed except conda, conda-self, configured permanent
+packages, their dependencies, and installed conda packages named in the
+installer snapshot when that file exists.
 
-### Step 4: Freeze base
+### Step 4: Mark base as frozen
 
-A freeze file is written to base, preventing regular [conda install](inv:conda:std:doc#commands/install)
-from modifying it. Only `conda self` commands (which pass
-`--override-frozen`) can make changes.
+The `conda-meta/frozen` environment marker file is written, marking base as
+frozen. Regular conda commands refuse to modify it unless `--override-frozen`
+is passed. `conda self install`, `update`, and `remove` pass that option to
+conda.
 
 ## Verify protection
 
 Run the health check again:
 
 ```bash
-conda doctor base-protection
+conda doctor -n base base-protection
 ```
 
 It should now report that base is protected.
@@ -91,18 +94,18 @@ conda activate default
 python -c "import numpy; print(numpy.__version__)"
 ```
 
-## Non-conda packages
+## External packages
 
 If your base environment contains pip-installed packages, you will
 see a warning before protection proceeds:
 
-> Warning: Base environment contains N non-conda package(s) that
-> will become non-functional after reset. They are preserved in the
-> cloned 'default' environment.
+> Warning: Base environment contains N external packages that may no longer
+> work in the reset base environment. They are preserved in the cloned
+> 'default' environment.
 
-These packages are copied to `default` but will not work in the
-reset base. Reinstall them in `default` or another environment
-if needed.
+These packages remain usable in `default` but may no longer work in the reset
+base environment. Activate `default` to keep using them, or reinstall them in
+another environment.
 
 ## Next steps
 
