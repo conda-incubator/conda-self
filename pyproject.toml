@@ -45,9 +45,13 @@ show_missing = true
 skip_covered = true
 sort = "Miss"
 
-[tool.mypy]
-warn_no_return = false
-exclude = "docs/.*"
+[tool.ty.src]
+include = ["conda_self", "tests"]
+exclude = ["conda_self/_version.py", "tests/data"]
+
+[tool.ty.analysis]
+# hatch-vcs creates this module during build and editable installation.
+allowed-unresolved-imports = ["conda_self._version"]
 
 [tool.ruff]
 target-version = "py310"
@@ -122,6 +126,20 @@ pytest = "*"
 pytest-mock = "*"
 pre-commit = "*"
 
+[tool.pixi.feature.typecheck]
+channels = [
+  "conda-forge",  # Force it for type checking, not available in defaults
+]
+
+[tool.pixi.feature.typecheck.dependencies]
+# Conda 26.5 corrected the subcommand and test fixture annotations used here.
+conda = ">=26.5"
+pytest = "*"
+ty = "==0.0.78"
+
+[tool.pixi.feature.typecheck.tasks]
+typecheck = "ty check"
+
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
 
@@ -148,3 +166,4 @@ test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
 test-py314 = ["test", "py314"]
+typecheck = ["typecheck", "py313"]

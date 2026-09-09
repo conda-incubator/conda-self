@@ -137,7 +137,9 @@ def fix(prefix: str, args: Namespace, confirm: ConfirmCallback) -> int:
         )
         if not context.quiet:
             print(f"Saving snapshot to {snapshot_file}")
-        snapshot_file.write_text(explicit_exporter.export(env))
+        export = explicit_exporter.export
+        assert export is not None
+        snapshot_file.write_text(export(env))
     except CondaValueError:
         if not context.quiet:
             print(

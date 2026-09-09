@@ -401,7 +401,8 @@ def test_reset_snapshot_package_error_reports_safe_context(
             f"archive from {unavailable.url}?X-Amz-Credential=signed-secret "
             "server%body-secret reason%secret"
         )
-    snapshot_reset["fetch_error"] = CondaMultiError((error,))
+    # Conda workers aggregate RuntimeError despite CondaMultiError's annotation.
+    snapshot_reset["fetch_error"] = CondaMultiError((error,))  # ty: ignore[invalid-argument-type]
 
     with pytest.raises(CondaError) as exc_info:
         reset(prefix="/target", snapshot=snapshot)
@@ -443,7 +444,10 @@ def test_reset_snapshot_package_error_reports_safe_context(
         RuntimeError("unexpected failure"),
         CondaMultiError(()),
         CondaMultiError((CondaMultiError((CondaExitZero("requested exit"),)),)),
-        CondaMultiError((CondaMultiError((RuntimeError("unexpected failure"),)),)),
+        CondaMultiError(
+            # This intentionally tests an unexpected error inside CondaMultiError.
+            (CondaMultiError((RuntimeError("unexpected failure"),)),)  # ty: ignore[invalid-argument-type]
+        ),
         CondaMultiError((CondaMultiError((CondaSignalInterrupt(signal.SIGINT),)),)),
         CondaMultiError(
             (
@@ -452,7 +456,7 @@ def test_reset_snapshot_package_error_reports_safe_context(
                     "conda_package_handling.exceptions.InvalidArchiveError: "
                     "corrupt archive"
                 ),
-            )
+            )  # ty: ignore[invalid-argument-type]
         ),
     ],
     ids=[
