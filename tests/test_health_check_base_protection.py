@@ -5,20 +5,26 @@ from __future__ import annotations
 import json
 import sys
 from argparse import Namespace
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 from conda.base.constants import PREFIX_FROZEN_FILE
 from conda.core.prefix_data import PrefixData
-from conda.exceptions import CondaValueError, EnvironmentIsFrozenError
+from conda.exceptions import (
+    CondaOSError,
+    CondaSystemExit,
+    CondaValueError,
+    EnvironmentIsFrozenError,
+)
+from conda.models.environment import Environment
+from ruamel.yaml import YAML
 
-from conda_self.constants import RESET_FILE_INSTALLER
+from conda_self.constants import RESET_FILE_BASE_PROTECTION, RESET_FILE_INSTALLER
 from conda_self.health_checks import base_protection
 from conda_self.plugin import conda_health_checks
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from pytest import CaptureFixture, MonkeyPatch
 
 
@@ -120,6 +126,44 @@ def fixable_base_env(
     return fake_base_env
 
 
+@pytest.fixture
+def base_protection_env(
+    fake_base_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+) -> Path:
+    """Use real package metadata, exports, and configuration for protection tests."""
+    conda_meta = fake_base_env / "conda-meta"
+    (conda_meta / "history").touch()
+    for name in ("conda", "user-package"):
+        filename = f"{name}-1.0-0.conda"
+        (conda_meta / f"{name}-1.0-0.json").write_text(
+            json.dumps(
+                {
+                    "name": name,
+                    "version": "1.0",
+                    "build": "0",
+                    "build_number": 0,
+                    "subdir": "noarch",
+                    "fn": filename,
+                    "url": f"https://packages.example.test/noarch/{filename}",
+                    "depends": [],
+                }
+            )
+        )
+    PrefixData._cache_.clear()
+    destination = fake_base_env / "envs" / "default"
+    monkeypatch.setattr(PrefixData, "from_name", lambda name: PrefixData(destination))
+    condarc = fake_base_env / "user.condarc"
+    condarc.write_text("default_activation_env: work\nchannels:\n  - conda-forge\n")
+    monkeypatch.setattr("conda.base.context.user_rc_path", str(condarc))
+    monkeypatch.setattr("conda.misc.clone_env", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "conda_self.reset.reset", lambda **kwargs: reset_calls.append(kwargs)
+    )
+    return fake_base_env
+
+
 @pytest.mark.parametrize(
     "use_base, expected",
     [
@@ -217,6 +261,146 @@ def test_fix_calls_confirm_callback(fake_base_env: Path):
 
 
 @pytest.mark.parametrize(
+    "is_environment", [True, False], ids=["environment", "directory"]
+)
+def test_fix_cancel_preserves_existing_destination(
+    base_protection_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+    is_environment: bool,
+):
+    destination = base_protection_env / "envs" / "default"
+    destination.mkdir(parents=True)
+    if is_environment:
+        (destination / "conda-meta").mkdir()
+        (destination / "conda-meta" / "history").touch()
+    sentinel = destination / "keep.txt"
+    sentinel.write_text("existing user data\n")
+    prompts: list[str] = []
+
+    def confirm(message: str):
+        prompts.append(message)
+        if len(prompts) == 2:
+            raise CondaSystemExit("Aborted")
+
+    def unexpected_clone(*args, **kwargs):
+        pytest.fail("Cloning must wait for destination confirmation")
+
+    monkeypatch.setattr("conda.misc.clone_env", unexpected_clone)
+
+    with pytest.raises(CondaSystemExit, match="Aborted"):
+        base_protection.fix(str(base_protection_env), Namespace(), confirm)
+
+    assert len(prompts) == 2
+    assert sentinel.read_text() == "existing user data\n"
+    assert not (base_protection_env / PREFIX_FROZEN_FILE).exists()
+    assert reset_calls == []
+
+
+def test_fix_replaces_existing_environment_after_confirmation(
+    base_protection_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+):
+    destination = base_protection_env / "envs" / "default"
+    (destination / "conda-meta").mkdir(parents=True)
+    (destination / "conda-meta" / "history").touch()
+    sentinel = destination / "old-data.txt"
+    sentinel.write_text("old environment\n")
+    prompts: list[str] = []
+
+    def confirm(message: str):
+        assert sentinel.read_text() == "old environment\n"
+        prompts.append(message)
+
+    def clone(source: str, target: str, **kwargs):
+        assert len(prompts) == 2
+        assert source == str(base_protection_env)
+        assert target == str(destination)
+        assert not destination.exists()
+        destination.mkdir()
+        (destination / "cloned-data.txt").write_text("cloned environment\n")
+
+    monkeypatch.setattr("conda.misc.clone_env", clone)
+
+    assert base_protection.fix(str(base_protection_env), Namespace(), confirm) == 0
+
+    assert "Remove and recreate?" in prompts[1]
+    assert not sentinel.exists()
+    assert (destination / "cloned-data.txt").read_text() == "cloned environment\n"
+    assert len(reset_calls) == 1
+    assert (base_protection_env / PREFIX_FROZEN_FILE).is_file()
+    assert YAML(typ="safe").load(
+        (base_protection_env / "user.condarc").read_text()
+    ) == {
+        "default_activation_env": str(destination),
+        "channels": ["conda-forge"],
+    }
+
+
+@pytest.mark.parametrize("failing_operation", ["clone", "reset"])
+def test_fix_preserves_recovery_snapshot_after_failure(
+    base_protection_env: Path,
+    monkeypatch: MonkeyPatch,
+    failing_operation: str,
+):
+    conda_meta = base_protection_env / "conda-meta"
+    snapshot = conda_meta / RESET_FILE_BASE_PROTECTION
+    snapshots_before_clone: list[str] = []
+
+    def clone(*args, **kwargs):
+        snapshots_before_clone.append(snapshot.read_text())
+        if failing_operation == "clone":
+            raise OSError("clone failed")
+
+    def reset(**kwargs):
+        (conda_meta / "user-package-1.0-0.json").unlink()
+        raise OSError("reset failed")
+
+    monkeypatch.setattr("conda.misc.clone_env", clone)
+    monkeypatch.setattr("conda_self.reset.reset", reset)
+
+    with pytest.raises(OSError, match=f"{failing_operation} failed"):
+        base_protection.fix(str(base_protection_env), Namespace(), lambda msg: None)
+
+    assert len(snapshots_before_clone) == 1
+    assert snapshot.read_text() == snapshots_before_clone[0]
+    assert {
+        line for line in snapshot.read_text().splitlines() if not line.startswith("#")
+    } == {
+        "@EXPLICIT",
+        "https://packages.example.test/noarch/conda-1.0-0.conda",
+        "https://packages.example.test/noarch/user-package-1.0-0.conda",
+    }
+    assert not (base_protection_env / PREFIX_FROZEN_FILE).exists()
+
+
+def test_fix_freeze_failure_preserves_activation_config(
+    base_protection_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+):
+    condarc = base_protection_env / "user.condarc"
+    original_config = condarc.read_bytes()
+    frozen_file = base_protection_env / PREFIX_FROZEN_FILE
+    write_text = Path.write_text
+
+    def fail_freeze(path, *args, **kwargs):
+        if path == frozen_file:
+            raise PermissionError("Cannot write frozen marker")
+        return write_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", fail_freeze)
+
+    with pytest.raises(CondaOSError, match="Could not protect the base environment"):
+        base_protection.fix(str(base_protection_env), Namespace(), lambda msg: None)
+
+    assert len(reset_calls) == 1
+    assert not frozen_file.exists()
+    assert condarc.read_bytes() == original_config
+
+
+@pytest.mark.parametrize(
     "create_snapshot, expect_names_only, expected_keep",
     [
         (
@@ -261,12 +445,55 @@ def test_fix_reset_strategy(
     assert len(perm_deps_calls) == 1
 
 
-def test_fix_writes_actionable_frozen_message(fixable_base_env: Path):
-    base_protection.fix(str(fixable_base_env), Namespace(), lambda msg: None)
+@pytest.mark.parametrize("quiet", [False, True], ids=["normal", "quiet"])
+def test_fix_without_exportable_snapshot(
+    base_protection_env: Path,
+    monkeypatch: MonkeyPatch,
+    reset_calls: list,
+    capsys: CaptureFixture,
+    quiet: bool,
+):
+    from conda.base.context import context
 
-    frozen_file = fixable_base_env / PREFIX_FROZEN_FILE
+    env = Environment.from_prefix(
+        str(base_protection_env), name="base", platform=context.subdir
+    )
+    env.external_packages = {"pip": ["external-package==1.0"]}
+    monkeypatch.setattr(Environment, "from_prefix", lambda *args, **kwargs: env)
+    monkeypatch.setattr(context, "quiet", quiet)
+
+    def clone(*args, **kwargs):
+        print("Cloning packages")
+
+    monkeypatch.setattr("conda.misc.clone_env", clone)
+
+    assert (
+        base_protection.fix(str(base_protection_env), Namespace(), lambda msg: None)
+        == 0
+    )
+
+    output = capsys.readouterr().out
+    if quiet:
+        assert output == ""
+    else:
+        assert "1 external package" in output
+        assert "Skipping snapshot" in output
+        assert "Cloning packages" in output
+        assert "conda activate default" in output
+    assert not (
+        base_protection_env / "conda-meta" / RESET_FILE_BASE_PROTECTION
+    ).exists()
+    assert len(reset_calls) == 1
+    assert YAML(typ="safe").load(
+        (base_protection_env / "user.condarc").read_text()
+    ) == {
+        "default_activation_env": str(base_protection_env / "envs" / "default"),
+        "channels": ["conda-forge"],
+    }
+
+    frozen_file = base_protection_env / PREFIX_FROZEN_FILE
     frozen_message = json.loads(frozen_file.read_text())["message"]
-    rendered_error = str(EnvironmentIsFrozenError(fixable_base_env, frozen_message))
+    rendered_error = str(EnvironmentIsFrozenError(base_protection_env, frozen_message))
 
     assert frozen_message == base_protection.BASE_PROTECTION_FROZEN_MESSAGE
     assert "conda self --help" in rendered_error

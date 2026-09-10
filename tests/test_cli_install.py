@@ -43,9 +43,15 @@ def test_install_not_found(conda_cli: CondaCLIFixture, spec: str):
     assert code != 0
 
 
-@pytest.mark.parametrize("plugin_name", ("flask", "numpy"))
+@pytest.mark.parametrize(
+    "package_names",
+    (
+        pytest.param(("flask",), id="single-package"),
+        pytest.param(("flask", "numpy"), id="multiple-packages"),
+    ),
+)
 def test_install_not_plugins(
-    plugin_name: str,
+    package_names: tuple[str, ...],
     monkeypatch: MonkeyPatch,
     base_env: Path,
     conda_channel: str,
@@ -63,14 +69,16 @@ def test_install_not_plugins(
         "self",
         "install",
         "--yes",
-        plugin_name,
+        *package_names,
         check=False,
         capture_output=True,
         text=True,
     )
     assert result.returncode != 0
     assert "NotAPluginError" in result.stderr
-    assert not is_installed(base_env, plugin_name)
+    for package_name in package_names:
+        assert package_name in result.stderr
+        assert not is_installed(base_env, package_name)
 
 
 @pytest.mark.parametrize(
